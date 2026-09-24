@@ -10,11 +10,17 @@
     "check": "tsc --noEmit",
     "format": "prettier --write .",
     "test": "vitest run",
+    "proto:generate": "buf lint && buf generate",
     "db:push": "drizzle-kit generate && drizzle-kit migrate"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.693.0",
     "@aws-sdk/s3-request-presigner": "^3.693.0",
+    "@bufbuild/protobuf": "^2.15.0",
+    "@connectrpc/connect": "^2.2.0",
+    "@connectrpc/connect-express": "^2.2.0",
+    "@connectrpc/connect-node": "^2.2.0",
+    "@connectrpc/connect-web": "^2.2.0",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -79,6 +85,8 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@bufbuild/buf": "^1.73.0",
+    "@bufbuild/protoc-gen-es": "^2.15.0",
     "@builder.io/vite-plugin-jsx-loc": "^0.1.1",
     "@tailwindcss/typography": "^0.5.15",
     "@tailwindcss/vite": "^4.1.3",

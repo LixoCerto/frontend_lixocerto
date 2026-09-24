@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+package lixo_certo.v1;
+
+service LixoCertoService {
+  rpc GetDashboard(GetDashboardRequest) returns (GetDashboardResponse);
+  rpc ListMaterials(ListMaterialsRequest) returns (ListMaterialsResponse);
+  rpc ListCollectionPoints(ListCollectionPointsRequest) returns (ListCollectionPointsResponse);
+  rpc SubmitQuiz(SubmitQuizRequest) returns (SubmitQuizResponse);
+  rpc SubmitSusEvaluation(SubmitSusEvaluationRequest) returns (SubmitSusEvaluationResponse);
+}
+
+message GetDashboardRequest {
+  string user_id = 1;
+}
+
+message GetDashboardResponse {
+  string greeting = 1;
+  int32 eco_points = 2;
+  int32 current_streak = 3;
+  int32 badges_unlocked = 4;
+  string daily_tip = 5;
+  repeated DashboardAction quick_actions = 6;
+}
+
+message DashboardAction {
+  string id = 1;
+  string label = 2;
+  string description = 3;
+  string icon = 4;
+}
+
+message ListMaterialsRequest {
+  string category = 1;
+  string query = 2;
+}
+
+message ListMaterialsResponse {
+  repeated Material materials = 1;
+}
+
+message Material {
+  string id = 1;
+  string name = 2;
+  string category = 3;
+  string disposal_instruction = 4;
+  string icon = 5;
+  string impact_note = 6;
+}
+
+message ListCollectionPointsRequest {
+  string city = 1;
+  string material_category = 2;
+}
+
+message ListCollectionPointsResponse {
+  repeated CollectionPoint collection_points = 1;
+}
+
+message CollectionPoint {
+  int32 id = 1;
+  string name = 2;
+  string address = 3;
+  string city = 4;
+  repeated string accepted_categories = 5;
+  bool is_verified = 6;
+}
+
+message SubmitQuizRequest {
+  string user_id = 1;
+  string question_id = 2;
+  string answer_id = 3;
+}
+
+message SubmitQuizResponse {
+  bool correct = 1;
+  int32 points_awarded = 2;
+  string explanation = 3;
+  int32 total_points = 4;
+}
+
+message SubmitSusEvaluationRequest {
+  string participant_code = 1;
+  bool consented = 2;
+  repeated int32 answers = 3;
+  string notes = 4;
+}
+
+message SubmitSusEvaluationResponse {
+  bool accepted = 1;
+  int32 score = 2;
+  string message = 3;
+}
