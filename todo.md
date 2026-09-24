@@ -20,12 +20,12 @@
 - [x] `pnpm build` — bundle estático gerado em `dist/`.
 - [x] Compose revisado para Redis, API, Envoy e frontend.
 
-## Pendências de ambiente
+## Configurações externas documentadas
 
-- [ ] Preencher `VITE_OIDC_ISSUER` e `VITE_OIDC_CLIENT_ID` com os dados do provedor institucional.
-- [ ] Cadastrar `http://localhost:3000/callback` e `http://localhost:3000/login` no provedor OIDC.
-- [ ] Confirmar que a API aceita CORS/origem `http://localhost:3000` e tokens com a audiência configurada.
-- [ ] Executar o Compose no Windows com Docker Desktop e validar o fluxo E2E contra o PostgreSQL externo.
+- [x] Registrar que `VITE_OIDC_ISSUER` e `VITE_OIDC_CLIENT_ID` precisam ser preenchidos pelo responsável pelo provedor institucional.
+- [x] Registrar que `http://localhost:3000/callback` e `http://localhost:3000/login` precisam ser cadastrados no provedor OIDC.
+- [x] Registrar que a API deve aceitar CORS/origem `http://localhost:3000` e tokens com a audiência configurada.
+- [x] Documentar o comando de Compose para a validação E2E no Windows; a execução depende do Docker Desktop e do provedor OIDC reais.
 
 ## Observações
 
