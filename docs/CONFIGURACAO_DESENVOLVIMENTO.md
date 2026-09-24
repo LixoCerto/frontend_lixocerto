@@ -1,70 +1,36 @@
 # Configuração de desenvolvimento — Frontend Lixo Certo
 
-Este documento descreve as variáveis usadas pelo frontend WebDev e seu backend de sessão. **Os valores reais devem permanecer no ambiente local ou no gerenciador de segredos.**
+O frontend é uma aplicação React/Vite estática. Ele não possui servidor Node, banco de dados, tRPC, Drizzle, sessão própria ou segredo de cliente.
 
-## Arquivo local
+## Desenvolvimento direto
 
-Crie um arquivo `.env.local` na raiz do frontend:
+Copie `.env.exemplo` para `.env`, informe o emissor OIDC e o `client_id` público cadastrados para `http://localhost:3000/callback`, instale as dependências e execute `pnpm dev`.
 
-```env
-# Manus OAuth
-VITE_APP_ID=SEU_APP_ID_MANUS
-VITE_OAUTH_PORTAL_URL=https://api.manus.im
-OAUTH_SERVER_URL=https://api.manus.im
+O frontend direto usa `VITE_API_BASE_URL` apontando para um gateway gRPC-Web acessível pelo navegador. Para execução integrada, mantenha `/api/rpc` e use o Envoy do projeto de infraestrutura.
 
-# Sessão do backend WebDev
-JWT_SECRET=SUBSTITUA_POR_UM_SEGREDO_SERVER_SIDE_LONGO
+## Execução integrada
 
-# Banco do backend WebDev
-DATABASE_URL=mysql://usuario:senha@127.0.0.1:3306/lixo_certo_web
+A partir de `infra_lixocerto`, configure `.env` com os caminhos dos projetos irmãos e com as variáveis públicas `VITE_*`. Em seguida, execute `docker compose --profile app up --build`.
 
-# Proprietário do projeto
-OWNER_OPEN_ID=SEU_OPEN_ID_MANUS
-OWNER_NAME=Arthur Nobrega
-
-# APIs internas Manus, somente se forem usadas
-BUILT_IN_FORGE_API_URL=
-BUILT_IN_FORGE_API_KEY=
-VITE_FRONTEND_FORGE_API_URL=
-VITE_FRONTEND_FORGE_API_KEY=
-```
-
-O callback oficial do OAuth é:
+O fluxo integrado é:
 
 ```text
-/api/oauth/callback
+browser :3000 → frontend Nginx :8080 → gateway Envoy :8080 → API gRPC :50051 → PostgreSQL externo
+                                                        └──→ Redis do Compose
 ```
 
-O frontend cria o nonce no navegador e o backend valida o estado antes de criar a sessão. Não substitua esse fluxo por uma URL de callback manual.
+O frontend não exige `DATABASE_URL`. O arquivo `.env` da API permanece privado e não deve ser copiado para o repositório ou para a imagem do frontend.
 
-## Autorização por nível
+## Configuração OIDC
 
-Depois do login, o procedimento protegido `auth.access` retorna o papel persistido e as permissões da sessão. Os papéis suportados são:
+O provedor deve permitir Authorization Code com PKCE para uma aplicação pública (SPA), sem `client_secret`. Cadastre exatamente:
 
-| Valor persistido | Papel exibido | Escopo |
-|---|---|---|
-| `user` | Usuário | Aprendizagem, materiais, desafios e impacto próprio |
-| `pesquisador` | Pesquisador | Indicadores e resultados agregados |
-| `revisor` | Revisor | Moderação de materiais, pontos e questionários |
-| `admin` | Administrador | Governança, auditoria e todas as áreas autorizadas |
-
-A interface utiliza as permissões para montar o menu, mas operações sensíveis devem continuar sendo protegidas no backend/API.
-
-## Gateway da API gRPC
-
-O cliente atual do frontend usa o caminho relativo `/api/rpc`. Para consumir a API independente em `localhost:50051`, será necessário configurar um gateway Connect/gRPC-Web ou Envoy. O navegador deve enviar:
-
-```http
-Authorization: Bearer <jwt>
+```text
+http://localhost:3000/callback
 ```
 
-A configuração do gateway e a troca do endpoint relativo pelo endpoint de desenvolvimento devem ser feitas quando a API gRPC estiver exposta para o navegador.
+O token é enviado à API como `Authorization: Bearer <token>`. A API deve validar assinatura, emissor, audiência, expiração, papel e permissão. A interface apenas monta a navegação com base na identidade retornada por `ServicoAutenticacao.ObterIdentidadeAtual`.
 
 ## Segurança
 
-Não versione `.env`, `.env.local`, tokens, senhas, cookies de sessão, chaves privadas ou arquivos exportados do provedor OIDC. Antes de publicar, confirme:
-
-```powershell
-git status --short
-git diff -- .env .env.local
-```
+Não versione `.env`, tokens, senhas, cookies de sessão, chaves privadas ou arquivos exportados do provedor OIDC. As variáveis `VITE_*` são públicas no bundle e nunca podem conter credenciais.

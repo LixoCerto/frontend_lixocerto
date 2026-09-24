@@ -23,9 +23,13 @@ import {
   Users,
 } from "lucide-react";
 import AppShell from "@/components/AppShell";
-import { lixoCertoClient } from "@/lib/connect";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { trpc } from "@/lib/trpc";
+import {
+  enviarRespostaQuestionario,
+  listarMateriais,
+  listarPontosColeta,
+  obterProgressoUsuario,
+} from "@/lib/api";
 import {
   PERFIS_ACESSO,
   type CodigoPermissao,
@@ -34,9 +38,28 @@ import {
 
 const categoryFilters = ["Todos", "Eletroeletrônicos", "Recicláveis", "Orgânicos"];
 
-type DashboardState = Awaited<ReturnType<typeof lixoCertoClient.getDashboard>>;
-type MaterialsState = Awaited<ReturnType<typeof lixoCertoClient.listMaterials>>["materials"];
-type CollectionPointsState = Awaited<ReturnType<typeof lixoCertoClient.listCollectionPoints>>["collectionPoints"];
+type DashboardState = {
+  ecoPoints: number;
+  currentStreak: number;
+  badgesUnlocked: number;
+  dailyTip: string;
+  quickActions: { id: string; label: string; description: string }[];
+};
+type MaterialsState = {
+  id: string;
+  name: string;
+  category: string;
+  disposalInstruction: string;
+  impactNote: string;
+}[];
+type CollectionPointsState = {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  acceptedCategories: string[];
+  isVerified: boolean;
+}[];
 
 interface Indicador {
   titulo: string;
@@ -82,17 +105,12 @@ function CabecalhoSecao({ etiqueta, titulo, descricao, acao }: { etiqueta: strin
 }
 
 export default function Home() {
-  const { user, isAuthenticated, loading: authLoading, error: authError, logout } = useAuth({
+  const { user, identidade, isAuthenticated, loading: authLoading, error: authError, logout } = useAuth({
     redirectOnUnauthenticated: true,
     redirectPath: "/login",
   });
-  const accessQuery = trpc.auth.access.useQuery(undefined, {
-    enabled: isAuthenticated,
-    retry: false,
-    refetchOnWindowFocus: false,
-  });
-  const papel = (accessQuery.data?.papel ?? "usuario") as PapelAcesso;
-  const permissoes = accessQuery.data?.permissoes ?? [];
+  const papel = (identidade?.papeisUsuario.find(item => ["usuario", "pesquisador", "revisor", "administrador"].includes(item)) ?? "usuario") as PapelAcesso;
+  const permissoes = (identidade?.permissoesUsuario ?? []) as CodigoPermissao[];
   const [paginaAtiva, setPaginaAtiva] = useState("inicio");
   const [dashboard, setDashboard] = useState<DashboardState | null>(null);
   const [materials, setMaterials] = useState<MaterialsState>([]);
@@ -118,13 +136,36 @@ export default function Home() {
     async function carregarDados() {
       try {
         const [painel, materiais, pontos] = await Promise.all([
-          lixoCertoClient.getDashboard({ userId: user?.openId ?? "" }),
-          lixoCertoClient.listMaterials({ category: "", query: "" }),
-          lixoCertoClient.listCollectionPoints({ city: "João Pessoa", materialCategory: "" }),
+          obterProgressoUsuario(),
+          listarMateriais(),
+          listarPontosColeta(),
         ]);
-        setDashboard(painel);
-        setMaterials(materiais.materials);
-        setCollectionPoints(pontos.collectionPoints);
+        setDashboard({
+          ecoPoints: painel.quantidadePontos,
+          currentStreak: painel.sequenciaDias,
+          badgesUnlocked: painel.quantidadeConquistas,
+          dailyTip: "Pequenas escolhas repetidas criam impacto ambiental mensurável.",
+          quickActions: [
+            { id: "guide", label: "Consultar guia", description: "Aprenda como descartar melhor." },
+            { id: "quiz", label: "Responder quiz", description: "Teste seu conhecimento ambiental." },
+            { id: "challenge", label: "Ver desafios", description: "Transforme intenção em hábito." },
+          ],
+        });
+        setMaterials(materiais.materiais.map(material => ({
+          id: material.idMaterial,
+          name: material.nomeMaterial,
+          category: material.categoriaMaterial,
+          disposalInstruction: material.instrucaoDescarte,
+          impactNote: material.observacaoImpacto,
+        })));
+        setCollectionPoints(pontos.pontosColeta.map(ponto => ({
+          id: ponto.idPontoColeta,
+          name: ponto.nomePontoColeta,
+          address: ponto.enderecoPontoColeta,
+          city: ponto.cidadePontoColeta,
+          acceptedCategories: ponto.categoriasAceitas,
+          isVerified: ponto.statusVerificacao.toLowerCase() === "verificado" || ponto.statusVerificacao.toLowerCase() === "aprovado",
+        })));
       } catch {
         setErroDados(true);
       } finally {
@@ -138,11 +179,14 @@ export default function Home() {
     if (!isAuthenticated) return;
     async function filtrarMateriais() {
       try {
-        const resposta = await lixoCertoClient.listMaterials({
-          category: selectedCategory === "Todos" ? "" : selectedCategory,
-          query,
-        });
-        setMaterials(resposta.materials);
+        const resposta = await listarMateriais(query, selectedCategory === "Todos" ? "" : selectedCategory);
+        setMaterials(resposta.materiais.map(material => ({
+          id: material.idMaterial,
+          name: material.nomeMaterial,
+          category: material.categoriaMaterial,
+          disposalInstruction: material.instrucaoDescarte,
+          impactNote: material.observacaoImpacto,
+        })));
       } catch {
         setErroDados(true);
       }
@@ -184,14 +228,10 @@ export default function Home() {
   async function responderQuiz(answerId: string) {
     setQuizAnswer(answerId);
     try {
-      const resposta = await lixoCertoClient.submitQuiz({
-        userId: user?.openId ?? "",
-        questionId: "destino-eletronicos",
-        answerId,
-      });
-      setQuizFeedback(resposta.explanation);
-      setQuizScore(resposta.pointsAwarded);
-      if (resposta.correct && dashboard) setDashboard({ ...dashboard, ecoPoints: resposta.totalPoints });
+      const resposta = await enviarRespostaQuestionario("destino-eletronicos", answerId);
+      setQuizFeedback(resposta.explicacaoResposta);
+      setQuizScore(resposta.quantidadePontos);
+      if (resposta.indicaCorreta && dashboard) setDashboard({ ...dashboard, ecoPoints: dashboard.ecoPoints + resposta.quantidadePontos });
     } catch {
       setQuizFeedback("Não foi possível registrar a resposta agora. Tente novamente em instantes.");
       setQuizScore(null);
@@ -329,7 +369,7 @@ export default function Home() {
     return renderizarInicio();
   }
 
-  if (authError || accessQuery.error) {
+  if (authError) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f6f7f4] px-5 text-center text-[#17362a]">
         <div className="max-w-md rounded-[28px] border border-[#f2d0c8] bg-white p-8 shadow-[0_24px_50px_-28px_rgba(23,54,42,.25)]">
@@ -342,7 +382,7 @@ export default function Home() {
     );
   }
 
-  if (authLoading || accessQuery.isLoading || !isAuthenticated || !user) {
+  if (authLoading || !isAuthenticated || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f6f7f4]">
         <div className="text-center">

@@ -1,37 +1,32 @@
-# Tarefas — Webapp Lixo Certo
+# Tarefas — Frontend Lixo Certo
 
-## Concluído nesta versão
+## Concluído
 
-- [x] Implementar tela de login com Manus OAuth.
-- [x] Preservar o callback oficial `/api/oauth/callback` com nonce anti-CSRF.
-- [x] Criar o endpoint protegido `auth.access` para sessão autenticada.
-- [x] Persistir os níveis `user`, `pesquisador`, `revisor` e `admin` no banco do webapp.
-- [x] Traduzir níveis persistidos para papéis de layout: usuário, pesquisador, revisor e administrador.
-- [x] Carregar navegação e áreas conforme permissões retornadas pelo backend.
-- [x] Remover o seletor de perfil demonstrativo como fonte de autorização.
-- [x] Adicionar logout funcional e exibição da identidade autenticada.
-- [x] Validar login em desktop e mobile.
+- [x] Importar os contratos Protobuf reais da API Lixo Certo.
+- [x] Gerar os clientes TypeScript com Buf e `protoc-gen-es`.
+- [x] Substituir tRPC, sessão Manus e backend embutido por OIDC Authorization Code + PKCE.
+- [x] Criar callback OIDC e envio de `Authorization: Bearer` pelo cliente Connect-Web.
+- [x] Adaptar materiais, pontos de coleta, progresso e questionário aos contratos gRPC reais.
+- [x] Remover `server/`, `drizzle/`, configuração Sequelize/Drizzle e componentes legados do template.
+- [x] Converter o build para Vite estático servido pelo Nginx.
+- [x] Adicionar Envoy gRPC-Web e proxy `/api/rpc` no projeto `infra_lixocerto`.
+- [x] Documentar a configuração pública do frontend e a separação entre os três projetos.
 
-## Evidências de validação
+## Validação
 
-| Verificação | Resultado |
-|---|---|
-| `pnpm check` | Aprovado |
-| `pnpm test` | 18 testes aprovados |
-| `pnpm build` | Aprovado |
-| Migration `0002_secret_maria_hill.sql` | Aplicada com sucesso |
-| Teste `auth.access` | 4 níveis persistidos verificados |
-| Tela `/login` desktop | Identidade, CTA e política visíveis |
-| Tela `/login` mobile | Layout, CTA e legibilidade aprovados |
-| Sessão autenticada de preview | Administrador e 11 permissões carregados |
+- [x] `pnpm proto:generate`.
+- [x] `pnpm check`.
+- [x] `pnpm test` — 2 testes da matriz de permissões aprovados.
+- [x] `pnpm build` — bundle estático gerado em `dist/`.
+- [x] Compose revisado para Redis, API, Envoy e frontend.
 
-## Modelo de autorização
+## Pendências de ambiente
 
-O login usa o fluxo Manus OAuth já existente no WebDev. Após o callback, o backend cria a sessão, sincroniza o usuário e o procedimento protegido `auth.access` traduz o papel persistido em permissões de navegação. A interface usa essas permissões somente para composição do layout; operações sensíveis continuam devendo ser autorizadas pela API/backend.
+- [ ] Preencher `VITE_OIDC_ISSUER` e `VITE_OIDC_CLIENT_ID` com os dados do provedor institucional.
+- [ ] Cadastrar `http://localhost:3000/callback` e `http://localhost:3000/login` no provedor OIDC.
+- [ ] Confirmar que a API aceita CORS/origem `http://localhost:3000` e tokens com a audiência configurada.
+- [ ] Executar o Compose no Windows com Docker Desktop e validar o fluxo E2E contra o PostgreSQL externo.
 
-## Próximos passos
+## Observações
 
-- Sincronizar os papéis do banco do webapp com o serviço de identidade da API Lixo Certo quando o endpoint gRPC protegido estiver publicado.
-- Criar uma tela administrativa para atribuição e revogação de papéis, com auditoria.
-- Adicionar testes E2E do fluxo completo OAuth, logout e bloqueio de áreas sem permissão.
-- Fazer code splitting do bundle principal, que atualmente gera apenas um aviso acima de 500 kB após minificação.
+O bundle inicial ultrapassa 500 kB após minificação. Isso é um aviso de otimização, não uma falha funcional; pode ser tratado posteriormente com code splitting por área do painel. Nenhum segredo deve ser colocado em variáveis `VITE_*`, pois elas são incorporadas ao JavaScript público.

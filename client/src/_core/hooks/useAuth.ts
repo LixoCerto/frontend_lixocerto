@@ -1,7 +1,24 @@
-import { startLogin } from "@/const";
-import { trpc } from "@/lib/trpc";
-import { TRPCClientError } from "@trpc/client";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  carregarUsuario,
+  concluirLogin,
+  encerrarLogin,
+  getAccessToken,
+  getCurrentUser,
+  iniciarLogin,
+  oidcConfigured,
+  setCurrentUser,
+} from "@/lib/oidc";
+import { obterIdentidade } from "@/lib/api";
+import type { User } from "oidc-client-ts";
+
+export type IdentidadeAutenticada = {
+  idUsuario: string;
+  nomeUsuario: string;
+  emailUsuario: string;
+  papeisUsuario: string[];
+  permissoesUsuario: string[];
+};
 
 type UseAuthOptions = {
   redirectOnUnauthenticated?: boolean;
@@ -9,90 +26,74 @@ type UseAuthOptions = {
 };
 
 export function useAuth(options?: UseAuthOptions) {
-  // Login is started via startLogin() in the effect below, only when we actually
-  // navigate — never during render. startLogin() mints a one-time nonce + writes
-  // the state cookie, so calling it per render would overwrite the cookie and
-  // desync it from an in-flight login's `state`.
-  const { redirectOnUnauthenticated = false, redirectPath } = options ?? {};
-  const utils = trpc.useUtils();
+  const { redirectOnUnauthenticated = false, redirectPath = "/login" } = options ?? {};
+  const [user, setUser] = useState<User | null>(() => getCurrentUser());
+  const [identidade, setIdentidade] = useState<IdentidadeAutenticada | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<unknown>(null);
 
-  const meQuery = trpc.auth.me.useQuery(undefined, {
-    retry: false,
-    refetchOnWindowFocus: false,
-  });
-
-  const logoutMutation = trpc.auth.logout.useMutation({
-    onSuccess: () => {
-      utils.auth.me.setData(undefined, null);
-    },
-  });
-
-  const logout = useCallback(async () => {
+  const carregar = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
-      await logoutMutation.mutateAsync();
-    } catch (error: unknown) {
-      if (
-        error instanceof TRPCClientError &&
-        error.data?.code === "UNAUTHORIZED"
-      ) {
-        return;
+      const usuario = await carregarUsuario();
+      setUser(usuario);
+      if (usuario?.access_token) {
+        setIdentidade(await obterIdentidade(usuario.access_token));
+      } else {
+        setIdentidade(null);
       }
-      throw error;
+    } catch (cause) {
+      setUser(null);
+      setIdentidade(null);
+      setCurrentUser(null);
+      setError(cause);
     } finally {
-      // Clear the Preview auto-login token mirrored into sessionStorage, so
-      // header-based sessions (Safari ITP / WebView) are logged out too. The
-      // backend cookie is cleared by the logout mutation.
-      try {
-        sessionStorage.removeItem("manus-cookie");
-      } catch {}
-      utils.auth.me.setData(undefined, null);
-      await utils.auth.me.invalidate();
+      setLoading(false);
     }
-  }, [logoutMutation, utils]);
-
-  const state = useMemo(() => {
-    localStorage.setItem(
-      "manus-runtime-user-info",
-      JSON.stringify(meQuery.data)
-    );
-    return {
-      user: meQuery.data ?? null,
-      loading: meQuery.isLoading || logoutMutation.isPending,
-      error: meQuery.error ?? logoutMutation.error ?? null,
-      isAuthenticated: Boolean(meQuery.data),
-    };
-  }, [
-    meQuery.data,
-    meQuery.error,
-    meQuery.isLoading,
-    logoutMutation.error,
-    logoutMutation.isPending,
-  ]);
+  }, []);
 
   useEffect(() => {
-    if (!redirectOnUnauthenticated) return;
-    if (meQuery.isLoading || logoutMutation.isPending) return;
-    if (state.user) return;
-    if (typeof window === "undefined") return;
-    if (redirectPath && window.location.pathname === redirectPath) return;
+    void carregar();
+  }, [carregar]);
 
-    // Navigate at this moment only. startLogin() mints the nonce + cookie itself.
-    if (redirectPath) {
-      window.location.href = redirectPath;
-    } else {
-      startLogin();
-    }
-  }, [
-    redirectOnUnauthenticated,
-    redirectPath,
-    logoutMutation.isPending,
-    meQuery.isLoading,
-    state.user,
-  ]);
+  useEffect(() => {
+    if (!redirectOnUnauthenticated || loading || user) return;
+    if (window.location.pathname === redirectPath) return;
+    window.location.assign(redirectPath);
+  }, [loading, redirectOnUnauthenticated, redirectPath, user]);
 
-  return {
-    ...state,
-    refresh: () => meQuery.refetch(),
-    logout,
-  };
+  const login = useCallback(async () => {
+    await iniciarLogin();
+  }, []);
+
+  const logout = useCallback(async () => {
+    await encerrarLogin();
+  }, []);
+
+  return useMemo(
+    () => ({
+      user: user
+        ? {
+            openId: identidade?.idUsuario ?? user.profile.sub ?? "",
+            name: identidade?.nomeUsuario || user.profile.name || user.profile.preferred_username || "",
+            email: identidade?.emailUsuario || user.profile.email || null,
+          }
+        : null,
+      identidade,
+      loading,
+      error,
+      isAuthenticated: Boolean(user && getAccessToken()),
+      oidcConfigured,
+      login,
+      logout,
+      refresh: carregar,
+    }),
+    [carregar, error, identidade, loading, login, logout, user],
+  );
+}
+
+export async function processarCallbackOidc(): Promise<void> {
+  const user = await concluirLogin();
+  setCurrentUser(user);
 }
