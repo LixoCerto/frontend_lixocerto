@@ -24,10 +24,11 @@ import {
 } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import { lixoCertoClient } from "@/lib/connect";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
 import {
-  obterPermissoes,
   PERFIS_ACESSO,
-  temPermissao,
+  type CodigoPermissao,
   type PapelAcesso,
 } from "@shared/permissoes";
 
@@ -81,7 +82,17 @@ function CabecalhoSecao({ etiqueta, titulo, descricao, acao }: { etiqueta: strin
 }
 
 export default function Home() {
-  const [papel, setPapel] = useState<PapelAcesso>("usuario");
+  const { user, isAuthenticated, loading: authLoading, error: authError, logout } = useAuth({
+    redirectOnUnauthenticated: true,
+    redirectPath: "/login",
+  });
+  const accessQuery = trpc.auth.access.useQuery(undefined, {
+    enabled: isAuthenticated,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+  const papel = (accessQuery.data?.papel ?? "usuario") as PapelAcesso;
+  const permissoes = accessQuery.data?.permissoes ?? [];
   const [paginaAtiva, setPaginaAtiva] = useState("inicio");
   const [dashboard, setDashboard] = useState<DashboardState | null>(null);
   const [materials, setMaterials] = useState<MaterialsState>([]);
@@ -94,18 +105,20 @@ export default function Home() {
   const [quizFeedback, setQuizFeedback] = useState<string | null>(null);
   const [quizScore, setQuizScore] = useState<number | null>(null);
 
-  const perfil = PERFIS_ACESSO[papel];
-  const pode = (permissao: Parameters<typeof temPermissao>[1]) => temPermissao([papel], permissao);
-  const quantidadePermissoes = obterPermissoes([papel]).length;
-  const nomeCurto = perfil.nomeDemonstracao.startsWith("Dr.")
-    ? perfil.nomeDemonstracao.split(" ").slice(0, 2).join(" ")
-    : perfil.nomeDemonstracao.split(" ")[0];
+  const perfilBase = PERFIS_ACESSO[papel];
+  const nomeAutenticado = user?.name?.trim() || perfilBase.nomeDemonstracao;
+  const iniciais = nomeAutenticado.split(/\s+/).filter(Boolean).slice(0, 2).map(parte => parte[0]?.toUpperCase()).join("") || perfilBase.iniciais;
+  const perfil = { ...perfilBase, nomeDemonstracao: nomeAutenticado, iniciais };
+  const pode = (permissao: CodigoPermissao) => permissoes.includes(permissao);
+  const quantidadePermissoes = permissoes.length;
+  const nomeCurto = nomeAutenticado.split(/\s+/).slice(0, 2).join(" ");
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     async function carregarDados() {
       try {
         const [painel, materiais, pontos] = await Promise.all([
-          lixoCertoClient.getDashboard({ userId: "demonstracao" }),
+          lixoCertoClient.getDashboard({ userId: user?.openId ?? "" }),
           lixoCertoClient.listMaterials({ category: "", query: "" }),
           lixoCertoClient.listCollectionPoints({ city: "João Pessoa", materialCategory: "" }),
         ]);
@@ -119,9 +132,10 @@ export default function Home() {
       }
     }
     void carregarDados();
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     async function filtrarMateriais() {
       try {
         const resposta = await lixoCertoClient.listMaterials({
@@ -135,7 +149,7 @@ export default function Home() {
     }
     const temporizador = window.setTimeout(() => void filtrarMateriais(), 180);
     return () => window.clearTimeout(temporizador);
-  }, [query, selectedCategory]);
+  }, [isAuthenticated, query, selectedCategory]);
 
   const progresso = useMemo(() => Math.min(100, Math.round(((dashboard?.ecoPoints ?? 0) / 1500) * 100)), [dashboard]);
   const indicadores = useMemo<Indicador[]>(() => {
@@ -171,7 +185,7 @@ export default function Home() {
     setQuizAnswer(answerId);
     try {
       const resposta = await lixoCertoClient.submitQuiz({
-        userId: "demonstracao",
+        userId: user?.openId ?? "",
         questionId: "destino-eletronicos",
         answerId,
       });
@@ -199,7 +213,7 @@ export default function Home() {
             <div className="rounded-2xl border border-white/10 bg-black/10 p-4 backdrop-blur-sm">
               <div className="flex items-center justify-between text-xs font-bold text-[#d9e8dc]"><span>Permissões disponíveis</span><span className="text-[#d6efad]">{quantidadePermissoes} ativas</span></div>
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gradient-to-r from-[#5eb57a] to-[#d6efad]" style={{ width: `${papel === "administrador" ? 100 : papel === "revisor" ? 64 : papel === "pesquisador" ? 52 : 45}%` }} /></div>
-              <p className="mt-3 text-xs leading-5 text-[#adc8b4]">Layout demonstrativo: escolha outro perfil no menu para visualizar as áreas acessíveis a cada nível.</p>
+              <p className="mt-3 text-xs leading-5 text-[#adc8b4]">Suas áreas de trabalho foram carregadas com base nas permissões associadas à sua sessão autenticada.</p>
             </div>
           </div>
         </section>
@@ -300,7 +314,7 @@ export default function Home() {
   }
 
   function renderizarPerfil() {
-    return <div className="space-y-6"><CabecalhoSecao etiqueta="Conta e segurança" titulo="Perfil e sessões" descricao="Gerencie seus dados de exibição e acompanhe sessões ativas. Tokens nunca são exibidos nesta interface." /><div className="grid gap-5 lg:grid-cols-[.8fr_1.2fr]"><article className="rounded-[24px] bg-[#17362a] p-6 text-white"><span className="grid h-14 w-14 place-items-center rounded-2xl bg-[#d6efad] text-lg font-black text-[#17362a]">{perfil.iniciais}</span><h3 className="mt-5 text-xl font-black">{perfil.nomeDemonstracao}</h3><p className="mt-1 text-sm text-[#bcd2c3]">{perfil.rotulo} · conta demonstrativa</p><div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-3 text-xs leading-5 text-[#d2e5d7]">A API permite atualização restrita do nome; e-mail, papéis e permissões seguem o fluxo administrativo seguro.</div></article><article className="rounded-2xl border border-[#e1ebe2] bg-white p-6"><div className="flex items-center justify-between"><div><h3 className="font-black">Sessões ativas</h3><p className="mt-1 text-sm text-[#728a7c]">Dispositivos conectados à sua conta.</p></div><button type="button" className="rounded-lg border border-[#ecc6c6] px-3 py-2 text-xs font-black text-[#ae4545]">Revogar todas</button></div>{["Navegador atual · João Pessoa, PB", "Navegador anterior · João Pessoa, PB"].map((sessao, indice) => <div key={sessao} className="mt-5 flex items-center gap-3 rounded-xl bg-[#f5f8f5] p-4"><span className="grid h-9 w-9 place-items-center rounded-xl bg-white text-[#497b60]"><Clock3 className="h-4 w-4" /></span><span className="min-w-0 flex-1"><strong className="block text-sm">{sessao}</strong><span className="mt-1 block text-xs text-[#7f9688]">{indice === 0 ? "Ativa agora" : "Há 2 dias"}</span></span>{indice === 0 ? <span className="rounded-full bg-[#e2f3e2] px-2 py-1 text-[10px] font-black text-[#2d754d]">Atual</span> : <button type="button" className="text-xs font-black text-[#b64b4b]">Revogar</button>}</div>)}</article></div></div>;
+    return <div className="space-y-6"><CabecalhoSecao etiqueta="Conta e segurança" titulo="Perfil e sessões" descricao="Gerencie seus dados de exibição e acompanhe sessões ativas. Tokens nunca são exibidos nesta interface." /><div className="grid gap-5 lg:grid-cols-[.8fr_1.2fr]"><article className="rounded-[24px] bg-[#17362a] p-6 text-white"><span className="grid h-14 w-14 place-items-center rounded-2xl bg-[#d6efad] text-lg font-black text-[#17362a]">{perfil.iniciais}</span><h3 className="mt-5 text-xl font-black">{perfil.nomeDemonstracao}</h3><p className="mt-1 text-sm text-[#bcd2c3]">{perfil.rotulo} · sessão autenticada</p><div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-3 text-xs leading-5 text-[#d2e5d7]">A API permite atualização restrita do nome; e-mail, papéis e permissões seguem o fluxo administrativo seguro.</div></article><article className="rounded-2xl border border-[#e1ebe2] bg-white p-6"><div className="flex items-center justify-between"><div><h3 className="font-black">Sessões ativas</h3><p className="mt-1 text-sm text-[#728a7c]">Dispositivos conectados à sua conta.</p></div><button type="button" className="rounded-lg border border-[#ecc6c6] px-3 py-2 text-xs font-black text-[#ae4545]">Revogar todas</button></div>{["Navegador atual · João Pessoa, PB", "Navegador anterior · João Pessoa, PB"].map((sessao, indice) => <div key={sessao} className="mt-5 flex items-center gap-3 rounded-xl bg-[#f5f8f5] p-4"><span className="grid h-9 w-9 place-items-center rounded-xl bg-white text-[#497b60]"><Clock3 className="h-4 w-4" /></span><span className="min-w-0 flex-1"><strong className="block text-sm">{sessao}</strong><span className="mt-1 block text-xs text-[#7f9688]">{indice === 0 ? "Ativa agora" : "Há 2 dias"}</span></span>{indice === 0 ? <span className="rounded-full bg-[#e2f3e2] px-2 py-1 text-[10px] font-black text-[#2d754d]">Atual</span> : <button type="button" className="text-xs font-black text-[#b64b4b]">Revogar</button>}</div>)}</article></div></div>;
   }
 
   function renderizarArea() {
@@ -315,8 +329,32 @@ export default function Home() {
     return renderizarInicio();
   }
 
+  if (authError || accessQuery.error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f6f7f4] px-5 text-center text-[#17362a]">
+        <div className="max-w-md rounded-[28px] border border-[#f2d0c8] bg-white p-8 shadow-[0_24px_50px_-28px_rgba(23,54,42,.25)]">
+          <ShieldCheck className="mx-auto h-10 w-10 text-[#b65b4c]" />
+          <h1 className="mt-5 text-xl font-black">Não foi possível carregar seu acesso</h1>
+          <p className="mt-3 text-sm leading-6 text-[#7c706c]">Sua sessão pode ter expirado ou o serviço de permissões está indisponível. Entre novamente para tentar.</p>
+          <button type="button" onClick={() => void logout()} className="mt-6 rounded-xl bg-[#17362a] px-5 py-3 text-sm font-black text-white">Voltar para o login</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (authLoading || accessQuery.isLoading || !isAuthenticated || !user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f6f7f4]">
+        <div className="text-center">
+          <div className="mx-auto h-9 w-9 animate-spin rounded-full border-4 border-[#d6efad] border-t-[#1d7953]" />
+          <p className="mt-4 text-sm font-bold text-[#6c8879]">Carregando seu espaço seguro...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <AppShell papel={papel} paginaAtiva={paginaAtiva} onMudarPapel={setPapel} onMudarPagina={setPaginaAtiva}>
+    <AppShell papel={papel} permissoes={permissoes} nome={perfil.nomeDemonstracao} email={user.email} iniciais={perfil.iniciais} paginaAtiva={paginaAtiva} onMudarPagina={setPaginaAtiva} onLogout={logout}>
       {erroDados ? <div className="mb-5 rounded-2xl border border-[#f2d0c8] bg-[#fff4f0] px-4 py-3 text-sm font-semibold text-[#a85040]">Não foi possível carregar todos os dados da API agora. O layout continua disponível, mas alguns indicadores podem estar incompletos.</div> : null}
       {renderizarArea()}
     </AppShell>

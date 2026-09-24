@@ -4,11 +4,9 @@ import {
   Bell,
   BookOpen,
   ChartNoAxesCombined,
-  ChevronDown,
   CircleHelp,
   ClipboardCheck,
   LayoutDashboard,
-  Leaf,
   LogOut,
   MapPinned,
   Menu,
@@ -19,9 +17,9 @@ import {
   X,
 } from "lucide-react";
 import {
-  obterNavegacaoPermitida,
-  obterPermissoes,
+  ITENS_NAVEGACAO,
   PERFIS_ACESSO,
+  type CodigoPermissao,
   type PapelAcesso,
 } from "@shared/permissoes";
 
@@ -39,23 +37,30 @@ const icones: Record<string, LucideIcon> = {
 
 interface AppShellProps {
   papel: PapelAcesso;
+  permissoes: readonly CodigoPermissao[];
+  nome: string;
+  email?: string | null;
+  iniciais: string;
   paginaAtiva: string;
-  onMudarPapel: (papel: PapelAcesso) => void;
   onMudarPagina: (pagina: string) => void;
+  onLogout: () => Promise<void>;
   children: ReactNode;
 }
 
 export default function AppShell({
   papel,
+  permissoes,
+  nome,
+  email,
+  iniciais,
   paginaAtiva,
-  onMudarPapel,
   onMudarPagina,
+  onLogout,
   children,
 }: AppShellProps) {
   const [aberto, setAberto] = useState(false);
-  const perfil = PERFIS_ACESSO[papel];
-  const navegacao = obterNavegacaoPermitida([papel]);
-  const permissoes = obterPermissoes([papel]);
+  const perfil = PERFIS_ACESSO[papel] ?? PERFIS_ACESSO.usuario;
+  const navegacao = ITENS_NAVEGACAO.filter(item => !item.permissao || permissoes.includes(item.permissao));
   const itemAtivo = navegacao.find(item => item.id === paginaAtiva) ?? navegacao[0];
 
   function selecionarPagina(id: string) {
@@ -91,25 +96,14 @@ export default function AppShell({
         </div>
 
         <div className="mx-4 mb-5 rounded-2xl border border-[#dbe8df] bg-[#f5faf4] p-3">
-          <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#6d8a7b]">Modo de demonstração</p>
-          <label className="mt-2 flex items-center justify-between gap-2 text-sm font-black text-[#244637]" htmlFor="perfil-acesso">
-            Acesso atual
-            <ChevronDown className="h-4 w-4 text-[#5d7c6b]" />
-          </label>
-          <select
-            id="perfil-acesso"
-            className="mt-1 w-full appearance-none bg-transparent text-sm font-semibold text-[#39765b] outline-none"
-            value={papel}
-            onChange={event => {
-              const novoPapel = event.target.value as PapelAcesso;
-              onMudarPapel(novoPapel);
-              onMudarPagina("inicio");
-            }}
-          >
-            {(Object.keys(PERFIS_ACESSO) as PapelAcesso[]).map(opcao => (
-              <option key={opcao} value={opcao}>{PERFIS_ACESSO[opcao].rotulo}</option>
-            ))}
-          </select>
+          <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#6d8a7b]">Acesso autenticado</p>
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <strong className="block truncate text-sm font-black text-[#244637]">{perfil.rotulo}</strong>
+              <span className="mt-1 block truncate text-xs font-semibold text-[#5c816d]">{permissoes.length} permissões ativas</span>
+            </div>
+            <ShieldCheck className="h-5 w-5 shrink-0 text-[#39835b]" aria-label="Sessão protegida" />
+          </div>
         </div>
 
         <nav className="flex-1 px-3 pb-5" aria-label="Áreas disponíveis">
@@ -140,12 +134,14 @@ export default function AppShell({
 
         <div className="border-t border-[#e0ebe2] px-4 py-4">
           <div className="flex items-center gap-3 rounded-2xl bg-[#17362a] p-3 text-white">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#d6efad] text-sm font-black text-[#17362a]">{perfil.iniciais}</span>
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#d6efad] text-sm font-black text-[#17362a]">{iniciais}</span>
             <span className="min-w-0 flex-1">
-              <strong className="block truncate text-sm">{perfil.nomeDemonstracao}</strong>
-              <span className="block truncate text-[11px] text-[#b5d2bd]">{perfil.rotulo} · {permissoes.length} permissões</span>
+              <strong className="block truncate text-sm">{nome}</strong>
+              <span className="block truncate text-[11px] text-[#b5d2bd]">{email || perfil.rotulo}</span>
             </span>
-            <LogOut className="h-4 w-4 text-[#b5d2bd]" aria-label="Encerrar sessão futuramente" />
+            <button type="button" onClick={() => void onLogout()} className="rounded-lg p-1 text-[#b5d2bd] hover:bg-white/10" aria-label="Sair da conta">
+              <LogOut className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </aside>
@@ -167,7 +163,7 @@ export default function AppShell({
               <Bell className="h-4 w-4" />
               <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-[#e6aa39]" />
             </button>
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#17362a] text-xs font-black text-white">{perfil.iniciais}</span>
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#17362a] text-xs font-black text-white">{iniciais}</span>
           </div>
         </header>
         <main className="px-4 py-6 sm:px-7 lg:px-10 lg:py-8">{children}</main>
