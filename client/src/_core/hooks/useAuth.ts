@@ -5,7 +5,12 @@ import {
   encerrarLogin,
   getAccessToken,
   getCurrentUser,
+  iniciarAtualizacaoSenha,
+  iniciarCadastro,
   iniciarLogin,
+  iniciarLoginGoogle,
+  iniciarRecuperacaoSenha,
+  loginGoogleDisponivel,
   oidcConfigured,
   setCurrentUser,
 } from "@/lib/oidc";
@@ -67,6 +72,22 @@ export function useAuth(options?: UseAuthOptions) {
     await iniciarLogin();
   }, []);
 
+  const cadastro = useCallback(async () => {
+    await iniciarCadastro();
+  }, []);
+
+  const recuperarSenha = useCallback(async () => {
+    await iniciarRecuperacaoSenha();
+  }, []);
+
+  const alterarSenha = useCallback(async () => {
+    await iniciarAtualizacaoSenha();
+  }, []);
+
+  const loginGoogle = useCallback(async () => {
+    await iniciarLoginGoogle();
+  }, []);
+
   const logout = useCallback(async () => {
     await encerrarLogin();
   }, []);
@@ -85,11 +106,16 @@ export function useAuth(options?: UseAuthOptions) {
       error,
       isAuthenticated: Boolean(user && getAccessToken()),
       oidcConfigured,
+      loginGoogleDisponivel,
       login,
+      cadastro,
+      recuperarSenha,
+      alterarSenha,
+      loginGoogle,
       logout,
       refresh: carregar,
     }),
-    [carregar, error, identidade, loading, login, logout, user],
+    [alterarSenha, cadastro, carregar, error, identidade, loading, login, loginGoogle, logout, recuperarSenha, user],
   );
 }
 

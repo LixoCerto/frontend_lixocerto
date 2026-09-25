@@ -12,6 +12,7 @@ import {
   Clock3,
   FileCheck2,
   Flame,
+  KeyRound,
   Leaf,
   MapPinned,
   Recycle,
@@ -23,6 +24,7 @@ import {
   Users,
 } from "lucide-react";
 import AppShell from "@/components/AppShell";
+import { iniciarAtualizacaoSenha } from "@/lib/oidc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import {
   enviarRespostaQuestionario,
@@ -354,7 +356,51 @@ export default function Home() {
   }
 
   function renderizarPerfil() {
-    return <div className="space-y-6"><CabecalhoSecao etiqueta="Conta e segurança" titulo="Perfil e sessões" descricao="Gerencie seus dados de exibição e acompanhe sessões ativas. Tokens nunca são exibidos nesta interface." /><div className="grid gap-5 lg:grid-cols-[.8fr_1.2fr]"><article className="rounded-[24px] bg-[#17362a] p-6 text-white"><span className="grid h-14 w-14 place-items-center rounded-2xl bg-[#d6efad] text-lg font-black text-[#17362a]">{perfil.iniciais}</span><h3 className="mt-5 text-xl font-black">{perfil.nomeDemonstracao}</h3><p className="mt-1 text-sm text-[#bcd2c3]">{perfil.rotulo} · sessão autenticada</p><div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-3 text-xs leading-5 text-[#d2e5d7]">A API permite atualização restrita do nome; e-mail, papéis e permissões seguem o fluxo administrativo seguro.</div></article><article className="rounded-2xl border border-[#e1ebe2] bg-white p-6"><div className="flex items-center justify-between"><div><h3 className="font-black">Sessões ativas</h3><p className="mt-1 text-sm text-[#728a7c]">Dispositivos conectados à sua conta.</p></div><button type="button" className="rounded-lg border border-[#ecc6c6] px-3 py-2 text-xs font-black text-[#ae4545]">Revogar todas</button></div>{["Navegador atual · João Pessoa, PB", "Navegador anterior · João Pessoa, PB"].map((sessao, indice) => <div key={sessao} className="mt-5 flex items-center gap-3 rounded-xl bg-[#f5f8f5] p-4"><span className="grid h-9 w-9 place-items-center rounded-xl bg-white text-[#497b60]"><Clock3 className="h-4 w-4" /></span><span className="min-w-0 flex-1"><strong className="block text-sm">{sessao}</strong><span className="mt-1 block text-xs text-[#7f9688]">{indice === 0 ? "Ativa agora" : "Há 2 dias"}</span></span>{indice === 0 ? <span className="rounded-full bg-[#e2f3e2] px-2 py-1 text-[10px] font-black text-[#2d754d]">Atual</span> : <button type="button" className="text-xs font-black text-[#b64b4b]">Revogar</button>}</div>)}</article></div></div>;
+    return (
+      <div className="space-y-6">
+        <CabecalhoSecao
+          etiqueta="Conta e segurança"
+          titulo="Perfil e sessões"
+          descricao="Gerencie seus dados de exibição, senha e sessões sem expor tokens ou credenciais no aplicativo."
+        />
+        <div className="grid gap-5 lg:grid-cols-[.8fr_1.2fr]">
+          <article className="rounded-[24px] bg-[#17362a] p-6 text-white">
+            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-[#d6efad] text-lg font-black text-[#17362a]">{perfil.iniciais}</span>
+            <h3 className="mt-5 text-xl font-black">{perfil.nomeDemonstracao}</h3>
+            <p className="mt-1 text-sm text-[#bcd2c3]">{perfil.rotulo} · sessão autenticada</p>
+            <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-3 text-xs leading-5 text-[#d2e5d7]">
+              E-mail, senha e confirmação de identidade são tratados pelo Keycloak. A plataforma não acessa sua senha.
+            </div>
+            <button
+              type="button"
+              onClick={() => void iniciarAtualizacaoSenha()}
+              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#d6efad] px-4 py-2.5 text-sm font-black text-[#17362a]"
+            >
+              <KeyRound className="h-4 w-4" /> Alterar senha com segurança
+            </button>
+          </article>
+          <article className="rounded-2xl border border-[#e1ebe2] bg-white p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-black">Sessões ativas</h3>
+                <p className="mt-1 text-sm text-[#728a7c]">Dispositivos conectados à sua conta.</p>
+              </div>
+              <button type="button" className="rounded-lg border border-[#ecc6c6] px-3 py-2 text-xs font-black text-[#ae4545]">Revogar todas</button>
+            </div>
+            {["Navegador atual · João Pessoa, PB", "Navegador anterior · João Pessoa, PB"].map((sessao, indice) => (
+              <div key={sessao} className="mt-5 flex items-center gap-3 rounded-xl bg-[#f5f8f5] p-4">
+                <span className="grid h-9 w-9 place-items-center rounded-xl bg-white text-[#497b60]"><Clock3 className="h-4 w-4" /></span>
+                <span className="min-w-0 flex-1">
+                  <strong className="block text-sm">{sessao}</strong>
+                  <span className="mt-1 block text-xs text-[#7f9688]">{indice === 0 ? "Ativa agora" : "Há 2 dias"}</span>
+                </span>
+                {indice === 0 ? <span className="rounded-full bg-[#e2f3e2] px-2 py-1 text-[10px] font-black text-[#2d754d]">Atual</span> : <button type="button" className="text-xs font-black text-[#b64b4b]">Revogar</button>}
+              </div>
+            ))}
+          </article>
+        </div>
+      </div>
+    );
   }
 
   function renderizarArea() {
