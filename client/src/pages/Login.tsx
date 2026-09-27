@@ -49,8 +49,10 @@ export default function Login() {
     if (modo === "recuperar") {
       setEnviando(true);
       try {
-        const resposta = await solicitarRecuperacaoSenha(email.trim());
+        const emailNormalizado = email.trim().toLowerCase();
+        const resposta = await solicitarRecuperacaoSenha(emailNormalizado);
         setAviso(resposta.mensagemResultado);
+        setEmail(emailNormalizado);
       } catch (cause) {
         setErro(mensagemErro(cause));
       } finally {
@@ -74,8 +76,20 @@ export default function Login() {
 
     setEnviando(true);
     try {
-      if (modo === "cadastro") await cadastro(nome.trim(), email.trim(), senha);
-      else await login(email.trim(), senha);
+      const emailNormalizado = email.trim().toLowerCase();
+      if (modo === "cadastro") {
+        const resposta = await cadastro(nome.trim(), emailNormalizado, senha);
+        if (resposta.requerVerificacaoEmail) {
+          setLocation(`/confirmar-email?email=${encodeURIComponent(emailNormalizado)}`);
+          return;
+        }
+      } else {
+        const resposta = await login(emailNormalizado, senha);
+        if (resposta.requerVerificacaoEmail) {
+          setLocation(`/confirmar-email?email=${encodeURIComponent(emailNormalizado)}`);
+          return;
+        }
+      }
       setLocation("/");
     } catch (cause) {
       setErro(mensagemErro(cause));
@@ -93,7 +107,7 @@ export default function Login() {
   const rotuloBotao = enviando
     ? "Aguarde..."
     : recuperacaoAtiva
-      ? "Enviar link de recuperação"
+      ? "Enviar código de recuperação"
       : cadastroAtivo
         ? "Criar conta e entrar"
         : "Entrar com segurança";
@@ -112,10 +126,10 @@ export default function Login() {
         </section>
 
         <section className="flex items-center justify-center py-4"><div className="w-full max-w-[520px]"><div className="rounded-[34px] border border-[#dfe9e1] bg-white/90 p-5 shadow-[0_32px_72px_-46px_rgba(23,54,42,.28)] backdrop-blur-xl sm:p-7">
-          <div className="mb-6"><p className="text-[11px] font-black uppercase tracking-[0.17em] text-[#3e8257]">Portal de acesso</p><h2 className="mt-2 text-2xl font-black tracking-[-0.035em]">{cadastroAtivo ? "Crie sua conta" : recuperacaoAtiva ? "Recuperar senha" : "Entre na plataforma"}</h2><p className="mt-2 text-sm leading-6 text-[#6b8576]">{cadastroAtivo ? "Comece a acompanhar seu impacto ambiental. Enviaremos um link para confirmar seu e-mail." : recuperacaoAtiva ? "Informe seu e-mail e enviaremos um link de uso único para criar uma nova senha." : "Use o e-mail e a senha da sua conta local."}</p></div>
+          <div className="mb-6"><p className="text-[11px] font-black uppercase tracking-[0.17em] text-[#3e8257]">Portal de acesso</p><h2 className="mt-2 text-2xl font-black tracking-[-0.035em]">{cadastroAtivo ? "Crie sua conta" : recuperacaoAtiva ? "Recuperar senha" : "Entre na plataforma"}</h2><p className="mt-2 text-sm leading-6 text-[#6b8576]">{cadastroAtivo ? "Comece a acompanhar seu impacto ambiental. Enviaremos um código para confirmar seu e-mail." : recuperacaoAtiva ? "Informe seu e-mail e enviaremos um código de uso único para criar uma nova senha." : "Use o e-mail e a senha da sua conta local."}</p></div>
           <div className="mb-6 grid grid-cols-3 gap-2 rounded-2xl bg-[#f1f6ef] p-1"><button type="button" onClick={() => trocarModo("entrar")} className={`rounded-xl px-2 py-2.5 text-xs font-black ${modo === "entrar" ? "bg-white text-[#1d7953] shadow-sm" : "text-[#789083]"}`}>Entrar</button><button type="button" onClick={() => trocarModo("cadastro")} className={`rounded-xl px-2 py-2.5 text-xs font-black ${cadastroAtivo ? "bg-white text-[#1d7953] shadow-sm" : "text-[#789083]"}`}><span className="inline-flex items-center gap-1"><UserPlus className="h-3.5 w-3.5" /> Cadastro</span></button><button type="button" onClick={() => trocarModo("recuperar")} className={`rounded-xl px-2 py-2.5 text-xs font-black ${recuperacaoAtiva ? "bg-white text-[#1d7953] shadow-sm" : "text-[#789083]"}`}>Esqueci</button></div>
           <form className="space-y-4" onSubmit={(event) => void submeter(event)}>{cadastroAtivo ? <label className="block"><span className="mb-2 block text-xs font-black uppercase tracking-[0.12em] text-[#5f7b6c]">Nome completo</span><input value={nome} onChange={event => setNome(event.target.value)} autoComplete="name" className="w-full rounded-xl border border-[#d9e6db] bg-[#fbfdfb] px-4 py-3 text-sm font-semibold outline-none focus:border-[#4e9b68] focus:ring-4 focus:ring-[#dcefdc]/60" placeholder="Seu nome" /></label> : null}<label className="block"><span className="mb-2 block text-xs font-black uppercase tracking-[0.12em] text-[#5f7b6c]">E-mail</span><input value={email} onChange={event => setEmail(event.target.value)} type="email" autoComplete="email" className="w-full rounded-xl border border-[#d9e6db] bg-[#fbfdfb] px-4 py-3 text-sm font-semibold outline-none focus:border-[#4e9b68] focus:ring-4 focus:ring-[#dcefdc]/60" placeholder="voce@exemplo.com" /></label>{recuperacaoAtiva ? null : <label className="block"><span className="mb-2 block text-xs font-black uppercase tracking-[0.12em] text-[#5f7b6c]">Senha</span><input value={senha} onChange={event => setSenha(event.target.value)} type="password" autoComplete={cadastroAtivo ? "new-password" : "current-password"} className="w-full rounded-xl border border-[#d9e6db] bg-[#fbfdfb] px-4 py-3 text-sm font-semibold outline-none focus:border-[#4e9b68] focus:ring-4 focus:ring-[#dcefdc]/60" placeholder="Mínimo de 12 caracteres" /></label>}{cadastroAtivo ? <label className="block"><span className="mb-2 block text-xs font-black uppercase tracking-[0.12em] text-[#5f7b6c]">Confirmar senha</span><input value={confirmacao} onChange={event => setConfirmacao(event.target.value)} type="password" autoComplete="new-password" className="w-full rounded-xl border border-[#d9e6db] bg-[#fbfdfb] px-4 py-3 text-sm font-semibold outline-none focus:border-[#4e9b68] focus:ring-4 focus:ring-[#dcefdc]/60" placeholder="Repita sua senha" /></label> : null}<button type="submit" disabled={enviando} className="group flex w-full items-center justify-center gap-2 rounded-xl bg-[#17362a] px-5 py-3.5 text-sm font-black text-white shadow-[0_16px_30px_-18px_rgba(23,54,42,.9)] transition hover:bg-[#24533f] disabled:cursor-wait disabled:opacity-60">{rotuloBotao}<ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" /></button></form>
-          {erro ? <div role="alert" className="mt-5 rounded-2xl border border-[#f0c1bd] bg-[#fff4f0] p-4 text-sm font-bold leading-6 text-[#a8493e]">{erro}</div> : null}{aviso ? <div role="status" className="mt-5 rounded-2xl border border-[#cfe3d1] bg-[#f2faf0] p-4 text-sm font-semibold leading-6 text-[#356b4a]"><MailCheck className="mb-2 h-5 w-5 text-[#3c8a5b]" />{aviso}</div> : null}
+          {erro ? <div role="alert" className="mt-5 rounded-2xl border border-[#f0c1bd] bg-[#fff4f0] p-4 text-sm font-bold leading-6 text-[#a8493e]">{erro}</div> : null}{aviso ? <div role="status" className="mt-5 rounded-2xl border border-[#cfe3d1] bg-[#f2faf0] p-4 text-sm font-semibold leading-6 text-[#356b4a]"><MailCheck className="mb-2 h-5 w-5 text-[#3c8a5b]" />{aviso}{recuperacaoAtiva ? <button type="button" onClick={() => setLocation(`/redefinir-senha?email=${encodeURIComponent(email.trim().toLowerCase())}`)} className="mt-3 block font-black text-[#1d7953] underline">Já recebi o código</button> : null}</div> : null}
           <p className="mt-6 flex items-start gap-2 text-xs leading-5 text-[#7b9485]"><LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-[#3c8a5b]" /> A sessão fica no armazenamento temporário do navegador e é revogada pelo logout. Links de e-mail expiram e só podem ser usados uma vez.</p>
         </div><p className="mt-7 text-center text-xs font-bold text-[#7b9485]">Projeto Lixo Certo · TCC II</p></div></section>
       </main>

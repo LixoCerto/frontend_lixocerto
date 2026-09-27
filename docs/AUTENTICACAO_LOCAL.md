@@ -4,7 +4,7 @@
 
 O frontend usa os RPCs próprios do serviço `ServicoAutenticacao` da API gRPC:
 
-- `CadastrarUsuario`: cria a conta e inicia a sessão;
+- `CadastrarUsuario`: cria a conta; o acesso só é liberado após a confirmação do e-mail;
 - `Entrar`: autentica e recebe access token e refresh token;
 - `RenovarToken`: renova a sessão antes da expiração do access token;
 - `Sair`: revoga o refresh token no backend;
@@ -20,7 +20,7 @@ As chamadas de negócio usam gRPC-Web pelo Envoy e recebem automaticamente `Auth
 
 1. O usuário acessa `/login`.
 2. O formulário valida e-mail, senha e, no cadastro, nome e confirmação.
-3. A API retorna a identidade, papéis, permissões e tokens.
+3. A API retorna a identidade, papéis e permissões; para uma conta nova, os tokens ficam vazios até a confirmação do e-mail.
 4. A sessão é mantida somente em `sessionStorage` durante a aba atual.
 5. O hook renova o token próximo da expiração e recarrega a identidade.
 6. O painel filtra a navegação, mas a autorização definitiva permanece na API.
@@ -39,9 +39,9 @@ dois fatores.
 
 | Rota | Função |
 |---|---|
-| `/login` (modo Esqueci) | Solicita o link de recuperação com resposta neutra |
-| `/confirmar-email?token=...` | Consome o token e confirma o endereço |
-| `/redefinir-senha?token=...` | Cria a nova senha e informa as sessões revogadas |
+| `/login` (modo Esqueci) | Solicita o código de recuperação com resposta neutra |
+| `/confirmar-email?email=...` | Recebe e consome o código de confirmação |
+| `/redefinir-senha?email=...` | Recebe o código, cria a nova senha e informa as sessões revogadas |
 
 O painel exibe um aviso quando `emailVerificadoUsuario` é falso, com ação de
 reenvio do link. O estado de verificação vem da API em cada renovação de sessão,
@@ -53,7 +53,7 @@ portanto a interface nunca presume que o e-mail já foi confirmado.
 - Vite fora do Docker: `VITE_API_BASE_URL=http://127.0.0.1:8080`.
 - Não existem mais variáveis `VITE_OIDC_*` para este fluxo.
 - Nenhum segredo é colocado em variáveis `VITE_*`.
-- `SolicitarVerificacaoEmail`: pede o envio do link de confirmação do e-mail;
-- `ConfirmarEmail`: consome o token do link e confirma o endereço;
-- `SolicitarRecuperacaoSenha`: pede o link de redefinição com resposta neutra;
-- `RedefinirSenha`: consome o token, troca a senha e revoga todas as sessões.
+- `SolicitarVerificacaoEmail`: pede o envio do código de confirmação do e-mail;
+- `ConfirmarEmail`: valida e consome o código junto com o e-mail;
+- `SolicitarRecuperacaoSenha`: pede o código de redefinição com resposta neutra;
+- `RedefinirSenha`: valida e consome o código, troca a senha e revoga todas as sessões.

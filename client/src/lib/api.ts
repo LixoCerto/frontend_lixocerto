@@ -87,16 +87,16 @@ export function solicitarVerificacaoEmail(emailUsuario: string) {
   return autenticacaoClient.solicitarVerificacaoEmail(create(SolicitarVerificacaoEmailRequisicaoSchema, { emailUsuario }));
 }
 
-export function confirmarEmail(tokenVerificacao: string) {
-  return autenticacaoClient.confirmarEmail(create(ConfirmarEmailRequisicaoSchema, { tokenVerificacao }));
+export function confirmarEmail(emailUsuario: string, codigoVerificacao: string) {
+  return autenticacaoClient.confirmarEmail(create(ConfirmarEmailRequisicaoSchema, { emailUsuario, codigoVerificacao }));
 }
 
 export function solicitarRecuperacaoSenha(emailUsuario: string) {
   return autenticacaoClient.solicitarRecuperacaoSenha(create(SolicitarRecuperacaoSenhaRequisicaoSchema, { emailUsuario }));
 }
 
-export function redefinirSenha(tokenRedefinicao: string, novaSenhaUsuario: string) {
-  return autenticacaoClient.redefinirSenha(create(RedefinirSenhaRequisicaoSchema, { tokenRedefinicao, novaSenhaUsuario }));
+export function redefinirSenha(emailUsuario: string, codigoRedefinicao: string, novaSenhaUsuario: string) {
+  return autenticacaoClient.redefinirSenha(create(RedefinirSenhaRequisicaoSchema, { emailUsuario, codigoRedefinicao, novaSenhaUsuario }));
 }
 
 export function listarSessoes() {

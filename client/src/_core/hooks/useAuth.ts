@@ -134,22 +134,26 @@ export function useAuth(options?: UseAuthOptions) {
 
   const executarLogin = useCallback(async (email: string, senha: string) => {
     const resposta = await entrar(email, senha);
+    if (resposta.requerVerificacaoEmail || !resposta.tokenAcesso || !resposta.tokenAtualizacao || !resposta.identidade) return resposta;
     aplicarSessao({
       tokenAcesso: resposta.tokenAcesso,
       tokenAtualizacao: resposta.tokenAtualizacao,
       expiraEmSegundos: resposta.expiraEmSegundos,
       identidade: resposta.identidade!,
     });
+    return resposta;
   }, [aplicarSessao]);
 
   const executarCadastro = useCallback(async (nome: string, email: string, senha: string) => {
     const resposta = await cadastrarUsuario(nome, email, senha);
+    if (resposta.requerVerificacaoEmail || !resposta.tokenAcesso || !resposta.tokenAtualizacao || !resposta.identidade) return resposta;
     aplicarSessao({
       tokenAcesso: resposta.tokenAcesso,
       tokenAtualizacao: resposta.tokenAtualizacao,
       expiraEmSegundos: resposta.expiraEmSegundos,
       identidade: resposta.identidade!,
     });
+    return resposta;
   }, [aplicarSessao]);
 
   const logout = useCallback(async () => {
@@ -164,9 +168,9 @@ export function useAuth(options?: UseAuthOptions) {
 
   const identidade = sessao?.identidade ?? null;
   const solicitarVerificacaoEmail = useCallback((email: string) => solicitarVerificacaoEmailApi(email), []);
-  const confirmarEmail = useCallback((token: string) => confirmarEmailApi(token), []);
+  const confirmarEmail = useCallback((email: string, codigo: string) => confirmarEmailApi(email, codigo), []);
   const solicitarRecuperacaoSenha = useCallback((email: string) => solicitarRecuperacaoSenhaApi(email), []);
-  const redefinirSenha = useCallback((token: string, novaSenha: string) => redefinirSenhaApi(token, novaSenha), []);
+  const redefinirSenha = useCallback((email: string, codigo: string, novaSenha: string) => redefinirSenhaApi(email, codigo, novaSenha), []);
 
   const user = identidade
     ? {

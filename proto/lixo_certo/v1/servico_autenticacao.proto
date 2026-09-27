@@ -34,6 +34,7 @@ message CadastrarUsuarioResposta {
   string token_atualizacao = 2;
   int32 expira_em_segundos = 3;
   IdentidadeAutenticada identidade = 4;
+  bool requer_verificacao_email = 5;
 }
 
 message EntrarResposta {
@@ -41,6 +42,7 @@ message EntrarResposta {
   string token_atualizacao = 2;
   int32 expira_em_segundos = 3;
   IdentidadeAutenticada identidade = 4;
+  bool requer_verificacao_email = 5;
 }
 
 message RenovarTokenResposta {
@@ -73,10 +75,12 @@ message SolicitarVerificacaoEmailResposta {
   bool solicitacao_aceita = 1;
   int32 expira_em_segundos = 2;
   string mensagem_resultado = 3;
+  int32 comprimento_codigo = 4;
 }
 
 message ConfirmarEmailRequisicao {
-  string token_verificacao = 1;
+  string email_usuario = 2;
+  string codigo_verificacao = 3;
 }
 
 message ConfirmarEmailResposta {
@@ -93,11 +97,13 @@ message SolicitarRecuperacaoSenhaResposta {
   bool solicitacao_aceita = 1;
   int32 expira_em_segundos = 2;
   string mensagem_resultado = 3;
+  int32 comprimento_codigo = 4;
 }
 
 message RedefinirSenhaRequisicao {
-  string token_redefinicao = 1;
-  string nova_senha_usuario = 2;
+  string email_usuario = 3;
+  string codigo_redefinicao = 4;
+  string nova_senha_usuario = 5;
 }
 
 message RedefinirSenhaResposta {
