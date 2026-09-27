@@ -26,11 +26,12 @@
 - [x] Registrar que a API deve aceitar a origem `http://localhost:3000` e tokens JWT próprios.
 - [x] Documentar o comando de Compose para a validação E2E no Windows com PostgreSQL externo.
 
-## Próximos contratos de identidade
+## Extensões fora do contrato atual
 
-- [ ] Adicionar RPC de recuperação e troca de senha com token de uso único.
-- [ ] Adicionar RPC de verificação de e-mail e integração SMTP transacional.
-- [ ] Adicionar associação de conta para login social, se o escopo acadêmico exigir.
+Recuperação/troca de senha, verificação de e-mail e login social não foram
+simulados no frontend: exigem RPCs específicos na API, persistência de tokens
+de uso único, SMTP transacional ou credenciais OAuth externas. Permanecem como
+evoluções futuras, sem telas que aparentem funcionar sem suporte real.
 
 ## Observações
 
