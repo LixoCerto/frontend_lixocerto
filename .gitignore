@@ -3,9 +3,6 @@
 .pnpm-store/
 
 # Configuração local e credenciais
-.env
-.env.*
-!.env.exemplo
 
 # Build outputs
 dist/
