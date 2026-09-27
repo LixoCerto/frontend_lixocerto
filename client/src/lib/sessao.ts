@@ -4,6 +4,7 @@ export type IdentidadeLocal = {
   emailUsuario: string;
   papeisUsuario: string[];
   permissoesUsuario: string[];
+  emailVerificadoUsuario: boolean;
 };
 
 export type SessaoLocal = {

@@ -4,11 +4,15 @@ import { createClient } from "@connectrpc/connect";
 import { createGrpcWebTransport } from "@connectrpc/connect-web";
 import {
   CadastrarUsuarioRequisicaoSchema,
+  ConfirmarEmailRequisicaoSchema,
   EntrarRequisicaoSchema,
   ObterIdentidadeAtualRequisicaoSchema,
+  RedefinirSenhaRequisicaoSchema,
   RenovarTokenRequisicaoSchema,
   SairRequisicaoSchema,
   ServicoAutenticacao,
+  SolicitarRecuperacaoSenhaRequisicaoSchema,
+  SolicitarVerificacaoEmailRequisicaoSchema,
 } from "@shared/gen/lixo_certo/v1/servico_autenticacao_pb";
 import {
   ListarSessoesRequisicaoSchema,
@@ -77,6 +81,22 @@ export function sair(tokenAtualizacao: string) {
 
 export function obterIdentidadeAtual() {
   return autenticacaoClient.obterIdentidadeAtual(create(ObterIdentidadeAtualRequisicaoSchema, {}));
+}
+
+export function solicitarVerificacaoEmail(emailUsuario: string) {
+  return autenticacaoClient.solicitarVerificacaoEmail(create(SolicitarVerificacaoEmailRequisicaoSchema, { emailUsuario }));
+}
+
+export function confirmarEmail(tokenVerificacao: string) {
+  return autenticacaoClient.confirmarEmail(create(ConfirmarEmailRequisicaoSchema, { tokenVerificacao }));
+}
+
+export function solicitarRecuperacaoSenha(emailUsuario: string) {
+  return autenticacaoClient.solicitarRecuperacaoSenha(create(SolicitarRecuperacaoSenhaRequisicaoSchema, { emailUsuario }));
+}
+
+export function redefinirSenha(tokenRedefinicao: string, novaSenhaUsuario: string) {
+  return autenticacaoClient.redefinirSenha(create(RedefinirSenhaRequisicaoSchema, { tokenRedefinicao, novaSenhaUsuario }));
 }
 
 export function listarSessoes() {

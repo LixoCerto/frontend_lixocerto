@@ -29,7 +29,23 @@ As chamadas de negócio usam gRPC-Web pelo Envoy e recebem automaticamente `Auth
 
 ## Limites honestos do contrato atual
 
-A API própria atual ainda não expõe RPCs para recuperação de senha, troca de senha, verificação de e-mail ou login social. A tela sinaliza esse limite em vez de simular uma operação que não existe. Esses recursos exigem novos contratos, persistência de tokens de uso único e um serviço de envio de e-mail.
+Os fluxos de confirmação de e-mail e recuperação de senha estão implementados
+ponta a ponta: contrato gRPC, tokens de uso único persistidos como hash, envio
+transacional pelo Resend e telas dedicadas. Ainda não fazem parte do contrato:
+troca de senha autenticada (com senha atual), login social e autenticação em
+dois fatores.
+
+## Telas dos fluxos de e-mail
+
+| Rota | Função |
+|---|---|
+| `/login` (modo Esqueci) | Solicita o link de recuperação com resposta neutra |
+| `/confirmar-email?token=...` | Consome o token e confirma o endereço |
+| `/redefinir-senha?token=...` | Cria a nova senha e informa as sessões revogadas |
+
+O painel exibe um aviso quando `emailVerificadoUsuario` é falso, com ação de
+reenvio do link. O estado de verificação vem da API em cada renovação de sessão,
+portanto a interface nunca presume que o e-mail já foi confirmado.
 
 ## Configuração
 
@@ -37,3 +53,7 @@ A API própria atual ainda não expõe RPCs para recuperação de senha, troca d
 - Vite fora do Docker: `VITE_API_BASE_URL=http://127.0.0.1:8080`.
 - Não existem mais variáveis `VITE_OIDC_*` para este fluxo.
 - Nenhum segredo é colocado em variáveis `VITE_*`.
+- `SolicitarVerificacaoEmail`: pede o envio do link de confirmação do e-mail;
+- `ConfirmarEmail`: consome o token do link e confirma o endereço;
+- `SolicitarRecuperacaoSenha`: pede o link de redefinição com resposta neutra;
+- `RedefinirSenha`: consome o token, troca a senha e revoga todas as sessões.

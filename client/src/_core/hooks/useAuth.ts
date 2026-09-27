@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   cadastrarUsuario,
+  confirmarEmail as confirmarEmailApi,
   entrar,
   obterIdentidadeAtual,
+  redefinirSenha as redefinirSenhaApi,
   renovarToken,
   sair,
+  solicitarRecuperacaoSenha as solicitarRecuperacaoSenhaApi,
+  solicitarVerificacaoEmail as solicitarVerificacaoEmailApi,
 } from "@/lib/api";
 import {
   carregarSessao,
@@ -23,6 +27,7 @@ export type IdentidadeAutenticada = {
   emailUsuario: string;
   papeisUsuario: string[];
   permissoesUsuario: string[];
+  emailVerificadoUsuario: boolean;
 };
 
 type UseAuthOptions = {
@@ -36,6 +41,7 @@ function normalizarIdentidade(identidade: {
   emailUsuario: string;
   papeisUsuario: readonly string[];
   permissoesUsuario: readonly string[];
+  emailVerificadoUsuario: boolean;
 }): IdentidadeAutenticada {
   return {
     idUsuario: identidade.idUsuario,
@@ -43,6 +49,7 @@ function normalizarIdentidade(identidade: {
     emailUsuario: identidade.emailUsuario,
     papeisUsuario: [...identidade.papeisUsuario],
     permissoesUsuario: [...identidade.permissoesUsuario],
+    emailVerificadoUsuario: identidade.emailVerificadoUsuario,
   };
 }
 
@@ -156,6 +163,11 @@ export function useAuth(options?: UseAuthOptions) {
   }, [aplicarSessao]);
 
   const identidade = sessao?.identidade ?? null;
+  const solicitarVerificacaoEmail = useCallback((email: string) => solicitarVerificacaoEmailApi(email), []);
+  const confirmarEmail = useCallback((token: string) => confirmarEmailApi(token), []);
+  const solicitarRecuperacaoSenha = useCallback((email: string) => solicitarRecuperacaoSenhaApi(email), []);
+  const redefinirSenha = useCallback((token: string, novaSenha: string) => redefinirSenhaApi(token, novaSenha), []);
+
   const user = identidade
     ? {
         openId: identidade.idUsuario,
@@ -175,6 +187,10 @@ export function useAuth(options?: UseAuthOptions) {
       login: executarLogin,
       cadastro: executarCadastro,
       logout,
+      solicitarVerificacaoEmail,
+      confirmarEmail,
+      solicitarRecuperacaoSenha,
+      redefinirSenha,
       refresh: carregar,
       renovar,
       expiraEm: expiracao,

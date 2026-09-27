@@ -14,6 +14,7 @@ import {
   Flame,
   KeyRound,
   Leaf,
+  MailWarning,
   MapPinned,
   Recycle,
   Search,
@@ -119,6 +120,24 @@ export default function Home() {
     redirectOnUnauthenticated: true,
     redirectPath: "/login",
   });
+  const { solicitarVerificacaoEmail } = useAuth();
+  const [avisoVerificacao, setAvisoVerificacao] = useState<string | null>(null);
+  const [reivindicandoVerificacao, setReivindicandoVerificacao] = useState(false);
+  const emailVerificado = identidade?.emailVerificadoUsuario ?? true;
+
+  async function reenviarVerificacao() {
+    if (!identidade?.emailUsuario) return;
+    setReivindicandoVerificacao(true);
+    setAvisoVerificacao(null);
+    try {
+      const resposta = await solicitarVerificacaoEmail(identidade.emailUsuario);
+      setAvisoVerificacao(resposta.mensagemResultado);
+    } catch {
+      setAvisoVerificacao("Não foi possível solicitar o envio agora. Tente novamente em instantes.");
+    } finally {
+      setReivindicandoVerificacao(false);
+    }
+  }
   const papel = (identidade?.papeisUsuario.find(item => ["usuario", "pesquisador", "revisor", "administrador"].includes(item)) ?? "usuario") as PapelAcesso;
   const permissoes = (identidade?.permissoesUsuario ?? []) as CodigoPermissao[];
   const [paginaAtiva, setPaginaAtiva] = useState("inicio");
@@ -496,6 +515,25 @@ export default function Home() {
 
   return (
     <AppShell papel={papel} permissoes={permissoes} nome={perfil.nomeDemonstracao} email={user.email} iniciais={perfil.iniciais} paginaAtiva={paginaAtiva} onMudarPagina={setPaginaAtiva} onLogout={logout}>
+      {!emailVerificado ? (
+        <div className="mb-5 rounded-2xl border border-[#f0dcb4] bg-[#fff8e8] px-4 py-3 text-sm font-semibold text-[#805a16]">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <span className="flex items-start gap-2">
+              <MailWarning className="mt-0.5 h-4 w-4 shrink-0" />
+              Seu e-mail ainda não foi confirmado. A confirmação protege a recuperação de senha e a continuidade do acesso.
+            </span>
+            <button
+              type="button"
+              onClick={() => void reenviarVerificacao()}
+              disabled={reivindicandoVerificacao}
+              className="shrink-0 rounded-xl bg-[#805a16] px-4 py-2 text-xs font-black text-white disabled:cursor-wait disabled:opacity-60"
+            >
+              {reivindicandoVerificacao ? "Solicitando..." : "Reenviar confirmação"}
+            </button>
+          </div>
+          {avisoVerificacao ? <p className="mt-3 text-xs font-bold text-[#6b4a12]">{avisoVerificacao}</p> : null}
+        </div>
+      ) : null}
       {erroDados ? <div className="mb-5 rounded-2xl border border-[#f2d0c8] bg-[#fff4f0] px-4 py-3 text-sm font-semibold text-[#a85040]">Não foi possível carregar todos os dados da API agora. O layout continua disponível, mas alguns indicadores podem estar incompletos.</div> : null}
       {renderizarArea()}
     </AppShell>
