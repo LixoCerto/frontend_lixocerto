@@ -24,13 +24,14 @@ import {
   Users,
 } from "lucide-react";
 import AppShell from "@/components/AppShell";
-import { iniciarAtualizacaoSenha } from "@/lib/oidc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import {
   enviarRespostaQuestionario,
   listarMateriais,
   listarPontosColeta,
+  listarSessoes,
   obterProgressoUsuario,
+  revogarTodasSessoes,
 } from "@/lib/api";
 import {
   PERFIS_ACESSO,
@@ -61,6 +62,13 @@ type CollectionPointsState = {
   city: string;
   acceptedCategories: string[];
   isVerified: boolean;
+}[];
+type SessoesAtivasState = {
+  id: string;
+  agente: string;
+  enderecoIp: string;
+  criadaEm: string;
+  expiraEm: string;
 }[];
 
 interface Indicador {
@@ -124,6 +132,10 @@ export default function Home() {
   const [quizAnswer, setQuizAnswer] = useState<string | null>(null);
   const [quizFeedback, setQuizFeedback] = useState<string | null>(null);
   const [quizScore, setQuizScore] = useState<number | null>(null);
+  const [sessoesAtivas, setSessoesAtivas] = useState<SessoesAtivasState>([]);
+  const [carregandoSessoes, setCarregandoSessoes] = useState(false);
+  const [erroSessoes, setErroSessoes] = useState<string | null>(null);
+  const [revogandoSessoes, setRevogandoSessoes] = useState(false);
 
   const perfilBase = PERFIS_ACESSO[papel];
   const nomeAutenticado = user?.name?.trim() || perfilBase.nomeDemonstracao;
@@ -196,6 +208,32 @@ export default function Home() {
     const temporizador = window.setTimeout(() => void filtrarMateriais(), 180);
     return () => window.clearTimeout(temporizador);
   }, [isAuthenticated, query, selectedCategory]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    let ativo = true;
+    async function carregarSessoes() {
+      setCarregandoSessoes(true);
+      setErroSessoes(null);
+      try {
+        const resposta = await listarSessoes();
+        if (!ativo) return;
+        setSessoesAtivas(resposta.sessoes.map(sessao => ({
+          id: sessao.idSessao,
+          agente: sessao.agenteUsuario || "Dispositivo não identificado",
+          enderecoIp: sessao.enderecoIp || "IP não informado",
+          criadaEm: sessao.dataCriacao,
+          expiraEm: sessao.dataExpiracao,
+        })));
+      } catch {
+        if (ativo) setErroSessoes("Não foi possível consultar as sessões ativas agora.");
+      } finally {
+        if (ativo) setCarregandoSessoes(false);
+      }
+    }
+    void carregarSessoes();
+    return () => { ativo = false; };
+  }, [isAuthenticated]);
 
   const progresso = useMemo(() => Math.min(100, Math.round(((dashboard?.ecoPoints ?? 0) / 1500) * 100)), [dashboard]);
   const indicadores = useMemo<Indicador[]>(() => {
@@ -355,13 +393,33 @@ export default function Home() {
     return <div className="space-y-6"><CabecalhoSecao etiqueta="Governança" titulo="Administração da plataforma" descricao="Visão operacional para usuários, permissões, conteúdos e eventos auditáveis." /><section className="grid gap-4 md:grid-cols-3"><IndicadorCard indicador={{ titulo: "Usuários ativos", valor: "1.248", detalhe: "+8,4% no mês", icone: Users, tom: "verde" }} /><IndicadorCard indicador={{ titulo: "Papéis ativos", valor: "4", detalhe: "Acesso por permissão", icone: ShieldCheck, tom: "azul" }} /><IndicadorCard indicador={{ titulo: "Auditorias", valor: "2.846", detalhe: "Eventos registrados", icone: FileCheck2, tom: "ouro" }} /></section><section className="grid gap-4 lg:grid-cols-2"><article className="rounded-2xl border border-[#e1ebe2] bg-white p-6"><h3 className="font-black">Governança de acesso</h3><p className="mt-2 text-sm leading-6 text-[#678172]">Papéis não substituem permissões. O administrador acompanha a matriz, mas cada operação sensível ainda é autorizada no backend.</p><div className="mt-5 space-y-3">{["Usuário — aprendizagem e impacto", "Pesquisador — indicadores agregados", "Revisor — moderação de conteúdo", "Administrador — operação e auditoria"].map((item, indice) => <div key={item} className="flex items-center justify-between rounded-xl bg-[#f4f8f3] px-4 py-3 text-sm"><span className="font-bold text-[#315c47]">{item}</span><span className="text-xs font-black text-[#5b9770]">{indice === 3 ? "11 permissões" : "Escopo definido"}</span></div>)}</div></article><article className="rounded-2xl bg-[#17362a] p-6 text-white"><ShieldCheck className="h-7 w-7 text-[#d6efad]" /><h3 className="mt-4 text-xl font-black">Auditoria sem segredos</h3><p className="mt-3 text-sm leading-6 text-[#bfd3c4]">Tokens, senhas, autorizações e segredos são redigidos antes do registro. A interface nunca recebe esses valores.</p><button type="button" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#d6efad] px-4 py-2.5 text-sm font-black text-[#18372a]">Consultar eventos <ArrowUpRight className="h-4 w-4" /></button></article></section></div>;
   }
 
+  function formatarDataSessao(valor: string): string {
+    const data = new Date(valor);
+    return Number.isNaN(data.getTime())
+      ? "Data não informada"
+      : data.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+  }
+
+  async function encerrarTodasSessoes() {
+    if (!window.confirm("Encerrar todas as sessões ativas? Será necessário entrar novamente.")) return;
+    setRevogandoSessoes(true);
+    setErroSessoes(null);
+    try {
+      await revogarTodasSessoes();
+      await logout();
+    } catch {
+      setErroSessoes("Não foi possível encerrar as sessões agora. Tente novamente.");
+      setRevogandoSessoes(false);
+    }
+  }
+
   function renderizarPerfil() {
     return (
       <div className="space-y-6">
         <CabecalhoSecao
           etiqueta="Conta e segurança"
           titulo="Perfil e sessões"
-          descricao="Gerencie seus dados de exibição, senha e sessões sem expor tokens ou credenciais no aplicativo."
+          descricao="Consulte e encerre sessões sem expor tokens ou credenciais. A alteração de senha exige um RPC próprio que ainda não faz parte do contrato."
         />
         <div className="grid gap-5 lg:grid-cols-[.8fr_1.2fr]">
           <article className="rounded-[24px] bg-[#17362a] p-6 text-white">
@@ -369,15 +427,9 @@ export default function Home() {
             <h3 className="mt-5 text-xl font-black">{perfil.nomeDemonstracao}</h3>
             <p className="mt-1 text-sm text-[#bcd2c3]">{perfil.rotulo} · sessão autenticada</p>
             <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-3 text-xs leading-5 text-[#d2e5d7]">
-              E-mail, senha e confirmação de identidade são tratados pelo Keycloak. A plataforma não acessa sua senha.
+              A API própria protege identidade e sessões. O frontend não persiste a senha nem expõe tokens na interface.
             </div>
-            <button
-              type="button"
-              onClick={() => void iniciarAtualizacaoSenha()}
-              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#d6efad] px-4 py-2.5 text-sm font-black text-[#17362a]"
-            >
-              <KeyRound className="h-4 w-4" /> Alterar senha com segurança
-            </button>
+            <p className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#d6efad] px-4 py-2.5 text-sm font-black text-[#17362a]"><KeyRound className="h-4 w-4" /> Sessão JWT própria ativa</p>
           </article>
           <article className="rounded-2xl border border-[#e1ebe2] bg-white p-6">
             <div className="flex items-center justify-between">
@@ -385,16 +437,19 @@ export default function Home() {
                 <h3 className="font-black">Sessões ativas</h3>
                 <p className="mt-1 text-sm text-[#728a7c]">Dispositivos conectados à sua conta.</p>
               </div>
-              <button type="button" className="rounded-lg border border-[#ecc6c6] px-3 py-2 text-xs font-black text-[#ae4545]">Revogar todas</button>
+              <button type="button" onClick={() => void encerrarTodasSessoes()} disabled={revogandoSessoes} className="rounded-lg border border-[#ecc6c6] px-3 py-2 text-xs font-black text-[#ae4545] disabled:cursor-wait disabled:opacity-60">{revogandoSessoes ? "Encerrando..." : "Revogar todas"}</button>
             </div>
-            {["Navegador atual · João Pessoa, PB", "Navegador anterior · João Pessoa, PB"].map((sessao, indice) => (
-              <div key={sessao} className="mt-5 flex items-center gap-3 rounded-xl bg-[#f5f8f5] p-4">
+            {carregandoSessoes ? <p className="mt-5 text-sm font-semibold text-[#728a7c]">Consultando sessões ativas...</p> : null}
+            {erroSessoes ? <p role="alert" className="mt-5 rounded-xl bg-[#fff4f0] p-3 text-sm font-semibold text-[#a85040]">{erroSessoes}</p> : null}
+            {!carregandoSessoes && !erroSessoes && sessoesAtivas.length === 0 ? <p className="mt-5 rounded-xl bg-[#f5f8f5] p-4 text-sm font-semibold text-[#728a7c]">Nenhuma sessão ativa foi encontrada.</p> : null}
+            {sessoesAtivas.map(sessao => (
+              <div key={sessao.id} className="mt-5 flex items-center gap-3 rounded-xl bg-[#f5f8f5] p-4">
                 <span className="grid h-9 w-9 place-items-center rounded-xl bg-white text-[#497b60]"><Clock3 className="h-4 w-4" /></span>
                 <span className="min-w-0 flex-1">
-                  <strong className="block text-sm">{sessao}</strong>
-                  <span className="mt-1 block text-xs text-[#7f9688]">{indice === 0 ? "Ativa agora" : "Há 2 dias"}</span>
+                  <strong className="block truncate text-sm">{sessao.agente}</strong>
+                  <span className="mt-1 block text-xs text-[#7f9688]">{sessao.enderecoIp} · iniciada em {formatarDataSessao(sessao.criadaEm)}</span>
                 </span>
-                {indice === 0 ? <span className="rounded-full bg-[#e2f3e2] px-2 py-1 text-[10px] font-black text-[#2d754d]">Atual</span> : <button type="button" className="text-xs font-black text-[#b64b4b]">Revogar</button>}
+                <span className="shrink-0 rounded-full bg-[#e2f3e2] px-2 py-1 text-[10px] font-black text-[#2d754d]">Expira {formatarDataSessao(sessao.expiraEm)}</span>
               </div>
             ))}
           </article>

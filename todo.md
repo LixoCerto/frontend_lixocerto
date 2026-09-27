@@ -4,8 +4,8 @@
 
 - [x] Importar os contratos Protobuf reais da API Lixo Certo.
 - [x] Gerar os clientes TypeScript com Buf e `protoc-gen-es`.
-- [x] Substituir tRPC, sessão Manus e backend embutido por OIDC Authorization Code + PKCE.
-- [x] Criar callback OIDC e envio de `Authorization: Bearer` pelo cliente Connect-Web.
+- [x] Substituir tRPC, sessão Manus e backend embutido por autenticação gRPC própria.
+- [x] Criar cadastro, login, renovação, logout e envio de `Authorization: Bearer` pelo cliente Connect-Web.
 - [x] Adaptar materiais, pontos de coleta, progresso e questionário aos contratos gRPC reais.
 - [x] Remover `server/`, `drizzle/`, configuração Sequelize/Drizzle e componentes legados do template.
 - [x] Converter o build para Vite estático servido pelo Nginx.
@@ -20,12 +20,17 @@
 - [x] `pnpm build` — bundle estático gerado em `dist/`.
 - [x] Compose revisado para Redis, API, Envoy e frontend.
 
-## Configurações externas documentadas
+## Configurações locais documentadas
 
-- [x] Registrar que `VITE_OIDC_ISSUER` e `VITE_OIDC_CLIENT_ID` precisam ser preenchidos pelo responsável pelo provedor institucional.
-- [x] Registrar que `http://localhost:3000/callback` e `http://localhost:3000/login` precisam ser cadastrados no provedor OIDC.
-- [x] Registrar que a API deve aceitar CORS/origem `http://localhost:3000` e tokens com a audiência configurada.
-- [x] Documentar o comando de Compose para a validação E2E no Windows; a execução depende do Docker Desktop e do provedor OIDC reais.
+- [x] Registrar `VITE_API_BASE_URL` para Vite direto ou `/api/rpc` no Nginx.
+- [x] Registrar que a API deve aceitar a origem `http://localhost:3000` e tokens JWT próprios.
+- [x] Documentar o comando de Compose para a validação E2E no Windows com PostgreSQL externo.
+
+## Próximos contratos de identidade
+
+- [ ] Adicionar RPC de recuperação e troca de senha com token de uso único.
+- [ ] Adicionar RPC de verificação de e-mail e integração SMTP transacional.
+- [ ] Adicionar associação de conta para login social, se o escopo acadêmico exigir.
 
 ## Observações
 

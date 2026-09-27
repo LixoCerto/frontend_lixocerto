@@ -1,18 +1,20 @@
-# Configuração de desenvolvimento — Frontend Lixo Certo
+# Configuração de desenvolvimento — frontend Lixo Certo
 
-O frontend é uma aplicação React/Vite estática. Ele não possui servidor Node, banco de dados, tRPC, Drizzle, sessão própria ou segredo de cliente.
+O frontend é uma aplicação React/Vite estática. Ele não possui servidor Node, banco de dados, tRPC, Drizzle ou segredo de cliente.
 
 ## Desenvolvimento direto
 
-Copie `.env.exemplo` para `.env`, informe o emissor OIDC e o `client_id` público cadastrados para `http://localhost:3000/callback`, instale as dependências e execute `pnpm dev`.
-
-O frontend direto usa `VITE_API_BASE_URL` apontando para um gateway gRPC-Web acessível pelo navegador. Para execução integrada, mantenha `/api/rpc` e use o Envoy do projeto de infraestrutura.
+Copie `.env.exemplo` para `.env`, configure `VITE_API_BASE_URL=http://127.0.0.1:8080`, instale as dependências e execute `pnpm dev`.
 
 ## Execução integrada
 
-A partir de `infra_lixocerto`, configure `.env` com os caminhos dos projetos irmãos e com as variáveis públicas `VITE_*`. Em seguida, execute `docker compose --profile app up --build`.
+A partir de `infra_lixocerto`, configure o `.env` com os caminhos dos projetos irmãos e execute:
 
-O fluxo integrado é:
+```powershell
+docker compose --env-file .env --profile app up --build -d
+```
+
+O fluxo é:
 
 ```text
 browser :3000 → frontend Nginx :8080 → gateway Envoy :8080 → API gRPC :50051 → PostgreSQL externo
@@ -21,16 +23,12 @@ browser :3000 → frontend Nginx :8080 → gateway Envoy :8080 → API gRPC :500
 
 O frontend não exige `DATABASE_URL`. O arquivo `.env` da API permanece privado e não deve ser copiado para o repositório ou para a imagem do frontend.
 
-## Configuração OIDC
+## Autenticação
 
-O provedor deve permitir Authorization Code com PKCE para uma aplicação pública (SPA), sem `client_secret`. Cadastre exatamente:
+O frontend chama o serviço gRPC próprio da API para cadastro, login, renovação, logout e identidade atual. O cliente Connect-Web anexa `Authorization: Bearer <token>` automaticamente às chamadas. Não configure OIDC, Keycloak, Google ou Client Secret.
 
-```text
-http://localhost:3000/callback
-```
-
-O token é enviado à API como `Authorization: Bearer <token>`. A API deve validar assinatura, emissor, audiência, expiração, papel e permissão. A interface apenas monta a navegação com base na identidade retornada por `ServicoAutenticacao.ObterIdentidadeAtual`.
+Recuperação de senha, troca de senha, verificação de e-mail e login social ainda não fazem parte do contrato gRPC atual; a interface informa esse limite em vez de simular uma operação inexistente.
 
 ## Segurança
 
-Não versione `.env`, tokens, senhas, cookies de sessão, chaves privadas ou arquivos exportados do provedor OIDC. As variáveis `VITE_*` são públicas no bundle e nunca podem conter credenciais.
+Não versione `.env`, tokens, senhas, cookies de sessão ou chaves privadas. As variáveis `VITE_*` são públicas no bundle e nunca podem conter credenciais.

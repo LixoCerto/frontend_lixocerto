@@ -1,12 +1,22 @@
 import { create } from "@bufbuild/protobuf";
 import type { Interceptor } from "@connectrpc/connect";
-import { createGrpcWebTransport } from "@connectrpc/connect-web";
 import { createClient } from "@connectrpc/connect";
-import { getAccessToken } from "./oidc";
+import { createGrpcWebTransport } from "@connectrpc/connect-web";
 import {
+  CadastrarUsuarioRequisicaoSchema,
+  EntrarRequisicaoSchema,
   ObterIdentidadeAtualRequisicaoSchema,
+  RenovarTokenRequisicaoSchema,
+  SairRequisicaoSchema,
   ServicoAutenticacao,
 } from "@shared/gen/lixo_certo/v1/servico_autenticacao_pb";
+import {
+  ListarSessoesRequisicaoSchema,
+  RevogarSessaoRequisicaoSchema,
+  RevogarTodasSessoesRequisicaoSchema,
+  ServicoSessoes,
+} from "@shared/gen/lixo_certo/v1/servico_sessoes_pb";
+import { obterTokenAcesso } from "./sessao";
 import {
   ListarMateriaisRequisicaoSchema,
   ServicoMateriais,
@@ -34,91 +44,81 @@ import {
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "/api/rpc";
 
 const bearerInterceptor: Interceptor = (next) => async (request) => {
-  const token = getAccessToken();
+  const token = obterTokenAcesso();
   if (token) request.header.set("Authorization", `Bearer ${token}`);
   return next(request);
 };
 
-const transport = createGrpcWebTransport({
-  baseUrl: apiBaseUrl,
-  interceptors: [bearerInterceptor],
-});
+const transport = createGrpcWebTransport({ baseUrl: apiBaseUrl, interceptors: [bearerInterceptor] });
 
 export const autenticacaoClient = createClient(ServicoAutenticacao, transport);
+export const sessoesClient = createClient(ServicoSessoes, transport);
 export const materiaisClient = createClient(ServicoMateriais, transport);
 export const pontosColetaClient = createClient(ServicoPontosColeta, transport);
 export const questionariosClient = createClient(ServicoQuestionarios, transport);
 export const gamificacaoClient = createClient(ServicoGamificacao, transport);
 export const avaliacaoClient = createClient(ServicoAvaliacaoUsabilidade, transport);
 
-export async function obterIdentidade(token?: string) {
-  if (token) {
-    return autenticacaoClient.obterIdentidadeAtual(
-      create(ObterIdentidadeAtualRequisicaoSchema, {}),
-      { headers: { Authorization: `Bearer ${token}` } },
-    );
-  }
-  return autenticacaoClient.obterIdentidadeAtual(
-    create(ObterIdentidadeAtualRequisicaoSchema, {}),
-  );
+export function cadastrarUsuario(nomeUsuario: string, emailUsuario: string, senhaUsuario: string) {
+  return autenticacaoClient.cadastrarUsuario(create(CadastrarUsuarioRequisicaoSchema, { nomeUsuario, emailUsuario, senhaUsuario }));
+}
+
+export function entrar(emailUsuario: string, senhaUsuario: string) {
+  return autenticacaoClient.entrar(create(EntrarRequisicaoSchema, { emailUsuario, senhaUsuario }));
+}
+
+export function renovarToken(tokenAtualizacao: string) {
+  return autenticacaoClient.renovarToken(create(RenovarTokenRequisicaoSchema, { tokenAtualizacao }));
+}
+
+export function sair(tokenAtualizacao: string) {
+  return autenticacaoClient.sair(create(SairRequisicaoSchema, { tokenAtualizacao }));
+}
+
+export function obterIdentidadeAtual() {
+  return autenticacaoClient.obterIdentidadeAtual(create(ObterIdentidadeAtualRequisicaoSchema, {}));
+}
+
+export function listarSessoes() {
+  return sessoesClient.listarSessoes(create(ListarSessoesRequisicaoSchema, {}));
+}
+
+export function revogarSessao(idSessao: string) {
+  return sessoesClient.revogarSessao(create(RevogarSessaoRequisicaoSchema, { idSessao }));
+}
+
+export function revogarTodasSessoes() {
+  return sessoesClient.revogarTodasSessoes(create(RevogarTodasSessoesRequisicaoSchema, {}));
 }
 
 export function listarMateriais(textoPesquisa = "", categoriaMaterial = "") {
-  return materiaisClient.listarMateriais(
-    create(ListarMateriaisRequisicaoSchema, {
-      textoPesquisa,
-      categoriaMaterial,
-      numeroPagina: 1,
-      tamanhoPagina: 30,
-    }),
-  );
+  return materiaisClient.listarMateriais(create(ListarMateriaisRequisicaoSchema, { textoPesquisa, categoriaMaterial, numeroPagina: 1, tamanhoPagina: 30 }));
 }
 
 export function listarPontosColeta(cidade = "João Pessoa", categoriaMaterial = "") {
-  return pontosColetaClient.listarPontosColeta(
-    create(ListarPontosColetaRequisicaoSchema, {
-      cidadePontoColeta: cidade,
-      categoriaMaterial,
-    }),
-  );
+  return pontosColetaClient.listarPontosColeta(create(ListarPontosColetaRequisicaoSchema, { cidadePontoColeta: cidade, categoriaMaterial }));
 }
 
 export function listarQuestoes() {
-  return questionariosClient.listarQuestoes(
-    create(ListarQuestoesRequisicaoSchema, { numeroPagina: 1, tamanhoPagina: 10 }),
-  );
+  return questionariosClient.listarQuestoes(create(ListarQuestoesRequisicaoSchema, { numeroPagina: 1, tamanhoPagina: 10 }));
 }
 
 export function enviarRespostaQuestionario(idQuestao: string, idAlternativa: string) {
-  return questionariosClient.enviarRespostaQuestionario(
-    create(EnviarRespostaQuestionarioRequisicaoSchema, { idQuestao, idAlternativa }),
-  );
+  return questionariosClient.enviarRespostaQuestionario(create(EnviarRespostaQuestionarioRequisicaoSchema, { idQuestao, idAlternativa }));
 }
 
 export function obterProgressoUsuario() {
-  return gamificacaoClient.obterProgressoUsuario(
-    create(ObterProgressoUsuarioRequisicaoSchema, {}),
-  );
+  return gamificacaoClient.obterProgressoUsuario(create(ObterProgressoUsuarioRequisicaoSchema, {}));
 }
 
 export function obterRanking(limiteResultado = 10) {
-  return gamificacaoClient.obterRanking(
-    create(ObterRankingRequisicaoSchema, { limiteResultado }),
-  );
+  return gamificacaoClient.obterRanking(create(ObterRankingRequisicaoSchema, { limiteResultado }));
 }
 
 export function enviarAvaliacaoSus(codigoParticipante: string, notasItens: number[]) {
-  return avaliacaoClient.enviarAvaliacaoSus(
-    create(EnviarAvaliacaoSusRequisicaoSchema, {
-      codigoParticipante,
-      indicaConsentimento: true,
-      notasItens,
-    }),
-  );
+  return avaliacaoClient.enviarAvaliacaoSus(create(EnviarAvaliacaoSusRequisicaoSchema, { codigoParticipante, indicaConsentimento: true, notasItens }));
 }
 
 export function obterResultadosAgregados() {
-  return avaliacaoClient.obterResultadosAgregados(
-    create(ObterResultadosAgregadosRequisicaoSchema, {}),
-  );
+  return avaliacaoClient.obterResultadosAgregados(create(ObterResultadosAgregadosRequisicaoSchema, {}));
 }

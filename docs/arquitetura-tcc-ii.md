@@ -7,7 +7,7 @@ O **Lixo Certo** é um webapp responsivo destinado à educação ambiental sobre
 ## Visão arquitetural
 
 ```text
-Navegador (React + TypeScript + OIDC/PKCE)
+Navegador (React + TypeScript)
         │
         │ arquivos estáticos + gRPC-Web / Protocol Buffers
         ▼
@@ -15,7 +15,7 @@ Nginx → Envoy gRPC-Web
         │
         ▼
 API NestJS gRPC
-        ├── Autenticação OIDC/JWT e autorização por permissão
+        ├── Autenticação JWT própria e autorização por permissão
         ├── Serviços de domínio do Lixo Certo
         ├── PostgreSQL externo via Sequelize
         └── Redis gerenciado pelo projeto de infraestrutura
@@ -27,7 +27,7 @@ O frontend é estático e não possui backend próprio. O Envoy converte chamada
 
 | Projeto | Responsabilidade |
 |---|---|
-| `frontend_lixocerto` | Interface React/Vite, OIDC/PKCE e cliente gRPC-Web |
+| `frontend_lixocerto` | Interface React/Vite, sessão JWT local e cliente gRPC-Web |
 | `api_lixocerto` | API NestJS, contratos, autenticação, autorização e persistência |
 | `infra_lixocerto` | Dockerfiles, Compose, Envoy, Redis e operação local |
 
@@ -45,8 +45,8 @@ A SUS avalia percepção de usabilidade; um escore SUS não comprova, sozinho, a
 
 ## Segurança
 
-O login usa Authorization Code com PKCE, sem `client_secret` no navegador. O token é enviado como `Authorization: Bearer`. A API valida emissor, audiência, assinatura, expiração, papel e permissão. O frontend não armazena senhas, não acessa o PostgreSQL e não possui `DATABASE_URL`.
+O login usa os RPCs próprios de cadastro, entrada, renovação, saída e identidade atual. O token é enviado como `Authorization: Bearer`. A API valida assinatura, emissor, audiência, expiração, papel e permissão. O frontend não armazena senhas, não acessa o PostgreSQL e não possui `DATABASE_URL`.
 
 ## Validação técnica
 
-A versão estática foi validada com geração dos contratos, verificação TypeScript, testes da matriz de permissões, build Vite e preview local dos arquivos estáticos. A validação integrada final depende da configuração real do provedor OIDC e da execução do Compose no Windows com o PostgreSQL externo.
+A versão estática foi validada com geração dos contratos, verificação TypeScript, testes da matriz de permissões, build Vite e execução integrada pelo gateway gRPC-Web. Recuperação de senha, verificação de e-mail e login social ainda exigem novos RPCs e não são simulados.

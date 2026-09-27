@@ -1,5 +1,4 @@
 import { TooltipProvider } from "@/components/ui/tooltip";
-import AuthCallback from "@/pages/AuthCallback";
 import Home from "@/pages/Home";
 import Login from "@/pages/Login";
 import NotFound from "@/pages/NotFound";
@@ -12,7 +11,6 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/login" component={Login} />
-      <Route path="/callback" component={AuthCallback} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

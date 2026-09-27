@@ -10,7 +10,240 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file lixo_certo/v1/servico_autenticacao.proto.
  */
 export const file_lixo_certo_v1_servico_autenticacao: GenFile = /*@__PURE__*/
-  fileDesc("CihsaXhvX2NlcnRvL3YxL3NlcnZpY29fYXV0ZW50aWNhY2FvLnByb3RvEg1saXhvX2NlcnRvLnYxIiAKHk9idGVySWRlbnRpZGFkZUF0dWFsUmVxdWlzaWNhbyKTAQocT2J0ZXJJZGVudGlkYWRlQXR1YWxSZXNwb3N0YRISCgppZF91c3VhcmlvGAEgASgJEhQKDG5vbWVfdXN1YXJpbxgCIAEoCRIVCg1lbWFpbF91c3VhcmlvGAMgASgJEhYKDnBhcGVpc191c3VhcmlvGAQgAygJEhoKEnBlcm1pc3NvZXNfdXN1YXJpbxgFIAMoCTKJAQoTU2Vydmljb0F1dGVudGljYWNhbxJyChRPYnRlcklkZW50aWRhZGVBdHVhbBItLmxpeG9fY2VydG8udjEuT2J0ZXJJZGVudGlkYWRlQXR1YWxSZXF1aXNpY2FvGisubGl4b19jZXJ0by52MS5PYnRlcklkZW50aWRhZGVBdHVhbFJlc3Bvc3RhYgZwcm90bzM");
+  fileDesc("CihsaXhvX2NlcnRvL3YxL3NlcnZpY29fYXV0ZW50aWNhY2FvLnByb3RvEg1saXhvX2NlcnRvLnYxIowBChVJZGVudGlkYWRlQXV0ZW50aWNhZGESEgoKaWRfdXN1YXJpbxgBIAEoCRIUCgxub21lX3VzdWFyaW8YAiABKAkSFQoNZW1haWxfdXN1YXJpbxgDIAEoCRIWCg5wYXBlaXNfdXN1YXJpbxgEIAMoCRIaChJwZXJtaXNzb2VzX3VzdWFyaW8YBSADKAkiYAoaQ2FkYXN0cmFyVXN1YXJpb1JlcXVpc2ljYW8SFAoMbm9tZV91c3VhcmlvGAEgASgJEhUKDWVtYWlsX3VzdWFyaW8YAiABKAkSFQoNc2VuaGFfdXN1YXJpbxgDIAEoCSJAChBFbnRyYXJSZXF1aXNpY2FvEhUKDWVtYWlsX3VzdWFyaW8YASABKAkSFQoNc2VuaGFfdXN1YXJpbxgCIAEoCSIzChZSZW5vdmFyVG9rZW5SZXF1aXNpY2FvEhkKEXRva2VuX2F0dWFsaXphY2FvGAEgASgJIisKDlNhaXJSZXF1aXNpY2FvEhkKEXRva2VuX2F0dWFsaXphY2FvGAEgASgJIqEBChhDYWRhc3RyYXJVc3VhcmlvUmVzcG9zdGESFAoMdG9rZW5fYWNlc3NvGAEgASgJEhkKEXRva2VuX2F0dWFsaXphY2FvGAIgASgJEhoKEmV4cGlyYV9lbV9zZWd1bmRvcxgDIAEoBRI4CgppZGVudGlkYWRlGAQgASgLMiQubGl4b19jZXJ0by52MS5JZGVudGlkYWRlQXV0ZW50aWNhZGEilwEKDkVudHJhclJlc3Bvc3RhEhQKDHRva2VuX2FjZXNzbxgBIAEoCRIZChF0b2tlbl9hdHVhbGl6YWNhbxgCIAEoCRIaChJleHBpcmFfZW1fc2VndW5kb3MYAyABKAUSOAoKaWRlbnRpZGFkZRgEIAEoCzIkLmxpeG9fY2VydG8udjEuSWRlbnRpZGFkZUF1dGVudGljYWRhIp0BChRSZW5vdmFyVG9rZW5SZXNwb3N0YRIUCgx0b2tlbl9hY2Vzc28YASABKAkSGQoRdG9rZW5fYXR1YWxpemFjYW8YAiABKAkSGgoSZXhwaXJhX2VtX3NlZ3VuZG9zGAMgASgFEjgKCmlkZW50aWRhZGUYBCABKAsyJC5saXhvX2NlcnRvLnYxLklkZW50aWRhZGVBdXRlbnRpY2FkYSInCgxTYWlyUmVzcG9zdGESFwoPc2Vzc2FvX3Jldm9nYWRhGAEgASgIIiAKHk9idGVySWRlbnRpZGFkZUF0dWFsUmVxdWlzaWNhbyKTAQocT2J0ZXJJZGVudGlkYWRlQXR1YWxSZXNwb3N0YRISCgppZF91c3VhcmlvGAEgASgJEhQKDG5vbWVfdXN1YXJpbxgCIAEoCRIVCg1lbWFpbF91c3VhcmlvGAMgASgJEhYKDnBhcGVpc191c3VhcmlvGAQgAygJEhoKEnBlcm1pc3NvZXNfdXN1YXJpbxgFIAMoCTLbAwoTU2Vydmljb0F1dGVudGljYWNhbxJmChBDYWRhc3RyYXJVc3VhcmlvEikubGl4b19jZXJ0by52MS5DYWRhc3RyYXJVc3VhcmlvUmVxdWlzaWNhbxonLmxpeG9fY2VydG8udjEuQ2FkYXN0cmFyVXN1YXJpb1Jlc3Bvc3RhEkgKBkVudHJhchIfLmxpeG9fY2VydG8udjEuRW50cmFyUmVxdWlzaWNhbxodLmxpeG9fY2VydG8udjEuRW50cmFyUmVzcG9zdGESWgoMUmVub3ZhclRva2VuEiUubGl4b19jZXJ0by52MS5SZW5vdmFyVG9rZW5SZXF1aXNpY2FvGiMubGl4b19jZXJ0by52MS5SZW5vdmFyVG9rZW5SZXNwb3N0YRJCCgRTYWlyEh0ubGl4b19jZXJ0by52MS5TYWlyUmVxdWlzaWNhbxobLmxpeG9fY2VydG8udjEuU2FpclJlc3Bvc3RhEnIKFE9idGVySWRlbnRpZGFkZUF0dWFsEi0ubGl4b19jZXJ0by52MS5PYnRlcklkZW50aWRhZGVBdHVhbFJlcXVpc2ljYW8aKy5saXhvX2NlcnRvLnYxLk9idGVySWRlbnRpZGFkZUF0dWFsUmVzcG9zdGFiBnByb3RvMw");
+
+/**
+ * @generated from message lixo_certo.v1.IdentidadeAutenticada
+ */
+export type IdentidadeAutenticada = Message<"lixo_certo.v1.IdentidadeAutenticada"> & {
+  /**
+   * @generated from field: string id_usuario = 1;
+   */
+  idUsuario: string;
+
+  /**
+   * @generated from field: string nome_usuario = 2;
+   */
+  nomeUsuario: string;
+
+  /**
+   * @generated from field: string email_usuario = 3;
+   */
+  emailUsuario: string;
+
+  /**
+   * @generated from field: repeated string papeis_usuario = 4;
+   */
+  papeisUsuario: string[];
+
+  /**
+   * @generated from field: repeated string permissoes_usuario = 5;
+   */
+  permissoesUsuario: string[];
+};
+
+/**
+ * Describes the message lixo_certo.v1.IdentidadeAutenticada.
+ * Use `create(IdentidadeAutenticadaSchema)` to create a new message.
+ */
+export const IdentidadeAutenticadaSchema: GenMessage<IdentidadeAutenticada> = /*@__PURE__*/
+  messageDesc(file_lixo_certo_v1_servico_autenticacao, 0);
+
+/**
+ * @generated from message lixo_certo.v1.CadastrarUsuarioRequisicao
+ */
+export type CadastrarUsuarioRequisicao = Message<"lixo_certo.v1.CadastrarUsuarioRequisicao"> & {
+  /**
+   * @generated from field: string nome_usuario = 1;
+   */
+  nomeUsuario: string;
+
+  /**
+   * @generated from field: string email_usuario = 2;
+   */
+  emailUsuario: string;
+
+  /**
+   * @generated from field: string senha_usuario = 3;
+   */
+  senhaUsuario: string;
+};
+
+/**
+ * Describes the message lixo_certo.v1.CadastrarUsuarioRequisicao.
+ * Use `create(CadastrarUsuarioRequisicaoSchema)` to create a new message.
+ */
+export const CadastrarUsuarioRequisicaoSchema: GenMessage<CadastrarUsuarioRequisicao> = /*@__PURE__*/
+  messageDesc(file_lixo_certo_v1_servico_autenticacao, 1);
+
+/**
+ * @generated from message lixo_certo.v1.EntrarRequisicao
+ */
+export type EntrarRequisicao = Message<"lixo_certo.v1.EntrarRequisicao"> & {
+  /**
+   * @generated from field: string email_usuario = 1;
+   */
+  emailUsuario: string;
+
+  /**
+   * @generated from field: string senha_usuario = 2;
+   */
+  senhaUsuario: string;
+};
+
+/**
+ * Describes the message lixo_certo.v1.EntrarRequisicao.
+ * Use `create(EntrarRequisicaoSchema)` to create a new message.
+ */
+export const EntrarRequisicaoSchema: GenMessage<EntrarRequisicao> = /*@__PURE__*/
+  messageDesc(file_lixo_certo_v1_servico_autenticacao, 2);
+
+/**
+ * @generated from message lixo_certo.v1.RenovarTokenRequisicao
+ */
+export type RenovarTokenRequisicao = Message<"lixo_certo.v1.RenovarTokenRequisicao"> & {
+  /**
+   * @generated from field: string token_atualizacao = 1;
+   */
+  tokenAtualizacao: string;
+};
+
+/**
+ * Describes the message lixo_certo.v1.RenovarTokenRequisicao.
+ * Use `create(RenovarTokenRequisicaoSchema)` to create a new message.
+ */
+export const RenovarTokenRequisicaoSchema: GenMessage<RenovarTokenRequisicao> = /*@__PURE__*/
+  messageDesc(file_lixo_certo_v1_servico_autenticacao, 3);
+
+/**
+ * @generated from message lixo_certo.v1.SairRequisicao
+ */
+export type SairRequisicao = Message<"lixo_certo.v1.SairRequisicao"> & {
+  /**
+   * @generated from field: string token_atualizacao = 1;
+   */
+  tokenAtualizacao: string;
+};
+
+/**
+ * Describes the message lixo_certo.v1.SairRequisicao.
+ * Use `create(SairRequisicaoSchema)` to create a new message.
+ */
+export const SairRequisicaoSchema: GenMessage<SairRequisicao> = /*@__PURE__*/
+  messageDesc(file_lixo_certo_v1_servico_autenticacao, 4);
+
+/**
+ * @generated from message lixo_certo.v1.CadastrarUsuarioResposta
+ */
+export type CadastrarUsuarioResposta = Message<"lixo_certo.v1.CadastrarUsuarioResposta"> & {
+  /**
+   * @generated from field: string token_acesso = 1;
+   */
+  tokenAcesso: string;
+
+  /**
+   * @generated from field: string token_atualizacao = 2;
+   */
+  tokenAtualizacao: string;
+
+  /**
+   * @generated from field: int32 expira_em_segundos = 3;
+   */
+  expiraEmSegundos: number;
+
+  /**
+   * @generated from field: lixo_certo.v1.IdentidadeAutenticada identidade = 4;
+   */
+  identidade?: IdentidadeAutenticada | undefined;
+};
+
+/**
+ * Describes the message lixo_certo.v1.CadastrarUsuarioResposta.
+ * Use `create(CadastrarUsuarioRespostaSchema)` to create a new message.
+ */
+export const CadastrarUsuarioRespostaSchema: GenMessage<CadastrarUsuarioResposta> = /*@__PURE__*/
+  messageDesc(file_lixo_certo_v1_servico_autenticacao, 5);
+
+/**
+ * @generated from message lixo_certo.v1.EntrarResposta
+ */
+export type EntrarResposta = Message<"lixo_certo.v1.EntrarResposta"> & {
+  /**
+   * @generated from field: string token_acesso = 1;
+   */
+  tokenAcesso: string;
+
+  /**
+   * @generated from field: string token_atualizacao = 2;
+   */
+  tokenAtualizacao: string;
+
+  /**
+   * @generated from field: int32 expira_em_segundos = 3;
+   */
+  expiraEmSegundos: number;
+
+  /**
+   * @generated from field: lixo_certo.v1.IdentidadeAutenticada identidade = 4;
+   */
+  identidade?: IdentidadeAutenticada | undefined;
+};
+
+/**
+ * Describes the message lixo_certo.v1.EntrarResposta.
+ * Use `create(EntrarRespostaSchema)` to create a new message.
+ */
+export const EntrarRespostaSchema: GenMessage<EntrarResposta> = /*@__PURE__*/
+  messageDesc(file_lixo_certo_v1_servico_autenticacao, 6);
+
+/**
+ * @generated from message lixo_certo.v1.RenovarTokenResposta
+ */
+export type RenovarTokenResposta = Message<"lixo_certo.v1.RenovarTokenResposta"> & {
+  /**
+   * @generated from field: string token_acesso = 1;
+   */
+  tokenAcesso: string;
+
+  /**
+   * @generated from field: string token_atualizacao = 2;
+   */
+  tokenAtualizacao: string;
+
+  /**
+   * @generated from field: int32 expira_em_segundos = 3;
+   */
+  expiraEmSegundos: number;
+
+  /**
+   * @generated from field: lixo_certo.v1.IdentidadeAutenticada identidade = 4;
+   */
+  identidade?: IdentidadeAutenticada | undefined;
+};
+
+/**
+ * Describes the message lixo_certo.v1.RenovarTokenResposta.
+ * Use `create(RenovarTokenRespostaSchema)` to create a new message.
+ */
+export const RenovarTokenRespostaSchema: GenMessage<RenovarTokenResposta> = /*@__PURE__*/
+  messageDesc(file_lixo_certo_v1_servico_autenticacao, 7);
+
+/**
+ * @generated from message lixo_certo.v1.SairResposta
+ */
+export type SairResposta = Message<"lixo_certo.v1.SairResposta"> & {
+  /**
+   * @generated from field: bool sessao_revogada = 1;
+   */
+  sessaoRevogada: boolean;
+};
+
+/**
+ * Describes the message lixo_certo.v1.SairResposta.
+ * Use `create(SairRespostaSchema)` to create a new message.
+ */
+export const SairRespostaSchema: GenMessage<SairResposta> = /*@__PURE__*/
+  messageDesc(file_lixo_certo_v1_servico_autenticacao, 8);
 
 /**
  * @generated from message lixo_certo.v1.ObterIdentidadeAtualRequisicao
@@ -23,7 +256,7 @@ export type ObterIdentidadeAtualRequisicao = Message<"lixo_certo.v1.ObterIdentid
  * Use `create(ObterIdentidadeAtualRequisicaoSchema)` to create a new message.
  */
 export const ObterIdentidadeAtualRequisicaoSchema: GenMessage<ObterIdentidadeAtualRequisicao> = /*@__PURE__*/
-  messageDesc(file_lixo_certo_v1_servico_autenticacao, 0);
+  messageDesc(file_lixo_certo_v1_servico_autenticacao, 9);
 
 /**
  * @generated from message lixo_certo.v1.ObterIdentidadeAtualResposta
@@ -60,12 +293,44 @@ export type ObterIdentidadeAtualResposta = Message<"lixo_certo.v1.ObterIdentidad
  * Use `create(ObterIdentidadeAtualRespostaSchema)` to create a new message.
  */
 export const ObterIdentidadeAtualRespostaSchema: GenMessage<ObterIdentidadeAtualResposta> = /*@__PURE__*/
-  messageDesc(file_lixo_certo_v1_servico_autenticacao, 1);
+  messageDesc(file_lixo_certo_v1_servico_autenticacao, 10);
 
 /**
  * @generated from service lixo_certo.v1.ServicoAutenticacao
  */
 export const ServicoAutenticacao: GenService<{
+  /**
+   * @generated from rpc lixo_certo.v1.ServicoAutenticacao.CadastrarUsuario
+   */
+  cadastrarUsuario: {
+    methodKind: "unary";
+    input: typeof CadastrarUsuarioRequisicaoSchema;
+    output: typeof CadastrarUsuarioRespostaSchema;
+  },
+  /**
+   * @generated from rpc lixo_certo.v1.ServicoAutenticacao.Entrar
+   */
+  entrar: {
+    methodKind: "unary";
+    input: typeof EntrarRequisicaoSchema;
+    output: typeof EntrarRespostaSchema;
+  },
+  /**
+   * @generated from rpc lixo_certo.v1.ServicoAutenticacao.RenovarToken
+   */
+  renovarToken: {
+    methodKind: "unary";
+    input: typeof RenovarTokenRequisicaoSchema;
+    output: typeof RenovarTokenRespostaSchema;
+  },
+  /**
+   * @generated from rpc lixo_certo.v1.ServicoAutenticacao.Sair
+   */
+  sair: {
+    methodKind: "unary";
+    input: typeof SairRequisicaoSchema;
+    output: typeof SairRespostaSchema;
+  },
   /**
    * @generated from rpc lixo_certo.v1.ServicoAutenticacao.ObterIdentidadeAtual
    */
