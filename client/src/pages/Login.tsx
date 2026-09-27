@@ -15,7 +15,7 @@ function senhaValida(senha: string): boolean {
 }
 
 export default function Login() {
-  const { isAuthenticated, loading, login, cadastro, solicitarRecuperacaoSenha } = useAuth();
+  const { isAuthenticated, loading, login, cadastro, solicitarVerificacaoEmail, solicitarRecuperacaoSenha } = useAuth();
   const [, setLocation] = useLocation();
   const [modo, setModo] = useState<Modo>("entrar");
   const [nome, setNome] = useState("");
@@ -80,6 +80,7 @@ export default function Login() {
       if (modo === "cadastro") {
         const resposta = await cadastro(nome.trim(), emailNormalizado, senha);
         if (resposta.requerVerificacaoEmail) {
+          await solicitarVerificacaoEmail(emailNormalizado);
           setLocation(`/confirmar-email?email=${encodeURIComponent(emailNormalizado)}`);
           return;
         }
