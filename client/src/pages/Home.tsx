@@ -27,6 +27,7 @@ import {
   Users,
 } from "lucide-react";
 import AppShell from "@/components/AppShell";
+import PontosColetaCrud from "@/components/PontosColetaCrud";
 import { useAuth } from "@/_core/hooks/useAuth";
 import {
   enviarRespostaQuestionario,
@@ -390,15 +391,7 @@ export default function Home() {
   }
 
   function renderizarPontos() {
-    return (
-      <div className="space-y-6">
-        <CabecalhoSecao etiqueta="Território" titulo="Pontos de coleta" descricao="A consulta prioriza locais verificados e informa claramente o estado de validação." acao={pode("pontos_coleta:aprovar") ? <button type="button" className="rounded-xl bg-[#1d7953] px-4 py-2.5 text-sm font-black text-white">Revisar pendências</button> : undefined} />
-        <div className="grid gap-4 lg:grid-cols-[1.25fr_.75fr]">
-          <div className="space-y-3">{collectionPoints.map(ponto => <article key={ponto.id} className="flex flex-col gap-4 rounded-2xl border border-[#e1ebe2] bg-white p-5 shadow-[0_16px_32px_-30px_rgba(23,54,42,.6)] sm:flex-row sm:items-start"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#e9f5e7] text-[#2a7951]"><MapPinned className="h-5 w-5" /></span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="font-black">{ponto.name}</h3><span className={`rounded-full px-2.5 py-1 text-[10px] font-black ${ponto.isVerified ? "bg-[#e5f5e6] text-[#28744d]" : "bg-[#fff2d9] text-[#9b6812]"}`}>{ponto.isVerified ? "Verificado" : "Em validação"}</span></div><p className="mt-2 text-sm text-[#698273]">{ponto.address} · {ponto.city}</p><div className="mt-3 flex flex-wrap gap-2">{ponto.acceptedCategories.map(categoria => <span key={categoria} className="rounded-lg bg-[#f0f5f0] px-2 py-1 text-xs font-bold text-[#5b7969]">{categoria}</span>)}</div></div><ChevronRight className="hidden h-5 w-5 text-[#8ba496] sm:block" /></article>)}</div>
-          <aside className="rounded-[24px] bg-[#17362a] p-6 text-white"><MapPinned className="h-6 w-6 text-[#d6efad]" /><h3 className="mt-5 text-xl font-black">Dados de localização com responsabilidade.</h3><p className="mt-3 text-sm leading-6 text-[#bdd2c3]">Pontos pendentes permanecem identificados como não verificados. A aprovação é uma operação disponível apenas a revisores e administradores.</p><div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-3 text-xs font-bold text-[#d4ead7]">Autorização efetiva: sempre confirmada pela API.</div></aside>
-        </div>
-      </div>
-    );
+    return <PontosColetaCrud podeEscrever={pode("pontos_coleta:escrever")} podeAprovar={pode("pontos_coleta:aprovar")} />;
   }
 
   function renderizarQuestionarios() {

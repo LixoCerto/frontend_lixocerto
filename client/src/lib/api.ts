@@ -31,7 +31,12 @@ import {
   ServicoMateriais,
 } from "@shared/gen/lixo_certo/v1/servico_materiais_pb";
 import {
+  AlterarStatusPontoColetaRequisicaoSchema,
+  AtualizarPontoColetaRequisicaoSchema,
+  CriarPontoColetaRequisicaoSchema,
+  ExcluirPontoColetaRequisicaoSchema,
   ListarPontosColetaRequisicaoSchema,
+  ObterPontoColetaRequisicaoSchema,
   ServicoPontosColeta,
 } from "@shared/gen/lixo_certo/v1/servico_pontos_coleta_pb";
 import {
@@ -131,8 +136,23 @@ export function listarMateriais(textoPesquisa = "", categoriaMaterial = "") {
   return materiaisClient.listarMateriais(create(ListarMateriaisRequisicaoSchema, { textoPesquisa, categoriaMaterial, numeroPagina: 1, tamanhoPagina: 30 }));
 }
 
-export function listarPontosColeta(cidade = "João Pessoa", categoriaMaterial = "") {
-  return pontosColetaClient.listarPontosColeta(create(ListarPontosColetaRequisicaoSchema, { cidadePontoColeta: cidade, categoriaMaterial }));
+export function listarPontosColeta(cidade = "João Pessoa", categoriaMaterial = "", local?: { latitude: number; longitude: number; raioMetros?: number }) {
+  return pontosColetaClient.listarPontosColeta(create(ListarPontosColetaRequisicaoSchema, { cidadePontoColeta: cidade, categoriaMaterial, latitude: local?.latitude ?? 0, longitude: local?.longitude ?? 0, raioMetros: local?.raioMetros ?? 10000 }));
+}
+export function obterPontoColeta(idPontoColeta: string) {
+  return pontosColetaClient.obterPontoColeta(create(ObterPontoColetaRequisicaoSchema, { idPontoColeta }));
+}
+export function criarPontoColeta(dados: { nomePontoColeta: string; enderecoPontoColeta: string; cidadePontoColeta: string; estadoPontoColeta: string; latitudePontoColeta: number; longitudePontoColeta: number; categoriasAceitas: string[]; origemInformacao?: string }) {
+  return pontosColetaClient.criarPontoColeta(create(CriarPontoColetaRequisicaoSchema, { dados }));
+}
+export function atualizarPontoColeta(idPontoColeta: string, dados: Parameters<typeof criarPontoColeta>[0]) {
+  return pontosColetaClient.atualizarPontoColeta(create(AtualizarPontoColetaRequisicaoSchema, { idPontoColeta, dados }));
+}
+export function excluirPontoColeta(idPontoColeta: string) {
+  return pontosColetaClient.excluirPontoColeta(create(ExcluirPontoColetaRequisicaoSchema, { idPontoColeta }));
+}
+export function alterarStatusPontoColeta(idPontoColeta: string, statusVerificacao: string) {
+  return pontosColetaClient.alterarStatusPontoColeta(create(AlterarStatusPontoColetaRequisicaoSchema, { idPontoColeta, statusVerificacao }));
 }
 
 export function listarQuestoes() {

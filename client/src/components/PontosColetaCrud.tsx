@@ -1,0 +1,70 @@
+import { useCallback, useEffect, useState } from "react";
+import { Check, Crosshair, ExternalLink, MapPinned, Pencil, Plus, Save, Trash2, X } from "lucide-react";
+import { alterarStatusPontoColeta, atualizarPontoColeta, criarPontoColeta, excluirPontoColeta, listarPontosColeta } from "@/lib/api";
+
+type Ponto = {
+  idPontoColeta: string;
+  nomePontoColeta: string;
+  enderecoPontoColeta: string;
+  cidadePontoColeta: string;
+  estadoPontoColeta: string;
+  latitudePontoColeta: number;
+  longitudePontoColeta: number;
+  statusVerificacao: string;
+  categoriasAceitas: string[];
+};
+type Dados = Omit<Ponto, "idPontoColeta" | "statusVerificacao">;
+const vazio: Dados = { nomePontoColeta: "", enderecoPontoColeta: "", cidadePontoColeta: "João Pessoa", estadoPontoColeta: "PB", latitudePontoColeta: 0, longitudePontoColeta: 0, categoriasAceitas: [] };
+
+export default function PontosColetaCrud({ podeEscrever, podeAprovar }: { podeEscrever: boolean; podeAprovar: boolean }) {
+  const [pontos, setPontos] = useState<Ponto[]>([]);
+  const [dados, setDados] = useState<Dados>(vazio);
+  const [editando, setEditando] = useState<string | null>(null);
+  const [aberto, setAberto] = useState(false);
+  const [categoria, setCategoria] = useState("");
+  const [mensagem, setMensagem] = useState<string | null>(null);
+  const [erro, setErro] = useState<string | null>(null);
+  const [carregando, setCarregando] = useState(false);
+
+  const carregar = useCallback(async () => {
+    setCarregando(true); setErro(null);
+    try {
+      const resposta = await listarPontosColeta(dados.cidadePontoColeta, categoria);
+      setPontos(resposta.pontosColeta.map(ponto => ({ ...ponto })));
+    } catch { setErro("Não foi possível carregar os pontos de coleta."); }
+    finally { setCarregando(false); }
+  }, [categoria, dados.cidadePontoColeta]);
+  useEffect(() => { void carregar(); }, [carregar]);
+
+  function localizar() {
+    if (!navigator.geolocation) { setErro("Este navegador não oferece geolocalização."); return; }
+    navigator.geolocation.getCurrentPosition(
+      posicao => setDados(atual => ({ ...atual, latitudePontoColeta: Number(posicao.coords.latitude.toFixed(7)), longitudePontoColeta: Number(posicao.coords.longitude.toFixed(7)) })),
+      () => setErro("Não foi possível obter sua localização. Permita o acesso e tente novamente."),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+    );
+  }
+  function abrirNovo() { setEditando(null); setDados(vazio); setAberto(true); setMensagem(null); setErro(null); }
+  function abrirEdicao(ponto: Ponto) { setEditando(ponto.idPontoColeta); setDados({ ...ponto }); setAberto(true); setMensagem(null); setErro(null); }
+  function atualizar<K extends keyof Dados>(campo: K, valor: Dados[K]) { setDados(atual => ({ ...atual, [campo]: valor })); }
+  function alternarCategoria(valor: string) { atualizar("categoriasAceitas", dados.categoriasAceitas.includes(valor) ? dados.categoriasAceitas.filter(item => item !== valor) : [...dados.categoriasAceitas, valor]); }
+  async function salvar(event: React.FormEvent) {
+    event.preventDefault(); setErro(null); setMensagem(null);
+    if (!dados.nomePontoColeta.trim() || !dados.enderecoPontoColeta.trim() || !dados.cidadePontoColeta.trim() || dados.latitudePontoColeta === 0 || dados.longitudePontoColeta === 0) { setErro("Preencha os dados obrigatórios e capture uma localização válida."); return; }
+    try {
+      const resposta = editando ? await atualizarPontoColeta(editando, dados) : await criarPontoColeta(dados);
+      setMensagem(resposta.mensagemResultado); setAberto(false); await carregar();
+    } catch { setErro("Não foi possível salvar o ponto. Verifique suas permissões e os dados informados."); }
+  }
+  async function remover(id: string) { if (!window.confirm("Excluir este ponto de coleta?")) return; try { const resposta = await excluirPontoColeta(id); setMensagem(resposta.mensagemResultado); await carregar(); } catch { setErro("Não foi possível excluir o ponto."); } }
+  async function moderar(id: string, status: string) { try { const resposta = await alterarStatusPontoColeta(id, status); setMensagem(resposta.mensagemResultado); await carregar(); } catch { setErro("Não foi possível alterar o status do ponto."); } }
+
+  return <div className="space-y-6">
+    <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#3d9664]">Território</p><h2 className="mt-2 text-2xl font-black text-[#17362a] sm:text-3xl">Pontos de coleta</h2><p className="mt-2 text-sm leading-6 text-[#668073]">Cadastre, encontre e valide locais com coordenadas obtidas pelo navegador.</p></div>{podeEscrever ? <button type="button" onClick={abrirNovo} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1d7953] px-4 py-2.5 text-sm font-black text-white"><Plus className="h-4 w-4" /> Novo ponto</button> : null}</div>
+    {erro ? <div role="alert" className="rounded-2xl border border-[#f0c1bd] bg-[#fff4f0] p-4 text-sm font-bold text-[#a8493e]">{erro}</div> : null}
+    {mensagem ? <div role="status" className="rounded-2xl border border-[#cfe3d1] bg-[#f2faf0] p-4 text-sm font-semibold text-[#356b4a]">{mensagem}</div> : null}
+    <div className="flex flex-col gap-3 rounded-2xl border border-[#e0eae1] bg-white p-4 sm:flex-row"><input value={dados.cidadePontoColeta} onChange={event => atualizar("cidadePontoColeta", event.target.value)} placeholder="Cidade" className="rounded-xl border border-[#d9e6db] px-4 py-3 text-sm font-semibold outline-none focus:border-[#4e9b68]" /><select value={categoria} onChange={event => setCategoria(event.target.value)} className="rounded-xl border border-[#d9e6db] px-4 py-3 text-sm font-semibold outline-none focus:border-[#4e9b68]"><option value="">Todas as categorias</option><option>Recicláveis</option><option>Eletroeletrônicos</option><option>Orgânicos</option><option>Óleo de cozinha</option></select><button type="button" onClick={() => void carregar()} className="rounded-xl border border-[#cfe3d1] px-4 py-3 text-sm font-black text-[#1d7953]">Pesquisar</button></div>
+    <div className="grid gap-4 md:grid-cols-2">{pontos.map(ponto => <article key={ponto.idPontoColeta} className="rounded-2xl border border-[#e1ebe2] bg-white p-5 shadow-[0_16px_32px_-30px_rgba(23,54,42,.6)]"><div className="flex items-start justify-between gap-3"><div className="flex items-start gap-3"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#e9f5e7] text-[#2a7951]"><MapPinned className="h-5 w-5" /></span><div><h3 className="font-black text-[#17362a]">{ponto.nomePontoColeta}</h3><p className="mt-1 text-sm text-[#698273]">{ponto.enderecoPontoColeta} · {ponto.cidadePontoColeta}/{ponto.estadoPontoColeta}</p></div></div><span className="rounded-full bg-[#e5f5e6] px-2.5 py-1 text-[10px] font-black text-[#28744d]">{ponto.statusVerificacao}</span></div><div className="mt-4 flex flex-wrap gap-2">{ponto.categoriasAceitas.map(item => <span key={item} className="rounded-lg bg-[#f0f5f0] px-2 py-1 text-xs font-bold text-[#5b7969]">{item}</span>)}</div><div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-semibold text-[#6c8879]"><span>{ponto.latitudePontoColeta.toFixed(5)}, {ponto.longitudePontoColeta.toFixed(5)}</span><a target="_blank" rel="noreferrer" href={`https://www.openstreetmap.org/?mlat=${ponto.latitudePontoColeta}&mlon=${ponto.longitudePontoColeta}#map=17/${ponto.latitudePontoColeta}/${ponto.longitudePontoColeta}`} className="inline-flex items-center gap-1 font-black text-[#1d7953]"><ExternalLink className="h-3.5 w-3.5" /> Abrir mapa</a></div><div className="mt-4 flex flex-wrap gap-2 border-t border-[#edf2ed] pt-4">{podeEscrever ? <><button type="button" onClick={() => abrirEdicao(ponto)} className="inline-flex items-center gap-1 rounded-lg bg-[#eef5ed] px-3 py-2 text-xs font-black text-[#337a51]"><Pencil className="h-3.5 w-3.5" /> Editar</button><button type="button" onClick={() => void remover(ponto.idPontoColeta)} className="inline-flex items-center gap-1 rounded-lg bg-[#fff1ef] px-3 py-2 text-xs font-black text-[#a8493e]"><Trash2 className="h-3.5 w-3.5" /> Excluir</button></> : null}{podeAprovar && ponto.statusVerificacao !== "verificado" ? <><button type="button" onClick={() => void moderar(ponto.idPontoColeta, "verificado")} className="inline-flex items-center gap-1 rounded-lg bg-[#e5f5e6] px-3 py-2 text-xs font-black text-[#28744d]"><Check className="h-3.5 w-3.5" /> Aprovar</button><button type="button" onClick={() => void moderar(ponto.idPontoColeta, "rejeitado")} className="inline-flex items-center gap-1 rounded-lg bg-[#fff1ef] px-3 py-2 text-xs font-black text-[#a8493e]"><X className="h-3.5 w-3.5" /> Rejeitar</button></> : null}</div></article>)}{!carregando && pontos.length === 0 ? <p className="md:col-span-2 rounded-2xl bg-white p-8 text-center text-sm font-semibold text-[#708a7b]">Nenhum ponto encontrado.</p> : null}</div>
+    {aberto ? <div className="fixed inset-0 z-50 grid place-items-center bg-[#17362a]/40 p-4"><form onSubmit={event => void salvar(event)} className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-[28px] bg-white p-6 shadow-2xl sm:p-8"><div className="flex items-center justify-between"><div><p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#3d9664]">CRUD seguro</p><h3 className="mt-1 text-2xl font-black text-[#17362a]">{editando ? "Editar ponto" : "Novo ponto de coleta"}</h3></div><button type="button" onClick={() => setAberto(false)} className="rounded-xl p-2 text-[#648074] hover:bg-[#edf3ed]"><X /></button></div><div className="mt-6 grid gap-4 sm:grid-cols-2"><label className="sm:col-span-2"><span className="mb-1 block text-xs font-black uppercase text-[#5f7b6c]">Nome</span><input required value={dados.nomePontoColeta} onChange={event => atualizar("nomePontoColeta", event.target.value)} className="w-full rounded-xl border border-[#d9e6db] px-4 py-3 text-sm" /></label><label className="sm:col-span-2"><span className="mb-1 block text-xs font-black uppercase text-[#5f7b6c]">Endereço</span><input required value={dados.enderecoPontoColeta} onChange={event => atualizar("enderecoPontoColeta", event.target.value)} className="w-full rounded-xl border border-[#d9e6db] px-4 py-3 text-sm" /></label><label><span className="mb-1 block text-xs font-black uppercase text-[#5f7b6c]">Cidade</span><input required value={dados.cidadePontoColeta} onChange={event => atualizar("cidadePontoColeta", event.target.value)} className="w-full rounded-xl border border-[#d9e6db] px-4 py-3 text-sm" /></label><label><span className="mb-1 block text-xs font-black uppercase text-[#5f7b6c]">UF</span><input required maxLength={2} value={dados.estadoPontoColeta} onChange={event => atualizar("estadoPontoColeta", event.target.value.toUpperCase())} className="w-full rounded-xl border border-[#d9e6db] px-4 py-3 text-sm uppercase" /></label><label><span className="mb-1 block text-xs font-black uppercase text-[#5f7b6c]">Latitude</span><input type="number" step="any" value={dados.latitudePontoColeta || ""} onChange={event => atualizar("latitudePontoColeta", Number(event.target.value))} className="w-full rounded-xl border border-[#d9e6db] px-4 py-3 text-sm" /></label><label><span className="mb-1 block text-xs font-black uppercase text-[#5f7b6c]">Longitude</span><input type="number" step="any" value={dados.longitudePontoColeta || ""} onChange={event => atualizar("longitudePontoColeta", Number(event.target.value))} className="w-full rounded-xl border border-[#d9e6db] px-4 py-3 text-sm" /></label></div><button type="button" onClick={localizar} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#e6f1d0] px-4 py-3 text-sm font-black text-[#2d7a50]"><Crosshair className="h-4 w-4" /> Usar minha localização atual</button><div className="mt-5"><p className="mb-2 text-xs font-black uppercase text-[#5f7b6c]">Materiais aceitos</p><div className="flex flex-wrap gap-2">{["Recicláveis", "Eletroeletrônicos", "Orgânicos", "Óleo de cozinha", "Pilhas e baterias"].map(item => <button type="button" key={item} onClick={() => alternarCategoria(item)} className={`rounded-full px-3 py-2 text-xs font-black ${dados.categoriasAceitas.includes(item) ? "bg-[#1d7953] text-white" : "bg-[#edf3ed] text-[#5d796a]"}`}>{item}</button>)}</div></div><div className="mt-7 flex justify-end gap-3"><button type="button" onClick={() => setAberto(false)} className="rounded-xl border border-[#cfe3d1] px-4 py-3 text-sm font-black text-[#5d796a]">Cancelar</button><button type="submit" className="inline-flex items-center gap-2 rounded-xl bg-[#17362a] px-5 py-3 text-sm font-black text-white"><Save className="h-4 w-4" /> Salvar</button></div></form></div> : null}
+  </div>;
+}
