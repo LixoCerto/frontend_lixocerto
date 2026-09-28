@@ -30,6 +30,8 @@ export type IdentidadeAutenticada = {
   emailVerificadoUsuario: boolean;
 };
 
+let renovacaoEmAndamento: Promise<SessaoLocal | null> | null = null;
+
 type UseAuthOptions = {
   redirectOnUnauthenticated?: boolean;
   redirectPath?: string;
@@ -71,17 +73,22 @@ export function useAuth(options?: UseAuthOptions) {
   }, []);
 
   const renovar = useCallback(async (): Promise<SessaoLocal | null> => {
+    if (renovacaoEmAndamento) return renovacaoEmAndamento;
     const tokenAtualizacao = obterTokenAtualizacao();
     if (!tokenAtualizacao) return null;
-    const resposta = await renovarToken(tokenAtualizacao);
-    const novaSessao: SessaoLocal = {
-      tokenAcesso: resposta.tokenAcesso,
-      tokenAtualizacao: resposta.tokenAtualizacao,
-      expiraEmSegundos: resposta.expiraEmSegundos,
-      identidade: resposta.identidade!,
-    };
-    aplicarSessao(novaSessao);
-    return novaSessao;
+    renovacaoEmAndamento = (async () => {
+      const resposta = await renovarToken(tokenAtualizacao);
+      const novaSessao: SessaoLocal = {
+        tokenAcesso: resposta.tokenAcesso,
+        tokenAtualizacao: resposta.tokenAtualizacao,
+        idSessao: resposta.idSessao,
+        expiraEmSegundos: resposta.expiraEmSegundos,
+        identidade: resposta.identidade!,
+      };
+      aplicarSessao(novaSessao);
+      return novaSessao;
+    })().finally(() => { renovacaoEmAndamento = null; });
+    return renovacaoEmAndamento;
   }, [aplicarSessao]);
 
   const carregar = useCallback(async () => {
@@ -138,6 +145,7 @@ export function useAuth(options?: UseAuthOptions) {
     aplicarSessao({
       tokenAcesso: resposta.tokenAcesso,
       tokenAtualizacao: resposta.tokenAtualizacao,
+      idSessao: resposta.idSessao,
       expiraEmSegundos: resposta.expiraEmSegundos,
       identidade: resposta.identidade!,
     });
@@ -150,6 +158,7 @@ export function useAuth(options?: UseAuthOptions) {
     aplicarSessao({
       tokenAcesso: resposta.tokenAcesso,
       tokenAtualizacao: resposta.tokenAtualizacao,
+      idSessao: resposta.idSessao,
       expiraEmSegundos: resposta.expiraEmSegundos,
       identidade: resposta.identidade!,
     });

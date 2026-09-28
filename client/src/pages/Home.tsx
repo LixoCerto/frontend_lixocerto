@@ -16,6 +16,8 @@ import {
   Leaf,
   MailWarning,
   MapPinned,
+  Pencil,
+  Save,
   Recycle,
   Search,
   ShieldCheck,
@@ -31,7 +33,10 @@ import {
   listarMateriais,
   listarPontosColeta,
   listarSessoes,
+  obterPerfilAtual,
+  atualizarPerfil,
   obterProgressoUsuario,
+  revogarSessao as revogarSessaoApi,
   revogarTodasSessoes,
 } from "@/lib/api";
 import {
@@ -70,6 +75,7 @@ type SessoesAtivasState = {
   enderecoIp: string;
   criadaEm: string;
   expiraEm: string;
+  atual: boolean;
 }[];
 
 interface Indicador {
@@ -116,12 +122,16 @@ function CabecalhoSecao({ etiqueta, titulo, descricao, acao }: { etiqueta: strin
 }
 
 export default function Home() {
-  const { user, identidade, isAuthenticated, loading: authLoading, error: authError, logout } = useAuth({
+  const { user, identidade, isAuthenticated, loading: authLoading, error: authError, logout, solicitarVerificacaoEmail } = useAuth({
     redirectOnUnauthenticated: true,
     redirectPath: "/login",
   });
-  const { solicitarVerificacaoEmail } = useAuth();
   const [avisoVerificacao, setAvisoVerificacao] = useState<string | null>(null);
+  const [perfilOficial, setPerfilOficial] = useState<{ nomeUsuario: string; emailUsuario: string; statusUsuario: string } | null>(null);
+  const [editandoNome, setEditandoNome] = useState(false);
+  const [novoNome, setNovoNome] = useState("");
+  const [salvandoNome, setSalvandoNome] = useState(false);
+  const [avisoPerfil, setAvisoPerfil] = useState<string | null>(null);
   const [reivindicandoVerificacao, setReivindicandoVerificacao] = useState(false);
   const emailVerificado = identidade?.emailVerificadoUsuario ?? true;
 
@@ -157,12 +167,20 @@ export default function Home() {
   const [revogandoSessoes, setRevogandoSessoes] = useState(false);
 
   const perfilBase = PERFIS_ACESSO[papel];
-  const nomeAutenticado = user?.name?.trim() || perfilBase.nomeDemonstracao;
+  const nomeAutenticado = perfilOficial?.nomeUsuario?.trim() || user?.name?.trim() || perfilBase.nomeDemonstracao;
   const iniciais = nomeAutenticado.split(/\s+/).filter(Boolean).slice(0, 2).map(parte => parte[0]?.toUpperCase()).join("") || perfilBase.iniciais;
   const perfil = { ...perfilBase, nomeDemonstracao: nomeAutenticado, iniciais };
   const pode = (permissao: CodigoPermissao) => permissoes.includes(permissao);
   const quantidadePermissoes = permissoes.length;
   const nomeCurto = nomeAutenticado.split(/\s+/).slice(0, 2).join(" ");
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    void obterPerfilAtual().then(perfilAtual => {
+      setPerfilOficial({ nomeUsuario: perfilAtual.nomeUsuario, emailUsuario: perfilAtual.emailUsuario, statusUsuario: perfilAtual.statusUsuario });
+      setNovoNome(perfilAtual.nomeUsuario);
+    }).catch(() => setAvisoPerfil("Não foi possível carregar o perfil oficial agora."));
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -243,6 +261,7 @@ export default function Home() {
           enderecoIp: sessao.enderecoIp || "IP não informado",
           criadaEm: sessao.dataCriacao,
           expiraEm: sessao.dataExpiracao,
+          atual: sessao.atual,
         })));
       } catch {
         if (ativo) setErroSessoes("Não foi possível consultar as sessões ativas agora.");
@@ -432,6 +451,40 @@ export default function Home() {
     }
   }
 
+  async function salvarNomePerfil() {
+    const nome = novoNome.trim().replace(/\s+/g, " ");
+    if (nome.length < 2) {
+      setAvisoPerfil("Informe um nome com pelo menos 2 caracteres.");
+      return;
+    }
+    setSalvandoNome(true);
+    setAvisoPerfil(null);
+    try {
+      const resposta = await atualizarPerfil(nome);
+      if (resposta.perfil) {
+        setPerfilOficial({ nomeUsuario: resposta.perfil.nomeUsuario, emailUsuario: resposta.perfil.emailUsuario, statusUsuario: resposta.perfil.statusUsuario });
+        setNovoNome(resposta.perfil.nomeUsuario);
+      }
+      setEditandoNome(false);
+      setAvisoPerfil("Perfil atualizado com sucesso.");
+    } catch {
+      setAvisoPerfil("Não foi possível atualizar o perfil agora.");
+    } finally {
+      setSalvandoNome(false);
+    }
+  }
+
+  async function encerrarSessao(idSessao: string, atual: boolean) {
+    if (!window.confirm(atual ? "Encerrar sua sessão atual? Será necessário entrar novamente." : "Revogar esta sessão?")) return;
+    try {
+      await revogarSessaoApi(idSessao);
+      if (atual) await logout();
+      else setSessoesAtivas(sessoes => sessoes.filter(sessao => sessao.id !== idSessao));
+    } catch {
+      setErroSessoes("Não foi possível revogar esta sessão agora. Tente novamente.");
+    }
+  }
+
   function renderizarPerfil() {
     return (
       <div className="space-y-6">
@@ -443,12 +496,20 @@ export default function Home() {
         <div className="grid gap-5 lg:grid-cols-[.8fr_1.2fr]">
           <article className="rounded-[24px] bg-[#17362a] p-6 text-white">
             <span className="grid h-14 w-14 place-items-center rounded-2xl bg-[#d6efad] text-lg font-black text-[#17362a]">{perfil.iniciais}</span>
-            <h3 className="mt-5 text-xl font-black">{perfil.nomeDemonstracao}</h3>
-            <p className="mt-1 text-sm text-[#bcd2c3]">{perfil.rotulo} · sessão autenticada</p>
+            {editandoNome ? (
+              <div className="mt-5 flex gap-2">
+                <input value={novoNome} onChange={evento => setNovoNome(evento.target.value)} className="min-w-0 flex-1 rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white outline-none placeholder:text-white/50" aria-label="Nome do perfil" />
+                <button type="button" onClick={() => void salvarNomePerfil()} disabled={salvandoNome} className="rounded-xl bg-[#d6efad] px-3 py-2 text-[#17362a] disabled:opacity-60" aria-label="Salvar nome"><Save className="h-4 w-4" /></button>
+              </div>
+            ) : (
+              <div className="mt-5 flex items-center gap-2"><h3 className="text-xl font-black">{perfil.nomeDemonstracao}</h3><button type="button" onClick={() => { setNovoNome(nomeAutenticado); setEditandoNome(true); setAvisoPerfil(null); }} className="rounded-lg p-1 text-[#d6efad]" aria-label="Editar nome"><Pencil className="h-4 w-4" /></button></div>
+            )}
+            <p className="mt-1 text-sm text-[#bcd2c3]">{perfil.rotulo} · {perfilOficial?.statusUsuario || "status não informado"}</p>
             <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-3 text-xs leading-5 text-[#d2e5d7]">
               A API própria protege identidade e sessões. O frontend não persiste a senha nem expõe tokens na interface.
             </div>
             <p className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#d6efad] px-4 py-2.5 text-sm font-black text-[#17362a]"><KeyRound className="h-4 w-4" /> Sessão JWT própria ativa</p>
+            {avisoPerfil ? <p role="status" className="mt-3 text-xs font-bold text-[#d6efad]">{avisoPerfil}</p> : null}
           </article>
           <article className="rounded-2xl border border-[#e1ebe2] bg-white p-6">
             <div className="flex items-center justify-between">
@@ -468,7 +529,10 @@ export default function Home() {
                   <strong className="block truncate text-sm">{sessao.agente}</strong>
                   <span className="mt-1 block text-xs text-[#7f9688]">{sessao.enderecoIp} · iniciada em {formatarDataSessao(sessao.criadaEm)}</span>
                 </span>
-                <span className="shrink-0 rounded-full bg-[#e2f3e2] px-2 py-1 text-[10px] font-black text-[#2d754d]">Expira {formatarDataSessao(sessao.expiraEm)}</span>
+                <div className="flex shrink-0 flex-col items-end gap-2">
+                  <span className={`rounded-full px-2 py-1 text-[10px] font-black ${sessao.atual ? "bg-[#dff0cb] text-[#2d754d]" : "bg-[#e2f3e2] text-[#2d754d]"}`}>{sessao.atual ? "Sessão atual" : `Expira ${formatarDataSessao(sessao.expiraEm)}`}</span>
+                  <button type="button" onClick={() => void encerrarSessao(sessao.id, sessao.atual)} className="text-[10px] font-black text-[#ae4545]">Revogar sessão</button>
+                </div>
               </div>
             ))}
           </article>

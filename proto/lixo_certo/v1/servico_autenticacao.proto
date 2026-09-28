@@ -35,6 +35,7 @@ message CadastrarUsuarioResposta {
   int32 expira_em_segundos = 3;
   IdentidadeAutenticada identidade = 4;
   bool requer_verificacao_email = 5;
+  string id_sessao = 6;
 }
 
 message EntrarResposta {
@@ -43,6 +44,7 @@ message EntrarResposta {
   int32 expira_em_segundos = 3;
   IdentidadeAutenticada identidade = 4;
   bool requer_verificacao_email = 5;
+  string id_sessao = 6;
 }
 
 message RenovarTokenResposta {
@@ -50,6 +52,7 @@ message RenovarTokenResposta {
   string token_atualizacao = 2;
   int32 expira_em_segundos = 3;
   IdentidadeAutenticada identidade = 4;
+  string id_sessao = 5;
 }
 
 message SairResposta {

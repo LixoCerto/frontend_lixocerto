@@ -20,7 +20,12 @@ import {
   RevogarTodasSessoesRequisicaoSchema,
   ServicoSessoes,
 } from "@shared/gen/lixo_certo/v1/servico_sessoes_pb";
-import { obterTokenAcesso } from "./sessao";
+import {
+  AtualizarPerfilRequisicaoSchema,
+  ObterPerfilAtualRequisicaoSchema,
+  ServicoPerfil,
+} from "@shared/gen/lixo_certo/v1/servico_perfil_pb";
+import { obterTokenAcesso, carregarSessao } from "./sessao";
 import {
   ListarMateriaisRequisicaoSchema,
   ServicoMateriais,
@@ -50,6 +55,8 @@ const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "/api/rpc";
 const bearerInterceptor: Interceptor = (next) => async (request) => {
   const token = obterTokenAcesso();
   if (token) request.header.set("Authorization", `Bearer ${token}`);
+  const idSessao = carregarSessao()?.idSessao;
+  if (idSessao) request.header.set("x-id-sessao", idSessao);
   return next(request);
 };
 
@@ -57,6 +64,7 @@ const transport = createGrpcWebTransport({ baseUrl: apiBaseUrl, interceptors: [b
 
 export const autenticacaoClient = createClient(ServicoAutenticacao, transport);
 export const sessoesClient = createClient(ServicoSessoes, transport);
+export const perfilClient = createClient(ServicoPerfil, transport);
 export const materiaisClient = createClient(ServicoMateriais, transport);
 export const pontosColetaClient = createClient(ServicoPontosColeta, transport);
 export const questionariosClient = createClient(ServicoQuestionarios, transport);
@@ -97,6 +105,14 @@ export function solicitarRecuperacaoSenha(emailUsuario: string) {
 
 export function redefinirSenha(emailUsuario: string, codigoRedefinicao: string, novaSenhaUsuario: string) {
   return autenticacaoClient.redefinirSenha(create(RedefinirSenhaRequisicaoSchema, { emailUsuario, codigoRedefinicao, novaSenhaUsuario }));
+}
+
+export function obterPerfilAtual() {
+  return perfilClient.obterPerfilAtual(create(ObterPerfilAtualRequisicaoSchema, {}));
+}
+
+export function atualizarPerfil(nomeUsuario: string) {
+  return perfilClient.atualizarPerfil(create(AtualizarPerfilRequisicaoSchema, { nomeUsuario }));
 }
 
 export function listarSessoes() {

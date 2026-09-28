@@ -10,6 +10,7 @@ export type IdentidadeLocal = {
 export type SessaoLocal = {
   tokenAcesso: string;
   tokenAtualizacao: string;
+  idSessao: string;
   expiraEmSegundos: number;
   identidade: IdentidadeLocal;
 };
@@ -26,7 +27,7 @@ export function carregarSessao(): SessaoLocal | null {
   if (!valor) return null;
   try {
     const sessao = JSON.parse(valor) as SessaoLocal;
-    if (!sessao.tokenAcesso || !sessao.tokenAtualizacao || !sessao.identidade) return null;
+    if (!sessao.tokenAcesso || !sessao.tokenAtualizacao || !sessao.idSessao || !sessao.identidade) return null;
     return sessao;
   } catch {
     limparSessao();
