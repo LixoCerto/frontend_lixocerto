@@ -41,6 +41,7 @@ import {
   revogarTodasSessoes,
 } from "@/lib/api";
 import {
+  CODIGOS_PERMISSAO,
   PERFIS_ACESSO,
   type CodigoPermissao,
   type PapelAcesso,
@@ -149,8 +150,14 @@ export default function Home() {
       setReivindicandoVerificacao(false);
     }
   }
-  const papel = (identidade?.papeisUsuario.find(item => ["usuario", "pesquisador", "revisor", "administrador"].includes(item)) ?? "usuario") as PapelAcesso;
-  const permissoes = (identidade?.permissoesUsuario ?? []) as CodigoPermissao[];
+  const papeis = identidade?.papeisUsuario ?? [];
+  const papel = (papeis.includes("administrador")
+    ? "administrador"
+    : papeis.find(item => ["usuario", "pesquisador", "revisor"].includes(item)) ?? "usuario") as PapelAcesso;
+  const permissoesBanco = (identidade?.permissoesUsuario ?? []) as CodigoPermissao[];
+  const permissoes = papel === "administrador"
+    ? Array.from(new Set([...permissoesBanco, ...CODIGOS_PERMISSAO]))
+    : permissoesBanco;
   const [paginaAtiva, setPaginaAtiva] = useState("inicio");
   const [dashboard, setDashboard] = useState<DashboardState | null>(null);
   const [materials, setMaterials] = useState<MaterialsState>([]);
