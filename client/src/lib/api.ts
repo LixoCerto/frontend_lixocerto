@@ -33,6 +33,7 @@ import {
 import {
   AlterarStatusPontoColetaRequisicaoSchema,
   AtualizarPontoColetaRequisicaoSchema,
+  BuscarEnderecoPorCoordenadasRequisicaoSchema,
   CriarPontoColetaRequisicaoSchema,
   ExcluirPontoColetaRequisicaoSchema,
   ListarPontosColetaRequisicaoSchema,
@@ -142,7 +143,7 @@ export function listarPontosColeta(cidade = "João Pessoa", categoriaMaterial = 
 export function obterPontoColeta(idPontoColeta: string) {
   return pontosColetaClient.obterPontoColeta(create(ObterPontoColetaRequisicaoSchema, { idPontoColeta }));
 }
-export function criarPontoColeta(dados: { nomePontoColeta: string; enderecoPontoColeta: string; cidadePontoColeta: string; estadoPontoColeta: string; latitudePontoColeta: number; longitudePontoColeta: number; categoriasAceitas: string[]; origemInformacao?: string }) {
+export function criarPontoColeta(dados: { nomePontoColeta: string; enderecoPontoColeta: string; cepPontoColeta?: string; cidadePontoColeta: string; estadoPontoColeta: string; latitudePontoColeta: number; longitudePontoColeta: number; categoriasAceitas: string[]; origemInformacao?: string }) {
   return pontosColetaClient.criarPontoColeta(create(CriarPontoColetaRequisicaoSchema, { dados }));
 }
 export function atualizarPontoColeta(idPontoColeta: string, dados: Parameters<typeof criarPontoColeta>[0]) {
@@ -153,6 +154,9 @@ export function excluirPontoColeta(idPontoColeta: string) {
 }
 export function alterarStatusPontoColeta(idPontoColeta: string, statusVerificacao: string) {
   return pontosColetaClient.alterarStatusPontoColeta(create(AlterarStatusPontoColetaRequisicaoSchema, { idPontoColeta, statusVerificacao }));
+}
+export function buscarEnderecoPorCoordenadas(latitude: number, longitude: number) {
+  return pontosColetaClient.buscarEnderecoPorCoordenadas(create(BuscarEnderecoPorCoordenadasRequisicaoSchema, { latitude, longitude }));
 }
 
 export function listarQuestoes() {
