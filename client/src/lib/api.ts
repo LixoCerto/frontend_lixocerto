@@ -46,9 +46,23 @@ import {
 } from "@shared/gen/lixo_certo/v1/servico_pontos_coleta_pb";
 import {
   EnviarRespostaQuestionarioRequisicaoSchema,
+  AlterarStatusQuestaoRequisicaoSchema,
+  AtualizarQuestaoRequisicaoSchema,
+  CriarQuestaoRequisicaoSchema,
+  ListarQuestoesGestaoRequisicaoSchema,
   ListarQuestoesRequisicaoSchema,
   ServicoQuestionarios,
 } from "@shared/gen/lixo_certo/v1/servico_questionarios_pb";
+import {
+  AlterarStatusDesafioRequisicaoSchema,
+  AtualizarDesafioRequisicaoSchema,
+  CriarDesafioRequisicaoSchema,
+  ListarDesafiosGestaoRequisicaoSchema,
+  ListarDesafiosRequisicaoSchema,
+  ParticiparDesafioRequisicaoSchema,
+  RegistrarAcaoSustentavelRequisicaoSchema,
+  ServicoDesafios,
+} from "@shared/gen/lixo_certo/v1/servico_desafios_pb";
 import {
   ObterProgressoUsuarioRequisicaoSchema,
   ObterRankingRequisicaoSchema,
@@ -78,6 +92,7 @@ export const perfilClient = createClient(ServicoPerfil, transport);
 export const materiaisClient = createClient(ServicoMateriais, transport);
 export const pontosColetaClient = createClient(ServicoPontosColeta, transport);
 export const questionariosClient = createClient(ServicoQuestionarios, transport);
+export const desafiosClient = createClient(ServicoDesafios, transport);
 export const gamificacaoClient = createClient(ServicoGamificacao, transport);
 export const avaliacaoClient = createClient(ServicoAvaliacaoUsabilidade, transport);
 
@@ -195,12 +210,63 @@ export function buscarEnderecoPorCoordenadas(latitude: number, longitude: number
   return pontosColetaClient.buscarEnderecoPorCoordenadas(create(BuscarEnderecoPorCoordenadasRequisicaoSchema, { latitude, longitude }));
 }
 
-export function listarQuestoes() {
-  return questionariosClient.listarQuestoes(create(ListarQuestoesRequisicaoSchema, { numeroPagina: 1, tamanhoPagina: 10 }));
+export function listarQuestoes(numeroPagina = 1, tamanhoPagina = 100) {
+  return questionariosClient.listarQuestoes(create(ListarQuestoesRequisicaoSchema, { numeroPagina, tamanhoPagina }));
 }
 
 export function enviarRespostaQuestionario(idQuestao: string, idAlternativa: string) {
   return questionariosClient.enviarRespostaQuestionario(create(EnviarRespostaQuestionarioRequisicaoSchema, { idQuestao, idAlternativa }));
+}
+
+export type DadosQuestaoApi = {
+  enunciadoQuestao: string;
+  explicacaoQuestao: string;
+  quantidadePontos: number;
+  alternativas: Array<{ idAlternativa?: string; textoAlternativa: string; indicaCorreta: boolean; ordemExibicao: number }>;
+};
+
+export function listarQuestoesGestao(textoPesquisa = "", statusQuestao = "todos") {
+  return questionariosClient.listarQuestoesGestao(create(ListarQuestoesGestaoRequisicaoSchema, { textoPesquisa, statusQuestao, numeroPagina: 1, tamanhoPagina: 100 }));
+}
+export function criarQuestao(dados: DadosQuestaoApi) {
+  return questionariosClient.criarQuestao(create(CriarQuestaoRequisicaoSchema, { dados: { ...dados, alternativas: dados.alternativas.map((alternativa, indice) => ({ ...alternativa, idAlternativa: alternativa.idAlternativa ?? "", ordemExibicao: indice + 1 })) } }));
+}
+export function atualizarQuestao(idQuestao: string, dados: DadosQuestaoApi) {
+  return questionariosClient.atualizarQuestao(create(AtualizarQuestaoRequisicaoSchema, { idQuestao, dados: { ...dados, alternativas: dados.alternativas.map((alternativa, indice) => ({ ...alternativa, idAlternativa: alternativa.idAlternativa ?? "", ordemExibicao: indice + 1 })) } }));
+}
+export function alterarStatusQuestao(idQuestao: string, statusQuestao: string) {
+  return questionariosClient.alterarStatusQuestao(create(AlterarStatusQuestaoRequisicaoSchema, { idQuestao, statusQuestao }));
+}
+
+export type DadosDesafioApi = {
+  nomeDesafio: string;
+  descricaoDesafio: string;
+  tipoAcao: string;
+  metaQuantidade: number;
+  quantidadePontos: number;
+  dataInicio: string;
+  dataFim: string;
+};
+export function listarDesafios() {
+  return desafiosClient.listarDesafios(create(ListarDesafiosRequisicaoSchema, { numeroPagina: 1, tamanhoPagina: 100 }));
+}
+export function listarDesafiosGestao(textoPesquisa = "", statusDesafio = "todos") {
+  return desafiosClient.listarDesafiosGestao(create(ListarDesafiosGestaoRequisicaoSchema, { textoPesquisa, statusDesafio, numeroPagina: 1, tamanhoPagina: 100 }));
+}
+export function criarDesafio(dados: DadosDesafioApi) {
+  return desafiosClient.criarDesafio(create(CriarDesafioRequisicaoSchema, { dados }));
+}
+export function atualizarDesafio(idDesafio: string, dados: DadosDesafioApi) {
+  return desafiosClient.atualizarDesafio(create(AtualizarDesafioRequisicaoSchema, { idDesafio, dados }));
+}
+export function alterarStatusDesafio(idDesafio: string, statusDesafio: string) {
+  return desafiosClient.alterarStatusDesafio(create(AlterarStatusDesafioRequisicaoSchema, { idDesafio, statusDesafio }));
+}
+export function participarDesafio(idDesafio: string) {
+  return desafiosClient.participarDesafio(create(ParticiparDesafioRequisicaoSchema, { idDesafio }));
+}
+export function registrarAcaoSustentavel(idDesafio: string, tipoAcao: string, descricaoAcao: string) {
+  return desafiosClient.registrarAcaoSustentavel(create(RegistrarAcaoSustentavelRequisicaoSchema, { idDesafio, tipoAcao, descricaoAcao }));
 }
 
 export function obterProgressoUsuario() {

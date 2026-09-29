@@ -8,6 +8,7 @@ export const CODIGOS_PERMISSAO = [
   "questionarios:responder",
   "questionarios:administrar",
   "gamificacao:ler",
+  "gamificacao:administrar",
   "avaliacao_usabilidade:enviar",
   "avaliacao_usabilidade:consultar_agregados",
   "auditoria:consultar",
@@ -43,7 +44,7 @@ export const PERFIS_ACESSO: Record<PapelAcesso, PerfilAcesso> = {
   revisor: {
     papel: "revisor",
     rotulo: "Revisor",
-    descricao: "Modera conteúdos, pontos de coleta e questionários.",
+    descricao: "Modera conteúdos, pontos de coleta, questionários e desafios.",
     nomeDemonstracao: "Rafaela Moura",
     iniciais: "RM",
   },
@@ -79,7 +80,10 @@ export const PERMISSOES_POR_PAPEL: Record<PapelAcesso, readonly CodigoPermissao[
     "pontos_coleta:ler",
     "pontos_coleta:escrever",
     "pontos_coleta:aprovar",
+    "questionarios:responder",
     "questionarios:administrar",
+    "gamificacao:ler",
+    "gamificacao:administrar",
   ],
   administrador: CODIGOS_PERMISSAO,
 };

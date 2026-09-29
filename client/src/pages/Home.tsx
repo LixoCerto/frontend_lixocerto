@@ -28,10 +28,11 @@ import {
 } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import MateriaisCrud from "@/components/MateriaisCrud";
+import QuestionariosCrud from "@/components/QuestionariosCrud";
+import DesafiosCrud from "@/components/DesafiosCrud";
 import PontosColetaCrud from "@/components/PontosColetaCrud";
 import { useAuth } from "@/_core/hooks/useAuth";
 import {
-  enviarRespostaQuestionario,
   listarMateriais,
   listarPontosColeta,
   listarSessoes,
@@ -176,9 +177,6 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [erroDados, setErroDados] = useState(false);
-  const [quizAnswer, setQuizAnswer] = useState<string | null>(null);
-  const [quizFeedback, setQuizFeedback] = useState<string | null>(null);
-  const [quizScore, setQuizScore] = useState<number | null>(null);
   const [sessoesAtivas, setSessoesAtivas] = useState<SessoesAtivasState>([]);
   const [carregandoSessoes, setCarregandoSessoes] = useState(false);
   const [erroSessoes, setErroSessoes] = useState<string | null>(null);
@@ -341,19 +339,6 @@ export default function Home() {
     ];
   }, [dashboard, papel]);
 
-  async function responderQuiz(answerId: string) {
-    setQuizAnswer(answerId);
-    try {
-      const resposta = await enviarRespostaQuestionario("destino-eletronicos", answerId);
-      setQuizFeedback(resposta.explicacaoResposta);
-      setQuizScore(resposta.quantidadePontos);
-      if (resposta.indicaCorreta && dashboard) setDashboard({ ...dashboard, ecoPoints: dashboard.ecoPoints + resposta.quantidadePontos });
-    } catch {
-      setQuizFeedback("Não foi possível registrar a resposta agora. Tente novamente em instantes.");
-      setQuizScore(null);
-    }
-  }
-
   function renderizarInicio() {
     return (
       <div className="space-y-7">
@@ -444,21 +429,11 @@ export default function Home() {
   }
 
   function renderizarQuestionarios() {
-    const administrando = pode("questionarios:administrar");
-    if (administrando) return <PainelRevisaoQuestionarios />;
-    return (
-      <div className="space-y-6">
-        <CabecalhoSecao etiqueta="Aprendizagem gamificada" titulo="Quiz ambiental" descricao="Responda, receba feedback imediato e acompanhe a evolução da sua pontuação." />
-        <div className="grid gap-5 xl:grid-cols-[.9fr_1.1fr]">
-          <aside className="rounded-[24px] bg-[#e6f1d0] p-6"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-white text-[#2d7a50]"><Trophy className="h-5 w-5" /></span><h3 className="mt-5 text-2xl font-black tracking-tight text-[#1d4934]">Aprenda. Acerte. Evolua.</h3><p className="mt-3 text-sm leading-6 text-[#55715d]">Cada resposta correta reforça boas práticas e atualiza os indicadores de gamificação pelo backend.</p><div className="mt-7 rounded-xl border border-[#cddfb6] bg-white/70 p-4"><p className="text-xs font-black text-[#4a694f]">Recompensa desta questão</p><strong className="mt-1 block text-2xl font-black text-[#277c4f]">+50 pontos</strong></div></aside>
-          <article className="rounded-[24px] border border-[#e1ebe2] bg-white p-6 shadow-[0_18px_36px_-30px_rgba(23,54,42,.6)]"><div className="flex items-center justify-between"><span className="rounded-full bg-[#edf5e9] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#3e8257]">Questão 01</span><span className="text-xs font-bold text-[#809789]">Eletroeletrônicos</span></div><h3 className="mt-6 text-xl font-black leading-7">Qual é o destino correto para celulares, pilhas e outros eletroeletrônicos?</h3><div className="mt-6 grid gap-3">{[{ id: "reciclagem-eletronicos", label: "Ponto de coleta especializado" }, { id: "lixo-comum", label: "Lixo comum" }, { id: "organicos", label: "Resíduos orgânicos" }].map((resposta, indice) => <button key={resposta.id} disabled={Boolean(quizFeedback)} type="button" onClick={() => void responderQuiz(resposta.id)} className={`flex items-center justify-between rounded-2xl border px-4 py-4 text-left text-sm font-bold transition ${quizAnswer === resposta.id ? "border-[#52a36b] bg-[#eaf5e7] text-[#1d6f48]" : "border-[#dfe9e0] hover:border-[#9ac4a5] hover:bg-[#f7fbf6]"}`}><span>{resposta.label}</span><span className="grid h-7 w-7 place-items-center rounded-full border border-current text-xs">{String.fromCharCode(65 + indice)}</span></button>)}</div>{quizFeedback ? <div className={`mt-5 rounded-2xl p-4 ${quizScore ? "bg-[#e6f5e7] text-[#1e7048]" : "bg-[#fff2d9] text-[#865913]"}`}><strong className="text-sm">{quizScore ? `+${quizScore} eco pontos` : "Continue aprendendo"}</strong><p className="mt-1 text-sm leading-5">{quizFeedback}</p></div> : <p className="mt-5 text-xs font-semibold text-[#84998c]">Escolha uma alternativa para receber o feedback.</p>}</article>
-        </div>
-      </div>
-    );
+    return <QuestionariosCrud podeAdministrar={pode("questionarios:administrar")} />;
   }
 
   function renderizarDesafios() {
-    return <div className="space-y-6"><CabecalhoSecao etiqueta="Ação prática" titulo="Desafios sustentáveis" descricao="Converta boas escolhas em progresso, pontos e conquistas sem misturar gamificação com permissões administrativas." /><div className="grid gap-4 lg:grid-cols-3"><CartaoDesafio titulo="Separar antes de descartar" progresso={80} meta="4 de 5 ações registradas" pontos="+120 pontos" icone={Recycle} /><CartaoDesafio titulo="Semana sem descartáveis" progresso={45} meta="3 de 7 dias concluídos" pontos="+180 pontos" icone={Leaf} /><CartaoDesafio titulo="Aprender e compartilhar" progresso={100} meta="Concluído hoje" pontos="+50 pontos" icone={Users} /></div><div className="rounded-2xl border border-[#e1ebe2] bg-white p-5"><div className="flex flex-wrap items-center justify-between gap-4"><div><h3 className="font-black">Ranking com privacidade</h3><p className="mt-1 text-sm text-[#6b8576]">A posição é exibida por pseudônimo; nomes reais não são compartilhados.</p></div><button type="button" className="inline-flex items-center gap-2 rounded-xl bg-[#e8f5e7] px-4 py-2.5 text-sm font-black text-[#28764e]">Ver minha posição <ArrowUpRight className="h-4 w-4" /></button></div></div></div>;
+    return <DesafiosCrud podeAdministrar={pode("gamificacao:administrar")} />;
   }
 
   function renderizarPesquisa() {
@@ -644,12 +619,4 @@ export default function Home() {
       {renderizarArea()}
     </AppShell>
   );
-}
-
-function CartaoDesafio({ titulo, progresso, meta, pontos, icone: Icone }: { titulo: string; progresso: number; meta: string; pontos: string; icone: LucideIcon }) {
-  return <article className="rounded-2xl border border-[#e1ebe2] bg-white p-5 shadow-[0_16px_32px_-30px_rgba(23,54,42,.6)]"><div className="flex items-start justify-between"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#eaf5e8] text-[#27784f]"><Icone className="h-5 w-5" /></span><span className="rounded-full bg-[#fff3d7] px-2.5 py-1 text-[10px] font-black text-[#a66a09]">{pontos}</span></div><h3 className="mt-5 font-black">{titulo}</h3><p className="mt-1 text-sm text-[#728a7b]">{meta}</p><div className="mt-5 h-2 overflow-hidden rounded-full bg-[#edf3ed]"><div className="h-full rounded-full bg-[#338057]" style={{ width: `${progresso}%` }} /></div><p className="mt-2 text-right text-xs font-black text-[#387e55]">{progresso}%</p></article>;
-}
-
-function PainelRevisaoQuestionarios() {
-  return <div className="space-y-6"><CabecalhoSecao etiqueta="Banco de aprendizagem" titulo="Gestão de questionários" descricao="O revisor organiza questões e alternativas. A resposta correta não é exposta em consultas públicas." acao={<button type="button" className="rounded-xl bg-[#1d7953] px-4 py-2.5 text-sm font-black text-white">Nova questão</button>} /><div className="overflow-hidden rounded-2xl border border-[#e1ebe2] bg-white"><div className="grid grid-cols-[1fr_auto_auto] gap-4 border-b border-[#edf2ed] bg-[#f6f9f5] px-5 py-3 text-[10px] font-black uppercase tracking-[0.12em] text-[#778f81]"><span>Questão</span><span>Status</span><span>Ação</span></div>{["Descarte correto de lâmpadas", "Separação de resíduos orgânicos", "Coleta de eletrônicos"].map((questao, indice) => <div key={questao} className="grid grid-cols-[1fr_auto_auto] items-center gap-4 border-b border-[#edf2ed] px-5 py-4 last:border-0"><span><strong className="block text-sm">{questao}</strong><span className="mt-1 block text-xs text-[#799082]">Atualizada há {indice + 1} dia(s)</span></span><span className="rounded-full bg-[#e4f4e5] px-2.5 py-1 text-[10px] font-black text-[#27764d]">Publicada</span><button type="button" className="text-xs font-black text-[#347c53]">Editar</button></div>)}</div></div>;
 }
