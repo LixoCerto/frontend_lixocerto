@@ -1,6 +1,7 @@
 export const CODIGOS_PERMISSAO = [
   "materiais:ler",
   "materiais:escrever",
+  "materiais:aprovar",
   "pontos_coleta:ler",
   "pontos_coleta:escrever",
   "pontos_coleta:aprovar",
@@ -74,6 +75,7 @@ export const PERMISSOES_POR_PAPEL: Record<PapelAcesso, readonly CodigoPermissao[
   revisor: [
     "materiais:ler",
     "materiais:escrever",
+    "materiais:aprovar",
     "pontos_coleta:ler",
     "pontos_coleta:escrever",
     "pontos_coleta:aprovar",

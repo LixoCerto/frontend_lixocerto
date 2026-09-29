@@ -27,6 +27,7 @@ import {
   Users,
 } from "lucide-react";
 import AppShell from "@/components/AppShell";
+import MateriaisCrud from "@/components/MateriaisCrud";
 import PontosColetaCrud from "@/components/PontosColetaCrud";
 import { useAuth } from "@/_core/hooks/useAuth";
 import {
@@ -47,8 +48,6 @@ import {
   type PapelAcesso,
 } from "@shared/permissoes";
 
-const categoryFilters = ["Todos", "Eletroeletrônicos", "Recicláveis", "Orgânicos"];
-
 type DashboardState = {
   ecoPoints: number;
   currentStreak: number;
@@ -60,8 +59,18 @@ type MaterialsState = {
   id: string;
   name: string;
   category: string;
+  classification: string;
   disposalInstruction: string;
   impactNote: string;
+  synonyms: string[];
+  preparation: string;
+  cautions: string;
+  acceptedPointCategories: string[];
+  routes: string[];
+  scope: string;
+  scopeNote: string;
+  sources: { title: string; url: string; supports: string }[];
+  verifiedAt: string;
 }[];
 type CollectionPointsState = {
   id: string;
@@ -214,8 +223,18 @@ export default function Home() {
           id: material.idMaterial,
           name: material.nomeMaterial,
           category: material.categoriaMaterial,
+          classification: material.classificacao,
           disposalInstruction: material.instrucaoDescarte,
           impactNote: material.observacaoImpacto,
+          synonyms: material.sinonimos,
+          preparation: material.preparacao,
+          cautions: material.cuidados,
+          acceptedPointCategories: material.categoriasPontos,
+          routes: material.rotasReferencia,
+          scope: material.abrangencia,
+          scopeNote: material.notaAbrangencia,
+          sources: material.fontesReferencia.map(fonte => ({ title: fonte.titulo, url: fonte.url, supports: fonte.comprova })),
+          verifiedAt: material.dataVerificacao,
         })));
         setCollectionPoints(pontos.pontosColeta.map(ponto => ({
           id: ponto.idPontoColeta,
@@ -243,8 +262,18 @@ export default function Home() {
           id: material.idMaterial,
           name: material.nomeMaterial,
           category: material.categoriaMaterial,
+          classification: material.classificacao,
           disposalInstruction: material.instrucaoDescarte,
           impactNote: material.observacaoImpacto,
+          synonyms: material.sinonimos,
+          preparation: material.preparacao,
+          cautions: material.cuidados,
+          acceptedPointCategories: material.categoriasPontos,
+          routes: material.rotasReferencia,
+          scope: material.abrangencia,
+          scopeNote: material.notaAbrangencia,
+          sources: material.fontesReferencia.map(fonte => ({ title: fonte.titulo, url: fonte.url, supports: fonte.comprova })),
+          verifiedAt: material.dataVerificacao,
         })));
       } catch {
         setErroDados(true);
@@ -387,10 +416,10 @@ export default function Home() {
         <CabecalhoSecao etiqueta="Base educativa" titulo="Guia de descarte" descricao="Pesquise materiais e encontre orientações claras para um descarte mais responsável." />
         <div className="rounded-2xl border border-[#e0eae1] bg-white p-4 sm:p-5">
           <label className="flex items-center gap-3 rounded-xl border border-[#d9e6db] bg-[#fbfdfb] px-4 py-3 focus-within:border-[#4e9b68] focus-within:ring-4 focus-within:ring-[#dcefdc]/60"><Search className="h-5 w-5 text-[#638775]" /><input className="w-full bg-transparent text-sm font-semibold outline-none placeholder:text-[#9aae9f]" value={query} onChange={event => setQuery(event.target.value)} placeholder="Ex.: celular, vidro, papel..." /></label>
-          <div className="mt-4 flex flex-wrap gap-2">{categoryFilters.map(categoria => <button key={categoria} type="button" onClick={() => setSelectedCategory(categoria)} className={`rounded-full px-3 py-1.5 text-xs font-black transition ${selectedCategory === categoria ? "bg-[#1d7953] text-white" : "bg-[#edf3ed] text-[#5d796a] hover:bg-[#dff0de]"}`}>{categoria}</button>)}</div>
+          <div className="mt-4 flex flex-wrap gap-2">{["Todos", ...Array.from(new Set(materials.map(material => material.category))).sort((a, b) => a.localeCompare(b, "pt-BR"))].map(categoria => <button key={categoria} type="button" onClick={() => setSelectedCategory(categoria)} className={`rounded-full px-3 py-1.5 text-xs font-black transition ${selectedCategory === categoria ? "bg-[#1d7953] text-white" : "bg-[#edf3ed] text-[#5d796a] hover:bg-[#dff0de]"}`}>{categoria}</button>)}</div>
         </div>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {materials.map(material => <article key={material.id} className="rounded-2xl border border-[#e1ebe2] bg-white p-5 shadow-[0_16px_32px_-30px_rgba(23,54,42,.6)]"><div className="flex items-start justify-between gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#eaf5e8] text-[#2b7a52]"><Recycle className="h-5 w-5" /></span><span className="rounded-full bg-[#f1f5ed] px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-[#69907a]">{material.category}</span></div><h3 className="mt-5 text-base font-black">{material.name}</h3><p className="mt-2 text-sm leading-6 text-[#638071]">{material.disposalInstruction}</p><p className="mt-4 border-t border-[#edf2ed] pt-3 text-xs font-semibold leading-5 text-[#7b9485]">{material.impactNote}</p></article>)}
+          {materials.map(material => <article key={material.id} className="rounded-2xl border border-[#e1ebe2] bg-white p-5 shadow-[0_16px_32px_-30px_rgba(23,54,42,.6)]"><div className="flex items-start justify-between gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#eaf5e8] text-[#2b7a52]"><Recycle className="h-5 w-5" /></span><span className="rounded-full bg-[#f1f5ed] px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-[#69907a]">{material.category}</span></div><h3 className="mt-5 text-base font-black">{material.name}</h3>{material.classification ? <p className="mt-1 text-xs leading-5 text-[#71897b]">{material.classification}</p> : null}<p className="mt-2 text-sm leading-6 text-[#638071]">{material.disposalInstruction}</p>{material.preparation ? <p className="mt-3 rounded-xl bg-[#f5faf4] p-3 text-xs leading-5 text-[#55715d]"><strong>Como preparar:</strong> {material.preparation}</p> : null}{material.cautions ? <p className="mt-3 rounded-xl bg-[#fff8e7] p-3 text-xs leading-5 text-[#745f2d]"><strong>Atenção:</strong> {material.cautions}</p> : null}{material.scopeNote ? <p className="mt-3 rounded-xl bg-[#eef5ed] p-3 text-xs leading-5 text-[#55715d]"><strong>Abrangência e limites:</strong> {material.scopeNote}</p> : null}{material.acceptedPointCategories.length ? <div className="mt-3"><p className="text-[10px] font-black uppercase text-[#71897b]">Categorias de pontos relacionadas</p><div className="mt-1 flex flex-wrap gap-1.5">{material.acceptedPointCategories.map(item => <span key={item} className="rounded-full bg-[#edf3ed] px-2 py-1 text-[10px] font-bold text-[#5d796a]">{item}</span>)}</div></div> : null}{material.routes.length ? <div className="mt-3 rounded-xl bg-[#f5faf4] p-3"><p className="text-[10px] font-black uppercase text-[#55715d]">Rotas citadas nas fontes — confirmar aceitação local</p><ul className="mt-2 list-disc space-y-1 pl-4 text-xs leading-5 text-[#638071]">{material.routes.map((route, index) => <li key={`${route}-${index}`}>{route}</li>)}</ul></div> : null}<p className="mt-4 border-t border-[#edf2ed] pt-3 text-xs font-semibold leading-5 text-[#7b9485]">{material.impactNote}</p><p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-[#668073]">{material.scope === "logistica_reversa" ? "Sistema de logística reversa" : material.scope === "orientacao_geral" ? "Orientação geral" : "Confirme a regra local e a aceitação do ponto"}{material.verifiedAt ? ` · Fonte verificada em ${new Date(`${material.verifiedAt}T12:00:00`).toLocaleDateString("pt-BR")}` : ""}</p>{material.sources.length ? <div className="mt-3 flex flex-wrap gap-2">{material.sources.map((fonte, indice) => <a key={`${fonte.url}-${indice}`} href={fonte.url} target="_blank" rel="noreferrer" title={fonte.supports} className="rounded-lg bg-[#eef5ed] px-2.5 py-1.5 text-xs font-black text-[#337a51] underline">Fonte: {fonte.title}</a>)}</div> : null}</article>)}
           {!loading && materials.length === 0 ? <p className="col-span-full rounded-2xl bg-white p-8 text-center text-sm font-semibold text-[#708a7b]">Nenhum material encontrado com esse filtro.</p> : null}
         </div>
       </div>
@@ -424,7 +453,7 @@ export default function Home() {
   }
 
   function renderizarRevisao() {
-    return <div className="space-y-6"><CabecalhoSecao etiqueta="Moderação" titulo="Central de revisão" descricao="Aprove conteúdo e pontos de coleta com rastreabilidade e separação de funções." acao={<button type="button" className="rounded-xl bg-[#1d7953] px-4 py-2.5 text-sm font-black text-white">Novo material</button>} /><div className="grid gap-4 lg:grid-cols-[1.2fr_.8fr]"><article className="overflow-hidden rounded-2xl border border-[#e1ebe2] bg-white"><div className="border-b border-[#edf2ed] px-5 py-4"><h3 className="font-black">Fila de pendências</h3></div>{["Ponto de coleta — Bairro dos Estados", "Material educativo — óleo de cozinha", "Questão do quiz — descarte de lâmpadas"].map((item, indice) => <div key={item} className="flex items-center gap-4 border-b border-[#edf2ed] px-5 py-4 last:border-b-0"><span className="grid h-9 w-9 place-items-center rounded-xl bg-[#fff2d9] text-[#a0680a]"><ClipboardCheck className="h-4 w-4" /></span><span className="min-w-0 flex-1"><strong className="block truncate text-sm">{item}</strong><span className="mt-1 block text-xs text-[#769080]">Enviado há {indice + 1} dia(s)</span></span><button type="button" className="rounded-lg bg-[#eef5ed] px-3 py-2 text-xs font-black text-[#337a51]">Analisar</button></div>)}</article><aside className="rounded-[24px] bg-[#fff1d1] p-6"><ClipboardCheck className="h-6 w-6 text-[#a66a09]" /><h3 className="mt-4 text-xl font-black text-[#5d4618]">Revisão responsável</h3><p className="mt-3 text-sm leading-6 text-[#78632d]">Cada aprovação deve ser persistida com identidade, data e auditoria. O frontend guia o fluxo; a API confirma a permissão.</p><div className="mt-6 rounded-xl bg-white/65 p-3 text-xs font-black text-[#725c28]">12 itens aguardam revisão</div></aside></div></div>;
+    return <MateriaisCrud podeEscrever={pode("materiais:escrever")} podeAprovar={pode("materiais:aprovar")} />;
   }
 
   function renderizarAdministracao() {

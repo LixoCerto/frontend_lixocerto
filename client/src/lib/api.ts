@@ -27,7 +27,11 @@ import {
 } from "@shared/gen/lixo_certo/v1/servico_perfil_pb";
 import { obterTokenAcesso, carregarSessao } from "./sessao";
 import {
+  AlterarStatusMaterialRequisicaoSchema,
+  AtualizarMaterialRequisicaoSchema,
+  CriarMaterialRequisicaoSchema,
   ListarMateriaisRequisicaoSchema,
+  ObterMaterialRequisicaoSchema,
   ServicoMateriais,
 } from "@shared/gen/lixo_certo/v1/servico_materiais_pb";
 import {
@@ -133,8 +137,40 @@ export function revogarTodasSessoes() {
   return sessoesClient.revogarTodasSessoes(create(RevogarTodasSessoesRequisicaoSchema, {}));
 }
 
-export function listarMateriais(textoPesquisa = "", categoriaMaterial = "") {
-  return materiaisClient.listarMateriais(create(ListarMateriaisRequisicaoSchema, { textoPesquisa, categoriaMaterial, numeroPagina: 1, tamanhoPagina: 30 }));
+export function listarMateriais(textoPesquisa = "", categoriaMaterial = "", statusMaterial = "") {
+  return materiaisClient.listarMateriais(create(ListarMateriaisRequisicaoSchema, { textoPesquisa, categoriaMaterial, statusMaterial, numeroPagina: 1, tamanhoPagina: 100 }));
+}
+
+export type FonteReferenciaMaterialApi = { titulo: string; url: string; comprova: string };
+export type DadosMaterialApi = {
+  codigoCatalogo: string;
+  classificacao: string;
+  nomeMaterial: string;
+  categoriaMaterial: string;
+  instrucaoDescarte: string;
+  observacaoImpacto: string;
+  sinonimos: string[];
+  preparacao: string;
+  cuidados: string;
+  categoriasPontos: string[];
+  rotasReferencia: string[];
+  abrangencia: string;
+  notaAbrangencia: string;
+  fontesReferencia: FonteReferenciaMaterialApi[];
+  dataVerificacao: string;
+};
+
+export function obterMaterial(idMaterial: string) {
+  return materiaisClient.obterMaterial(create(ObterMaterialRequisicaoSchema, { idMaterial }));
+}
+export function criarMaterial(dados: DadosMaterialApi) {
+  return materiaisClient.criarMaterial(create(CriarMaterialRequisicaoSchema, { dados }));
+}
+export function atualizarMaterial(idMaterial: string, dados: DadosMaterialApi) {
+  return materiaisClient.atualizarMaterial(create(AtualizarMaterialRequisicaoSchema, { idMaterial, dados }));
+}
+export function alterarStatusMaterial(idMaterial: string, statusMaterial: string, observacaoRevisao = "") {
+  return materiaisClient.alterarStatusMaterial(create(AlterarStatusMaterialRequisicaoSchema, { idMaterial, statusMaterial, observacaoRevisao }));
 }
 
 export function listarPontosColeta(cidade = "João Pessoa", categoriaMaterial = "", local?: { latitude: number; longitude: number; raioMetros?: number }) {
