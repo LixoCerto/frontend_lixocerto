@@ -172,6 +172,7 @@ export default function Home() {
   const [materials, setMaterials] = useState<MaterialsState>([]);
   const [collectionPoints, setCollectionPoints] = useState<CollectionPointsState>([]);
   const [selectedCategory, setSelectedCategory] = useState("Todos");
+  const [modoGestaoMateriais, setModoGestaoMateriais] = useState(false);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [erroDados, setErroDados] = useState(false);
@@ -413,6 +414,16 @@ export default function Home() {
   function renderizarMateriais() {
     return (
       <div className="space-y-6">
+        {pode("materiais:escrever") ? (
+          <div className="flex flex-wrap gap-2 rounded-2xl border border-[#e0eae1] bg-white p-2" aria-label="Ações do Guia de descarte">
+            <button type="button" aria-pressed={!modoGestaoMateriais} onClick={() => setModoGestaoMateriais(false)} className={`rounded-xl px-4 py-2.5 text-sm font-black transition ${!modoGestaoMateriais ? "bg-[#1d7953] text-white" : "text-[#5d796a] hover:bg-[#edf5ed]"}`}>Consultar guia</button>
+            <button type="button" aria-pressed={modoGestaoMateriais} onClick={() => setModoGestaoMateriais(true)} className={`rounded-xl px-4 py-2.5 text-sm font-black transition ${modoGestaoMateriais ? "bg-[#1d7953] text-white" : "text-[#5d796a] hover:bg-[#edf5ed]"}`}>Gerenciar catálogo</button>
+          </div>
+        ) : null}
+        {pode("materiais:escrever") && modoGestaoMateriais ? (
+          <MateriaisCrud podeEscrever={pode("materiais:escrever")} podeAprovar={pode("materiais:aprovar")} />
+        ) : (
+          <>
         <CabecalhoSecao etiqueta="Base educativa" titulo="Guia de descarte" descricao="Pesquise materiais e encontre orientações claras para um descarte mais responsável." />
         <div className="rounded-2xl border border-[#e0eae1] bg-white p-4 sm:p-5">
           <label className="flex items-center gap-3 rounded-xl border border-[#d9e6db] bg-[#fbfdfb] px-4 py-3 focus-within:border-[#4e9b68] focus-within:ring-4 focus-within:ring-[#dcefdc]/60"><Search className="h-5 w-5 text-[#638775]" /><input className="w-full bg-transparent text-sm font-semibold outline-none placeholder:text-[#9aae9f]" value={query} onChange={event => setQuery(event.target.value)} placeholder="Ex.: celular, vidro, papel..." /></label>
@@ -422,6 +433,8 @@ export default function Home() {
           {materials.map(material => <article key={material.id} className="rounded-2xl border border-[#e1ebe2] bg-white p-5 shadow-[0_16px_32px_-30px_rgba(23,54,42,.6)]"><div className="flex items-start justify-between gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#eaf5e8] text-[#2b7a52]"><Recycle className="h-5 w-5" /></span><span className="rounded-full bg-[#f1f5ed] px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-[#69907a]">{material.category}</span></div><h3 className="mt-5 text-base font-black">{material.name}</h3>{material.classification ? <p className="mt-1 text-xs leading-5 text-[#71897b]">{material.classification}</p> : null}<p className="mt-2 text-sm leading-6 text-[#638071]">{material.disposalInstruction}</p>{material.preparation ? <p className="mt-3 rounded-xl bg-[#f5faf4] p-3 text-xs leading-5 text-[#55715d]"><strong>Como preparar:</strong> {material.preparation}</p> : null}{material.cautions ? <p className="mt-3 rounded-xl bg-[#fff8e7] p-3 text-xs leading-5 text-[#745f2d]"><strong>Atenção:</strong> {material.cautions}</p> : null}{material.scopeNote ? <p className="mt-3 rounded-xl bg-[#eef5ed] p-3 text-xs leading-5 text-[#55715d]"><strong>Abrangência e limites:</strong> {material.scopeNote}</p> : null}{material.acceptedPointCategories.length ? <div className="mt-3"><p className="text-[10px] font-black uppercase text-[#71897b]">Categorias de pontos relacionadas</p><div className="mt-1 flex flex-wrap gap-1.5">{material.acceptedPointCategories.map(item => <span key={item} className="rounded-full bg-[#edf3ed] px-2 py-1 text-[10px] font-bold text-[#5d796a]">{item}</span>)}</div></div> : null}{material.routes.length ? <div className="mt-3 rounded-xl bg-[#f5faf4] p-3"><p className="text-[10px] font-black uppercase text-[#55715d]">Rotas citadas nas fontes — confirmar aceitação local</p><ul className="mt-2 list-disc space-y-1 pl-4 text-xs leading-5 text-[#638071]">{material.routes.map((route, index) => <li key={`${route}-${index}`}>{route}</li>)}</ul></div> : null}<p className="mt-4 border-t border-[#edf2ed] pt-3 text-xs font-semibold leading-5 text-[#7b9485]">{material.impactNote}</p><p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-[#668073]">{material.scope === "logistica_reversa" ? "Sistema de logística reversa" : material.scope === "orientacao_geral" ? "Orientação geral" : "Confirme a regra local e a aceitação do ponto"}{material.verifiedAt ? ` · Fonte verificada em ${new Date(`${material.verifiedAt}T12:00:00`).toLocaleDateString("pt-BR")}` : ""}</p>{material.sources.length ? <div className="mt-3 flex flex-wrap gap-2">{material.sources.map((fonte, indice) => <a key={`${fonte.url}-${indice}`} href={fonte.url} target="_blank" rel="noreferrer" title={fonte.supports} className="rounded-lg bg-[#eef5ed] px-2.5 py-1.5 text-xs font-black text-[#337a51] underline">Fonte: {fonte.title}</a>)}</div> : null}</article>)}
           {!loading && materials.length === 0 ? <p className="col-span-full rounded-2xl bg-white p-8 text-center text-sm font-semibold text-[#708a7b]">Nenhum material encontrado com esse filtro.</p> : null}
         </div>
+          </>
+        )}
       </div>
     );
   }
