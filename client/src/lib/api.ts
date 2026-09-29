@@ -73,6 +73,22 @@ import {
   ObterResultadosAgregadosRequisicaoSchema,
   ServicoAvaliacaoUsabilidade,
 } from "@shared/gen/lixo_certo/v1/servico_avaliacao_usabilidade_pb";
+import {
+  AlterarStatusUsuarioAdministrativoRequisicaoSchema,
+  ArquivarPapelAdministrativoRequisicaoSchema,
+  AtualizarPapelAdministrativoRequisicaoSchema,
+  CriarPapelAdministrativoRequisicaoSchema,
+  DefinirPapeisUsuarioAdministrativoRequisicaoSchema,
+  DefinirPermissoesPapelAdministrativoRequisicaoSchema,
+  ListarPermissoesAdministrativasRequisicaoSchema,
+  ListarPapeisAdministrativosRequisicaoSchema,
+  ListarUsuariosAdministrativosRequisicaoSchema,
+  ObterResumoAdministrativoRequisicaoSchema,
+  RestaurarPapelAdministrativoRequisicaoSchema,
+  RevogarSessoesUsuarioAdministrativoRequisicaoSchema,
+  ServicoAdministracao,
+} from "@shared/gen/lixo_certo/v1/servico_administracao_pb";
+import { ListarAuditoriaRequisicaoSchema, ServicoAuditoria } from "@shared/gen/lixo_certo/v1/servico_auditoria_pb";
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "/api/rpc";
 
@@ -95,6 +111,8 @@ export const questionariosClient = createClient(ServicoQuestionarios, transport)
 export const desafiosClient = createClient(ServicoDesafios, transport);
 export const gamificacaoClient = createClient(ServicoGamificacao, transport);
 export const avaliacaoClient = createClient(ServicoAvaliacaoUsabilidade, transport);
+export const administracaoClient = createClient(ServicoAdministracao, transport);
+export const auditoriaClient = createClient(ServicoAuditoria, transport);
 
 export function cadastrarUsuario(nomeUsuario: string, emailUsuario: string, senhaUsuario: string) {
   return autenticacaoClient.cadastrarUsuario(create(CadastrarUsuarioRequisicaoSchema, { nomeUsuario, emailUsuario, senhaUsuario }));
@@ -208,6 +226,46 @@ export function alterarStatusPontoColeta(idPontoColeta: string, statusVerificaca
 }
 export function buscarEnderecoPorCoordenadas(latitude: number, longitude: number) {
   return pontosColetaClient.buscarEnderecoPorCoordenadas(create(BuscarEnderecoPorCoordenadasRequisicaoSchema, { latitude, longitude }));
+}
+
+export function obterResumoAdministrativo() {
+  return administracaoClient.obterResumoAdministrativo(create(ObterResumoAdministrativoRequisicaoSchema, {}));
+}
+export function listarUsuariosAdministrativos(busca = "", status = "", deslocamento = 0, limite = 25) {
+  return administracaoClient.listarUsuariosAdministrativos(create(ListarUsuariosAdministrativosRequisicaoSchema, { busca, status, deslocamento, limite }));
+}
+export function alterarStatusUsuarioAdministrativo(idUsuario: string, status: string, motivo: string) {
+  return administracaoClient.alterarStatusUsuarioAdministrativo(create(AlterarStatusUsuarioAdministrativoRequisicaoSchema, { idUsuario, status, motivo }));
+}
+export function definirPapeisUsuarioAdministrativo(idUsuario: string, idsPapeis: string[], motivo: string) {
+  return administracaoClient.definirPapeisUsuarioAdministrativo(create(DefinirPapeisUsuarioAdministrativoRequisicaoSchema, { idUsuario, idsPapeis, motivo }));
+}
+export function revogarSessoesUsuarioAdministrativo(idUsuario: string, motivo: string) {
+  return administracaoClient.revogarSessoesUsuarioAdministrativo(create(RevogarSessoesUsuarioAdministrativoRequisicaoSchema, { idUsuario, motivo }));
+}
+export function listarPapeisAdministrativos(incluirInativos = true) {
+  return administracaoClient.listarPapeisAdministrativos(create(ListarPapeisAdministrativosRequisicaoSchema, { incluirInativos }));
+}
+export function listarPermissoesAdministrativas() {
+  return administracaoClient.listarPermissoesAdministrativas(create(ListarPermissoesAdministrativasRequisicaoSchema, {}));
+}
+export function criarPapelAdministrativo(nomePapel: string, descricaoPapel: string, idsPermissoes: string[], motivo: string) {
+  return administracaoClient.criarPapelAdministrativo(create(CriarPapelAdministrativoRequisicaoSchema, { nomePapel, descricaoPapel, idsPermissoes, motivo }));
+}
+export function atualizarPapelAdministrativo(idPapel: string, nomePapel: string, descricaoPapel: string, idsPermissoes: string[], motivo: string) {
+  return administracaoClient.atualizarPapelAdministrativo(create(AtualizarPapelAdministrativoRequisicaoSchema, { idPapel, nomePapel, descricaoPapel, idsPermissoes, motivo }));
+}
+export function arquivarPapelAdministrativo(idPapel: string, motivo: string) {
+  return administracaoClient.arquivarPapelAdministrativo(create(ArquivarPapelAdministrativoRequisicaoSchema, { idPapel, motivo }));
+}
+export function restaurarPapelAdministrativo(idPapel: string, motivo: string) {
+  return administracaoClient.restaurarPapelAdministrativo(create(RestaurarPapelAdministrativoRequisicaoSchema, { idPapel, motivo }));
+}
+export function definirPermissoesPapelAdministrativo(idPapel: string, idsPermissoes: string[], motivo: string) {
+  return administracaoClient.definirPermissoesPapelAdministrativo(create(DefinirPermissoesPapelAdministrativoRequisicaoSchema, { idPapel, idsPermissoes, motivo }));
+}
+export function listarAuditoria(tipoEvento = "", limiteResultado = 25, deslocamento = 0) {
+  return auditoriaClient.listarAuditoria(create(ListarAuditoriaRequisicaoSchema, { tipoEvento, limiteResultado, deslocamento }));
 }
 
 export function listarQuestoes(numeroPagina = 1, tamanhoPagina = 100) {

@@ -13,6 +13,7 @@ export const CODIGOS_PERMISSAO = [
   "avaliacao_usabilidade:consultar_agregados",
   "auditoria:consultar",
   "administracao:consultar",
+  "administracao:gerenciar_acessos",
 ] as const;
 
 export type CodigoPermissao = (typeof CODIGOS_PERMISSAO)[number];

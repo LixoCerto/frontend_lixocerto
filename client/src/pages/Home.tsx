@@ -27,6 +27,7 @@ import {
   Users,
 } from "lucide-react";
 import AppShell from "@/components/AppShell";
+import AdministracaoCrud from "@/components/AdministracaoCrud";
 import MateriaisCrud from "@/components/MateriaisCrud";
 import QuestionariosCrud from "@/components/QuestionariosCrud";
 import DesafiosCrud from "@/components/DesafiosCrud";
@@ -445,7 +446,7 @@ export default function Home() {
   }
 
   function renderizarAdministracao() {
-    return <div className="space-y-6"><CabecalhoSecao etiqueta="Governança" titulo="Administração da plataforma" descricao="Visão operacional para usuários, permissões, conteúdos e eventos auditáveis." /><section className="grid gap-4 md:grid-cols-3"><IndicadorCard indicador={{ titulo: "Usuários ativos", valor: "1.248", detalhe: "+8,4% no mês", icone: Users, tom: "verde" }} /><IndicadorCard indicador={{ titulo: "Papéis ativos", valor: "4", detalhe: "Acesso por permissão", icone: ShieldCheck, tom: "azul" }} /><IndicadorCard indicador={{ titulo: "Auditorias", valor: "2.846", detalhe: "Eventos registrados", icone: FileCheck2, tom: "ouro" }} /></section><section className="grid gap-4 lg:grid-cols-2"><article className="rounded-2xl border border-[#e1ebe2] bg-white p-6"><h3 className="font-black">Governança de acesso</h3><p className="mt-2 text-sm leading-6 text-[#678172]">Papéis não substituem permissões. O administrador acompanha a matriz, mas cada operação sensível ainda é autorizada no backend.</p><div className="mt-5 space-y-3">{["Usuário — aprendizagem e impacto", "Pesquisador — indicadores agregados", "Revisor — moderação de conteúdo", "Administrador — operação e auditoria"].map((item, indice) => <div key={item} className="flex items-center justify-between rounded-xl bg-[#f4f8f3] px-4 py-3 text-sm"><span className="font-bold text-[#315c47]">{item}</span><span className="text-xs font-black text-[#5b9770]">{indice === 3 ? "11 permissões" : "Escopo definido"}</span></div>)}</div></article><article className="rounded-2xl bg-[#17362a] p-6 text-white"><ShieldCheck className="h-7 w-7 text-[#d6efad]" /><h3 className="mt-4 text-xl font-black">Auditoria sem segredos</h3><p className="mt-3 text-sm leading-6 text-[#bfd3c4]">Tokens, senhas, autorizações e segredos são redigidos antes do registro. A interface nunca recebe esses valores.</p><button type="button" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#d6efad] px-4 py-2.5 text-sm font-black text-[#18372a]">Consultar eventos <ArrowUpRight className="h-4 w-4" /></button></article></section></div>;
+    return <AdministracaoCrud podeGerenciarAcessos={pode("administracao:gerenciar_acessos")} />;
   }
 
   function formatarDataSessao(valor: string): string {
