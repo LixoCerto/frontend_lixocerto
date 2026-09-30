@@ -14,6 +14,8 @@ const primary = "rounded-xl bg-[#1d7953] px-4 py-2.5 text-sm font-black text-whi
 const secondary = "rounded-xl border border-[#dce8de] bg-white px-3 py-2 text-xs font-bold text-[#386348] transition hover:bg-[#f4f8f3] disabled:opacity-50";
 const TAMANHO_MAXIMO_FOTO = 2 * 1024 * 1024;
 const TAMANHO_MAXIMO_LOTE = 2.5 * 1024 * 1024;
+const PRECISAO_MAXIMA_GPS_METROS = 10;
+const TEMPO_MAXIMO_GPS_MS = 30_000;
 type Registro = Awaited<ReturnType<typeof listarMeusDescartes>>["registros"][number];
 type Ponto = Awaited<ReturnType<typeof listarPontosColeta>>["pontosColeta"][number];
 type PontoInicial = { idPontoColeta: string; nomePontoColeta: string; cidadePontoColeta: string };
@@ -119,13 +121,40 @@ export default function RegistrosDescarte({
         reject(new Error("Este navegador não disponibiliza geolocalização. Tente em um navegador compatível e com conexão segura (HTTPS)."));
         return;
       }
-      navigator.geolocation.getCurrentPosition(resolve, erroLocalizacao => {
-        reject(new Error(erroLocalizacao.code === 1
-          ? "A permissão de localização foi negada. Autorize-a no navegador para continuar."
-          : erroLocalizacao.code === 3
-            ? "A localização demorou demais. Tente novamente ao ar livre ou perto de uma janela."
-            : "Não foi possível obter uma localização precisa. Ative o GPS e tente novamente."));
-      }, { enableHighAccuracy: true, maximumAge: 0, timeout: 25_000 });
+      let idMonitoramento: number | null = null;
+      let temporizador: number | undefined;
+      let melhorPosicao: GeolocationPosition | null = null;
+      let finalizado = false;
+
+      const finalizar = (acao: () => void) => {
+        if (finalizado) return;
+        finalizado = true;
+        if (idMonitoramento !== null) navigator.geolocation.clearWatch(idMonitoramento);
+        if (temporizador !== undefined) window.clearTimeout(temporizador);
+        acao();
+      };
+
+      temporizador = window.setTimeout(() => finalizar(() => {
+        const precisao = melhorPosicao?.coords.accuracy;
+        reject(new Error(precisao !== undefined
+          ? `A melhor precisão reportada após 30 s foi ${precisao.toFixed(0)} m; o limite é 10 m. Ative a localização/GPS do dispositivo, tente ao ar livre ou perto de uma janela e toque novamente.`
+          : "Não foi possível obter uma posição em 30 s. Confirme a localização/GPS do dispositivo e tente novamente ao ar livre ou perto de uma janela."));
+      }), TEMPO_MAXIMO_GPS_MS);
+
+      try {
+        idMonitoramento = navigator.geolocation.watchPosition(posicao => {
+          const precisao = posicao.coords.accuracy;
+          if (!Number.isFinite(precisao) || precisao <= 0) return;
+          if (!melhorPosicao || precisao < melhorPosicao.coords.accuracy) melhorPosicao = posicao;
+          if (precisao <= PRECISAO_MAXIMA_GPS_METROS) finalizar(() => resolve(posicao));
+        }, erroLocalizacao => {
+          if (erroLocalizacao.code === 1) {
+            finalizar(() => reject(new Error("A permissão de localização foi negada. Autorize-a no navegador e nas configurações do dispositivo para continuar.")));
+          }
+        }, { enableHighAccuracy: true, maximumAge: 0, timeout: 15_000 });
+      } catch {
+        finalizar(() => reject(new Error("Não foi possível iniciar o GPS. Confirme a permissão de localização e tente novamente.")));
+      }
     });
   }
 
@@ -218,7 +247,7 @@ export default function RegistrosDescarte({
     <header className="rounded-[24px] bg-[#e8f3df] p-5 sm:p-6">
       <p className="text-[11px] font-black uppercase tracking-[0.15em] text-[#397649]">Check-in e evidência por categoria</p>
       <h2 className="mt-2 text-xl font-black tracking-tight text-[#17362a]">Iniciar descarte no ponto escolhido</h2>
-      <p className="mt-2 max-w-3xl text-sm leading-6 text-[#5f7967]">1. No local, permita a geolocalização de alta precisão: o servidor exige distância de até 5 m e precisão do GPS de até 10 m. 2. Selecione cada categoria e anexe uma foto própria do material separado. O check-in dura 30 minutos; os pontos continuam sujeitos à revisão humana.</p>
+      <p className="mt-2 max-w-3xl text-sm leading-6 text-[#5f7967]">1. No local, permita a localização de alta precisão e mantenha esta tela aberta enquanto o GPS busca um sinal estável (até 30 s). O servidor exige distância de até 5 m e precisão reportada de até 10 m. 2. Selecione cada categoria e anexe uma foto própria do material separado. O check-in dura 30 minutos; os pontos continuam sujeitos à revisão humana.</p>
     </header>
 
     {erro ? <p role="alert" className="rounded-xl border border-[#f1c9c0] bg-[#fff4f0] px-4 py-3 text-sm font-semibold text-[#a85040]">{erro}</p> : null}
@@ -232,7 +261,7 @@ export default function RegistrosDescarte({
       </div>
       {pontos.length ? <label className="block text-xs font-bold text-[#587261]">Ponto de coleta verificado<select required className={`${inputClass} mt-1.5`} value={pontoSelecionado} disabled={Boolean(checkin)} onChange={evento => { setPontoSelecionado(evento.target.value); setCategoriasSelecionadas([]); setFotos({}); }}><option value="">Selecione um ponto</option>{pontos.map(ponto => <option key={ponto.idPontoColeta} value={ponto.idPontoColeta}>{ponto.nomePontoColeta} · {ponto.enderecoPontoColeta} · aceita {ponto.categoriasAceitas.join(", ") || "categorias não informadas"}</option>)}</select></label> : <p className="text-xs text-[#82978a]">Busque pontos verificados ou use “Iniciar descarte” no cartão do local escolhido.</p>}
       {pontoAtual ? <div className="rounded-xl bg-[#f5f9f3] p-3 text-xs leading-5 text-[#5f7967]"><strong>{pontoAtual.nomePontoColeta}</strong> · {pontoAtual.enderecoPontoColeta}, {pontoAtual.cidadePontoColeta}. Categorias aceitas: {pontoAtual.categoriasAceitas.join(", ") || "não informadas"}.</div> : null}
-      {!checkin ? <button type="button" disabled={!pontoAtual || idProcessando === "checkin"} onClick={() => void iniciarCheckin()} className={primary}>{idProcessando === "checkin" ? "Obtendo localização precisa…" : "Usar minha localização e iniciar check-in"}</button> : <div className="rounded-xl border border-[#cde5cf] bg-[#eff8ee] p-3 text-sm text-[#28764e]"><strong>Check-in ativo</strong> · distância verificada: {checkin.distancia.toFixed(1)} m · precisão GPS: {checkin.precisao.toFixed(1)} m · expira {formatarData(checkin.expiraEm)}.<button type="button" className="ml-3 font-bold underline" onClick={() => { setCheckin(null); setCategoriasSelecionadas([]); setFotos({}); }}>Cancelar</button></div>}
+      {!checkin ? <button type="button" disabled={!pontoAtual || idProcessando === "checkin"} onClick={() => void iniciarCheckin()} className={primary}>{idProcessando === "checkin" ? "Aguardando GPS de até 10 m…" : "Usar minha localização e iniciar check-in"}</button> : <div className="rounded-xl border border-[#cde5cf] bg-[#eff8ee] p-3 text-sm text-[#28764e]"><strong>Check-in ativo</strong> · distância verificada: {checkin.distancia.toFixed(1)} m · precisão GPS: {checkin.precisao.toFixed(1)} m · expira {formatarData(checkin.expiraEm)}.<button type="button" className="ml-3 font-bold underline" onClick={() => { setCheckin(null); setCategoriasSelecionadas([]); setFotos({}); }}>Cancelar</button></div>}
 
       {checkin ? <form onSubmit={enviarEvidencias} className="space-y-4 border-t border-[#e8efe7] pt-4">
         <h3 className="font-black text-[#17362a]">Etapa 2 — separar as fotos por categoria</h3>
