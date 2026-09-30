@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file lixo_certo/v1/servico_gamificacao.proto.
  */
 export const file_lixo_certo_v1_servico_gamificacao: GenFile = /*@__PURE__*/
-  fileDesc("CidsaXhvX2NlcnRvL3YxL3NlcnZpY29fZ2FtaWZpY2FjYW8ucHJvdG8SDWxpeG9fY2VydG8udjEiIQofT2J0ZXJQcm9ncmVzc29Vc3VhcmlvUmVxdWlzaWNhbyKMAQodT2J0ZXJQcm9ncmVzc29Vc3VhcmlvUmVzcG9zdGESGQoRcXVhbnRpZGFkZV9wb250b3MYASABKAUSGQoRbml2ZWxfZ2FtaWZpY2FjYW8YAiABKAkSFgoOc2VxdWVuY2lhX2RpYXMYAyABKAUSHQoVcXVhbnRpZGFkZV9jb25xdWlzdGFzGAQgASgFIjIKFk9idGVyUmFua2luZ1JlcXVpc2ljYW8SGAoQbGltaXRlX3Jlc3VsdGFkbxgBIAEoBSJ6ChNJdGVtUmFua2luZ1Jlc3Bvc3RhEhcKD3Bvc2ljYW9fcmFua2luZxgBIAEoBRIUCgxub21lX3VzdWFyaW8YAiABKAkSGQoRcXVhbnRpZGFkZV9wb250b3MYAyABKAUSGQoRbml2ZWxfZ2FtaWZpY2FjYW8YBCABKAkiUQoUT2J0ZXJSYW5raW5nUmVzcG9zdGESOQoNaXRlbnNfcmFua2luZxgBIAMoCzIiLmxpeG9fY2VydG8udjEuSXRlbVJhbmtpbmdSZXNwb3N0YTLnAQoSU2Vydmljb0dhbWlmaWNhY2FvEnUKFU9idGVyUHJvZ3Jlc3NvVXN1YXJpbxIuLmxpeG9fY2VydG8udjEuT2J0ZXJQcm9ncmVzc29Vc3VhcmlvUmVxdWlzaWNhbxosLmxpeG9fY2VydG8udjEuT2J0ZXJQcm9ncmVzc29Vc3VhcmlvUmVzcG9zdGESWgoMT2J0ZXJSYW5raW5nEiUubGl4b19jZXJ0by52MS5PYnRlclJhbmtpbmdSZXF1aXNpY2FvGiMubGl4b19jZXJ0by52MS5PYnRlclJhbmtpbmdSZXNwb3N0YWIGcHJvdG8z");
+  fileDesc("CidsaXhvX2NlcnRvL3YxL3NlcnZpY29fZ2FtaWZpY2FjYW8ucHJvdG8SDWxpeG9fY2VydG8udjEiIQofT2J0ZXJQcm9ncmVzc29Vc3VhcmlvUmVxdWlzaWNhbyL2AQodT2J0ZXJQcm9ncmVzc29Vc3VhcmlvUmVzcG9zdGESGQoRcXVhbnRpZGFkZV9wb250b3MYASABKAUSGQoRbml2ZWxfZ2FtaWZpY2FjYW8YAiABKAkSFgoOc2VxdWVuY2lhX2RpYXMYAyABKAUSHQoVcXVhbnRpZGFkZV9jb25xdWlzdGFzGAQgASgFEi0KBXNlbG9zGAUgAygLMh4ubGl4b19jZXJ0by52MS5TZWxvR2FtaWZpY2FjYW8SOQoRcmVzdW1vX3Bvcl9vcmlnZW0YBiADKAsyHi5saXhvX2NlcnRvLnYxLlBvbnRvc1Bvck9yaWdlbSKWAQoPU2Vsb0dhbWlmaWNhY2FvEg4KBmNvZGlnbxgBIAEoCRIMCgRub21lGAIgASgJEhEKCWRlc2NyaWNhbxgDIAEoCRIWCg5wb250b3NfbWluaW1vcxgEIAEoBRINCgVpY29uZRgFIAEoCRITCgtjb25xdWlzdGFkbxgGIAEoCBIWCg5kYXRhX2NvbnF1aXN0YRgHIAEoCSJYCg9Qb250b3NQb3JPcmlnZW0SDgoGb3JpZ2VtGAEgASgJEhkKEXF1YW50aWRhZGVfcG9udG9zGAIgASgFEhoKEnF1YW50aWRhZGVfZXZlbnRvcxgDIAEoBSIyChZPYnRlclJhbmtpbmdSZXF1aXNpY2FvEhgKEGxpbWl0ZV9yZXN1bHRhZG8YASABKAUiegoTSXRlbVJhbmtpbmdSZXNwb3N0YRIXCg9wb3NpY2FvX3JhbmtpbmcYASABKAUSFAoMbm9tZV91c3VhcmlvGAIgASgJEhkKEXF1YW50aWRhZGVfcG9udG9zGAMgASgFEhkKEW5pdmVsX2dhbWlmaWNhY2FvGAQgASgJIlEKFE9idGVyUmFua2luZ1Jlc3Bvc3RhEjkKDWl0ZW5zX3JhbmtpbmcYASADKAsyIi5saXhvX2NlcnRvLnYxLkl0ZW1SYW5raW5nUmVzcG9zdGEy5wEKElNlcnZpY29HYW1pZmljYWNhbxJ1ChVPYnRlclByb2dyZXNzb1VzdWFyaW8SLi5saXhvX2NlcnRvLnYxLk9idGVyUHJvZ3Jlc3NvVXN1YXJpb1JlcXVpc2ljYW8aLC5saXhvX2NlcnRvLnYxLk9idGVyUHJvZ3Jlc3NvVXN1YXJpb1Jlc3Bvc3RhEloKDE9idGVyUmFua2luZxIlLmxpeG9fY2VydG8udjEuT2J0ZXJSYW5raW5nUmVxdWlzaWNhbxojLmxpeG9fY2VydG8udjEuT2J0ZXJSYW5raW5nUmVzcG9zdGFiBnByb3RvMw");
 
 /**
  * @generated from message lixo_certo.v1.ObterProgressoUsuarioRequisicao
@@ -48,6 +48,16 @@ export type ObterProgressoUsuarioResposta = Message<"lixo_certo.v1.ObterProgress
    * @generated from field: int32 quantidade_conquistas = 4;
    */
   quantidadeConquistas: number;
+
+  /**
+   * @generated from field: repeated lixo_certo.v1.SeloGamificacao selos = 5;
+   */
+  selos: SeloGamificacao[];
+
+  /**
+   * @generated from field: repeated lixo_certo.v1.PontosPorOrigem resumo_por_origem = 6;
+   */
+  resumoPorOrigem: PontosPorOrigem[];
 };
 
 /**
@@ -56,6 +66,80 @@ export type ObterProgressoUsuarioResposta = Message<"lixo_certo.v1.ObterProgress
  */
 export const ObterProgressoUsuarioRespostaSchema: GenMessage<ObterProgressoUsuarioResposta> = /*@__PURE__*/
   messageDesc(file_lixo_certo_v1_servico_gamificacao, 1);
+
+/**
+ * @generated from message lixo_certo.v1.SeloGamificacao
+ */
+export type SeloGamificacao = Message<"lixo_certo.v1.SeloGamificacao"> & {
+  /**
+   * @generated from field: string codigo = 1;
+   */
+  codigo: string;
+
+  /**
+   * @generated from field: string nome = 2;
+   */
+  nome: string;
+
+  /**
+   * @generated from field: string descricao = 3;
+   */
+  descricao: string;
+
+  /**
+   * @generated from field: int32 pontos_minimos = 4;
+   */
+  pontosMinimos: number;
+
+  /**
+   * @generated from field: string icone = 5;
+   */
+  icone: string;
+
+  /**
+   * @generated from field: bool conquistado = 6;
+   */
+  conquistado: boolean;
+
+  /**
+   * @generated from field: string data_conquista = 7;
+   */
+  dataConquista: string;
+};
+
+/**
+ * Describes the message lixo_certo.v1.SeloGamificacao.
+ * Use `create(SeloGamificacaoSchema)` to create a new message.
+ */
+export const SeloGamificacaoSchema: GenMessage<SeloGamificacao> = /*@__PURE__*/
+  messageDesc(file_lixo_certo_v1_servico_gamificacao, 2);
+
+/**
+ * @generated from message lixo_certo.v1.PontosPorOrigem
+ */
+export type PontosPorOrigem = Message<"lixo_certo.v1.PontosPorOrigem"> & {
+  /**
+   * @generated from field: string origem = 1;
+   */
+  origem: string;
+
+  /**
+   * @generated from field: int32 quantidade_pontos = 2;
+   */
+  quantidadePontos: number;
+
+  /**
+   * @generated from field: int32 quantidade_eventos = 3;
+   */
+  quantidadeEventos: number;
+};
+
+/**
+ * Describes the message lixo_certo.v1.PontosPorOrigem.
+ * Use `create(PontosPorOrigemSchema)` to create a new message.
+ */
+export const PontosPorOrigemSchema: GenMessage<PontosPorOrigem> = /*@__PURE__*/
+  messageDesc(file_lixo_certo_v1_servico_gamificacao, 3);
 
 /**
  * @generated from message lixo_certo.v1.ObterRankingRequisicao
@@ -72,7 +156,7 @@ export type ObterRankingRequisicao = Message<"lixo_certo.v1.ObterRankingRequisic
  * Use `create(ObterRankingRequisicaoSchema)` to create a new message.
  */
 export const ObterRankingRequisicaoSchema: GenMessage<ObterRankingRequisicao> = /*@__PURE__*/
-  messageDesc(file_lixo_certo_v1_servico_gamificacao, 2);
+  messageDesc(file_lixo_certo_v1_servico_gamificacao, 4);
 
 /**
  * @generated from message lixo_certo.v1.ItemRankingResposta
@@ -104,7 +188,7 @@ export type ItemRankingResposta = Message<"lixo_certo.v1.ItemRankingResposta"> &
  * Use `create(ItemRankingRespostaSchema)` to create a new message.
  */
 export const ItemRankingRespostaSchema: GenMessage<ItemRankingResposta> = /*@__PURE__*/
-  messageDesc(file_lixo_certo_v1_servico_gamificacao, 3);
+  messageDesc(file_lixo_certo_v1_servico_gamificacao, 5);
 
 /**
  * @generated from message lixo_certo.v1.ObterRankingResposta
@@ -121,7 +205,7 @@ export type ObterRankingResposta = Message<"lixo_certo.v1.ObterRankingResposta">
  * Use `create(ObterRankingRespostaSchema)` to create a new message.
  */
 export const ObterRankingRespostaSchema: GenMessage<ObterRankingResposta> = /*@__PURE__*/
-  messageDesc(file_lixo_certo_v1_servico_gamificacao, 4);
+  messageDesc(file_lixo_certo_v1_servico_gamificacao, 6);
 
 /**
  * @generated from service lixo_certo.v1.ServicoGamificacao

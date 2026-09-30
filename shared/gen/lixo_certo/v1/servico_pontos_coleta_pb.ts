@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file lixo_certo/v1/servico_pontos_coleta.proto.
  */
 export const file_lixo_certo_v1_servico_pontos_coleta: GenFile = /*@__PURE__*/
-  fileDesc("CilsaXhvX2NlcnRvL3YxL3NlcnZpY29fcG9udG9zX2NvbGV0YS5wcm90bxINbGl4b19jZXJ0by52MSKRAQocTGlzdGFyUG9udG9zQ29sZXRhUmVxdWlzaWNhbxIbChNjaWRhZGVfcG9udG9fY29sZXRhGAEgASgJEhoKEmNhdGVnb3JpYV9tYXRlcmlhbBgCIAEoCRIQCghsYXRpdHVkZRgDIAEoARIRCglsb25naXR1ZGUYBCABKAESEwoLcmFpb19tZXRyb3MYBSABKAUiugMKE1BvbnRvQ29sZXRhUmVzcG9zdGESFwoPaWRfcG9udG9fY29sZXRhGAEgASgJEhkKEW5vbWVfcG9udG9fY29sZXRhGAIgASgJEh0KFWVuZGVyZWNvX3BvbnRvX2NvbGV0YRgDIAEoCRIbChNjaWRhZGVfcG9udG9fY29sZXRhGAQgASgJEhsKE2VzdGFkb19wb250b19jb2xldGEYBSABKAkSHQoVbGF0aXR1ZGVfcG9udG9fY29sZXRhGAYgASgBEh4KFmxvbmdpdHVkZV9wb250b19jb2xldGEYByABKAESGgoSc3RhdHVzX3ZlcmlmaWNhY2FvGAggASgJEhoKEmNhdGVnb3JpYXNfYWNlaXRhcxgJIAMoCRIZChFvcmlnZW1faW5mb3JtYWNhbxgKIAEoCRIYChBjZXBfcG9udG9fY29sZXRhGAsgASgJEh0KFWhvcmFyaW9fZnVuY2lvbmFtZW50bxgMIAEoCRIYChB0ZWxlZm9uZV9jb250YXRvGA0gASgJEhcKD3VybF9pbmZvcm1hY29lcxgOIAEoCRIYChBkYXRhX3ZlcmlmaWNhY2FvGA8gASgJIlcKGkxpc3RhclBvbnRvc0NvbGV0YVJlc3Bvc3RhEjkKDXBvbnRvc19jb2xldGEYASADKAsyIi5saXhvX2NlcnRvLnYxLlBvbnRvQ29sZXRhUmVzcG9zdGEiNQoaT2J0ZXJQb250b0NvbGV0YVJlcXVpc2ljYW8SFwoPaWRfcG9udG9fY29sZXRhGAEgASgJIk0KGE9idGVyUG9udG9Db2xldGFSZXNwb3N0YRIxCgVwb250bxgBIAEoCzIiLmxpeG9fY2VydG8udjEuUG9udG9Db2xldGFSZXNwb3N0YSLyAgoaRGFkb3NQb250b0NvbGV0YVJlcXVpc2ljYW8SGQoRbm9tZV9wb250b19jb2xldGEYASABKAkSHQoVZW5kZXJlY29fcG9udG9fY29sZXRhGAIgASgJEhsKE2NpZGFkZV9wb250b19jb2xldGEYAyABKAkSGwoTZXN0YWRvX3BvbnRvX2NvbGV0YRgEIAEoCRIdChVsYXRpdHVkZV9wb250b19jb2xldGEYBSABKAESHgoWbG9uZ2l0dWRlX3BvbnRvX2NvbGV0YRgGIAEoARIaChJjYXRlZ29yaWFzX2FjZWl0YXMYByADKAkSGQoRb3JpZ2VtX2luZm9ybWFjYW8YCCABKAkSGAoQY2VwX3BvbnRvX2NvbGV0YRgJIAEoCRIdChVob3JhcmlvX2Z1bmNpb25hbWVudG8YCiABKAkSGAoQdGVsZWZvbmVfY29udGF0bxgLIAEoCRIXCg91cmxfaW5mb3JtYWNvZXMYDCABKAkiTQomQnVzY2FyRW5kZXJlY29Qb3JDb29yZGVuYWRhc1JlcXVpc2ljYW8SEAoIbGF0aXR1ZGUYASABKAESEQoJbG9uZ2l0dWRlGAIgASgBIsEBCiRCdXNjYXJFbmRlcmVjb1BvckNvb3JkZW5hZGFzUmVzcG9zdGESEgoKZW5jb250cmFkbxgBIAEoCBIYChBjZXBfcG9udG9fY29sZXRhGAIgASgJEh0KFWVuZGVyZWNvX3BvbnRvX2NvbGV0YRgDIAEoCRIbChNjaWRhZGVfcG9udG9fY29sZXRhGAQgASgJEhsKE2VzdGFkb19wb250b19jb2xldGEYBSABKAkSEgoKYXRyaWJ1aWNhbxgGIAEoCSJWChpDcmlhclBvbnRvQ29sZXRhUmVxdWlzaWNhbxI4CgVkYWRvcxgBIAEoCzIpLmxpeG9fY2VydG8udjEuRGFkb3NQb250b0NvbGV0YVJlcXVpc2ljYW8icwoeQXR1YWxpemFyUG9udG9Db2xldGFSZXF1aXNpY2FvEhcKD2lkX3BvbnRvX2NvbGV0YRgBIAEoCRI4CgVkYWRvcxgCIAEoCzIpLmxpeG9fY2VydG8udjEuRGFkb3NQb250b0NvbGV0YVJlcXVpc2ljYW8iWQoiQWx0ZXJhclN0YXR1c1BvbnRvQ29sZXRhUmVxdWlzaWNhbxIXCg9pZF9wb250b19jb2xldGEYASABKAkSGgoSc3RhdHVzX3ZlcmlmaWNhY2FvGAIgASgJIjcKHEV4Y2x1aXJQb250b0NvbGV0YVJlcXVpc2ljYW8SFwoPaWRfcG9udG9fY29sZXRhGAEgASgJIoIBChhDcmlhclBvbnRvQ29sZXRhUmVzcG9zdGESFwoPb3BlcmFjYW9fYWNlaXRhGAEgASgIEhoKEm1lbnNhZ2VtX3Jlc3VsdGFkbxgCIAEoCRIxCgVwb250bxgDIAEoCzIiLmxpeG9fY2VydG8udjEuUG9udG9Db2xldGFSZXNwb3N0YSKGAQocQXR1YWxpemFyUG9udG9Db2xldGFSZXNwb3N0YRIXCg9vcGVyYWNhb19hY2VpdGEYASABKAgSGgoSbWVuc2FnZW1fcmVzdWx0YWRvGAIgASgJEjEKBXBvbnRvGAMgASgLMiIubGl4b19jZXJ0by52MS5Qb250b0NvbGV0YVJlc3Bvc3RhIlEKGkV4Y2x1aXJQb250b0NvbGV0YVJlc3Bvc3RhEhcKD29wZXJhY2FvX2FjZWl0YRgBIAEoCBIaChJtZW5zYWdlbV9yZXN1bHRhZG8YAiABKAkiigEKIEFsdGVyYXJTdGF0dXNQb250b0NvbGV0YVJlc3Bvc3RhEhcKD29wZXJhY2FvX2FjZWl0YRgBIAEoCBIaChJtZW5zYWdlbV9yZXN1bHRhZG8YAiABKAkSMQoFcG9udG8YAyABKAsyIi5saXhvX2NlcnRvLnYxLlBvbnRvQ29sZXRhUmVzcG9zdGEywgYKE1NlcnZpY29Qb250b3NDb2xldGESbAoSTGlzdGFyUG9udG9zQ29sZXRhEisubGl4b19jZXJ0by52MS5MaXN0YXJQb250b3NDb2xldGFSZXF1aXNpY2FvGikubGl4b19jZXJ0by52MS5MaXN0YXJQb250b3NDb2xldGFSZXNwb3N0YRJmChBPYnRlclBvbnRvQ29sZXRhEikubGl4b19jZXJ0by52MS5PYnRlclBvbnRvQ29sZXRhUmVxdWlzaWNhbxonLmxpeG9fY2VydG8udjEuT2J0ZXJQb250b0NvbGV0YVJlc3Bvc3RhEmYKEENyaWFyUG9udG9Db2xldGESKS5saXhvX2NlcnRvLnYxLkNyaWFyUG9udG9Db2xldGFSZXF1aXNpY2FvGicubGl4b19jZXJ0by52MS5DcmlhclBvbnRvQ29sZXRhUmVzcG9zdGEScgoUQXR1YWxpemFyUG9udG9Db2xldGESLS5saXhvX2NlcnRvLnYxLkF0dWFsaXphclBvbnRvQ29sZXRhUmVxdWlzaWNhbxorLmxpeG9fY2VydG8udjEuQXR1YWxpemFyUG9udG9Db2xldGFSZXNwb3N0YRJsChJFeGNsdWlyUG9udG9Db2xldGESKy5saXhvX2NlcnRvLnYxLkV4Y2x1aXJQb250b0NvbGV0YVJlcXVpc2ljYW8aKS5saXhvX2NlcnRvLnYxLkV4Y2x1aXJQb250b0NvbGV0YVJlc3Bvc3RhEn4KGEFsdGVyYXJTdGF0dXNQb250b0NvbGV0YRIxLmxpeG9fY2VydG8udjEuQWx0ZXJhclN0YXR1c1BvbnRvQ29sZXRhUmVxdWlzaWNhbxovLmxpeG9fY2VydG8udjEuQWx0ZXJhclN0YXR1c1BvbnRvQ29sZXRhUmVzcG9zdGESigEKHEJ1c2NhckVuZGVyZWNvUG9yQ29vcmRlbmFkYXMSNS5saXhvX2NlcnRvLnYxLkJ1c2NhckVuZGVyZWNvUG9yQ29vcmRlbmFkYXNSZXF1aXNpY2FvGjMubGl4b19jZXJ0by52MS5CdXNjYXJFbmRlcmVjb1BvckNvb3JkZW5hZGFzUmVzcG9zdGFiBnByb3RvMw");
+  fileDesc("CilsaXhvX2NlcnRvL3YxL3NlcnZpY29fcG9udG9zX2NvbGV0YS5wcm90bxINbGl4b19jZXJ0by52MSKRAQocTGlzdGFyUG9udG9zQ29sZXRhUmVxdWlzaWNhbxIbChNjaWRhZGVfcG9udG9fY29sZXRhGAEgASgJEhoKEmNhdGVnb3JpYV9tYXRlcmlhbBgCIAEoCRIQCghsYXRpdHVkZRgDIAEoARIRCglsb25naXR1ZGUYBCABKAESEwoLcmFpb19tZXRyb3MYBSABKAUiugMKE1BvbnRvQ29sZXRhUmVzcG9zdGESFwoPaWRfcG9udG9fY29sZXRhGAEgASgJEhkKEW5vbWVfcG9udG9fY29sZXRhGAIgASgJEh0KFWVuZGVyZWNvX3BvbnRvX2NvbGV0YRgDIAEoCRIbChNjaWRhZGVfcG9udG9fY29sZXRhGAQgASgJEhsKE2VzdGFkb19wb250b19jb2xldGEYBSABKAkSHQoVbGF0aXR1ZGVfcG9udG9fY29sZXRhGAYgASgBEh4KFmxvbmdpdHVkZV9wb250b19jb2xldGEYByABKAESGgoSc3RhdHVzX3ZlcmlmaWNhY2FvGAggASgJEhoKEmNhdGVnb3JpYXNfYWNlaXRhcxgJIAMoCRIZChFvcmlnZW1faW5mb3JtYWNhbxgKIAEoCRIYChBjZXBfcG9udG9fY29sZXRhGAsgASgJEh0KFWhvcmFyaW9fZnVuY2lvbmFtZW50bxgMIAEoCRIYChB0ZWxlZm9uZV9jb250YXRvGA0gASgJEhcKD3VybF9pbmZvcm1hY29lcxgOIAEoCRIYChBkYXRhX3ZlcmlmaWNhY2FvGA8gASgJIlcKGkxpc3RhclBvbnRvc0NvbGV0YVJlc3Bvc3RhEjkKDXBvbnRvc19jb2xldGEYASADKAsyIi5saXhvX2NlcnRvLnYxLlBvbnRvQ29sZXRhUmVzcG9zdGEiNQoaT2J0ZXJQb250b0NvbGV0YVJlcXVpc2ljYW8SFwoPaWRfcG9udG9fY29sZXRhGAEgASgJIk0KGE9idGVyUG9udG9Db2xldGFSZXNwb3N0YRIxCgVwb250bxgBIAEoCzIiLmxpeG9fY2VydG8udjEuUG9udG9Db2xldGFSZXNwb3N0YSLyAgoaRGFkb3NQb250b0NvbGV0YVJlcXVpc2ljYW8SGQoRbm9tZV9wb250b19jb2xldGEYASABKAkSHQoVZW5kZXJlY29fcG9udG9fY29sZXRhGAIgASgJEhsKE2NpZGFkZV9wb250b19jb2xldGEYAyABKAkSGwoTZXN0YWRvX3BvbnRvX2NvbGV0YRgEIAEoCRIdChVsYXRpdHVkZV9wb250b19jb2xldGEYBSABKAESHgoWbG9uZ2l0dWRlX3BvbnRvX2NvbGV0YRgGIAEoARIaChJjYXRlZ29yaWFzX2FjZWl0YXMYByADKAkSGQoRb3JpZ2VtX2luZm9ybWFjYW8YCCABKAkSGAoQY2VwX3BvbnRvX2NvbGV0YRgJIAEoCRIdChVob3JhcmlvX2Z1bmNpb25hbWVudG8YCiABKAkSGAoQdGVsZWZvbmVfY29udGF0bxgLIAEoCRIXCg91cmxfaW5mb3JtYWNvZXMYDCABKAkiTQomQnVzY2FyRW5kZXJlY29Qb3JDb29yZGVuYWRhc1JlcXVpc2ljYW8SEAoIbGF0aXR1ZGUYASABKAESEQoJbG9uZ2l0dWRlGAIgASgBIsEBCiRCdXNjYXJFbmRlcmVjb1BvckNvb3JkZW5hZGFzUmVzcG9zdGESEgoKZW5jb250cmFkbxgBIAEoCBIYChBjZXBfcG9udG9fY29sZXRhGAIgASgJEh0KFWVuZGVyZWNvX3BvbnRvX2NvbGV0YRgDIAEoCRIbChNjaWRhZGVfcG9udG9fY29sZXRhGAQgASgJEhsKE2VzdGFkb19wb250b19jb2xldGEYBSABKAkSEgoKYXRyaWJ1aWNhbxgGIAEoCSJWChpDcmlhclBvbnRvQ29sZXRhUmVxdWlzaWNhbxI4CgVkYWRvcxgBIAEoCzIpLmxpeG9fY2VydG8udjEuRGFkb3NQb250b0NvbGV0YVJlcXVpc2ljYW8icwoeQXR1YWxpemFyUG9udG9Db2xldGFSZXF1aXNpY2FvEhcKD2lkX3BvbnRvX2NvbGV0YRgBIAEoCRI4CgVkYWRvcxgCIAEoCzIpLmxpeG9fY2VydG8udjEuRGFkb3NQb250b0NvbGV0YVJlcXVpc2ljYW8iWQoiQWx0ZXJhclN0YXR1c1BvbnRvQ29sZXRhUmVxdWlzaWNhbxIXCg9pZF9wb250b19jb2xldGEYASABKAkSGgoSc3RhdHVzX3ZlcmlmaWNhY2FvGAIgASgJIjcKHEV4Y2x1aXJQb250b0NvbGV0YVJlcXVpc2ljYW8SFwoPaWRfcG9udG9fY29sZXRhGAEgASgJIoIBChhDcmlhclBvbnRvQ29sZXRhUmVzcG9zdGESFwoPb3BlcmFjYW9fYWNlaXRhGAEgASgIEhoKEm1lbnNhZ2VtX3Jlc3VsdGFkbxgCIAEoCRIxCgVwb250bxgDIAEoCzIiLmxpeG9fY2VydG8udjEuUG9udG9Db2xldGFSZXNwb3N0YSKGAQocQXR1YWxpemFyUG9udG9Db2xldGFSZXNwb3N0YRIXCg9vcGVyYWNhb19hY2VpdGEYASABKAgSGgoSbWVuc2FnZW1fcmVzdWx0YWRvGAIgASgJEjEKBXBvbnRvGAMgASgLMiIubGl4b19jZXJ0by52MS5Qb250b0NvbGV0YVJlc3Bvc3RhIlEKGkV4Y2x1aXJQb250b0NvbGV0YVJlc3Bvc3RhEhcKD29wZXJhY2FvX2FjZWl0YRgBIAEoCBIaChJtZW5zYWdlbV9yZXN1bHRhZG8YAiABKAkiigEKIEFsdGVyYXJTdGF0dXNQb250b0NvbGV0YVJlc3Bvc3RhEhcKD29wZXJhY2FvX2FjZWl0YRgBIAEoCBIaChJtZW5zYWdlbV9yZXN1bHRhZG8YAiABKAkSMQoFcG9udG8YAyABKAsyIi5saXhvX2NlcnRvLnYxLlBvbnRvQ29sZXRhUmVzcG9zdGEiYgobUmVnaXN0cmFyRGVzY2FydGVSZXF1aXNpY2FvEhcKD2lkX3BvbnRvX2NvbGV0YRgBIAEoCRIaChJjYXRlZ29yaWFfbWF0ZXJpYWwYAiABKAkSDgoGcmVsYXRvGAMgASgJIrwCChhSZWdpc3Ryb0Rlc2NhcnRlUmVzcG9zdGESEwoLaWRfcmVnaXN0cm8YASABKAkSFwoPaWRfcG9udG9fY29sZXRhGAIgASgJEhkKEW5vbWVfcG9udG9fY29sZXRhGAMgASgJEhsKE2NpZGFkZV9wb250b19jb2xldGEYBCABKAkSGgoSY2F0ZWdvcmlhX21hdGVyaWFsGAUgASgJEg4KBnN0YXR1cxgGIAEoCRIVCg1kYXRhX3JlZ2lzdHJvGAcgASgJEhQKDGRhdGFfcmV2aXNhbxgIIAEoCRIOCgZyZWxhdG8YCSABKAkSIgoaaWRlbnRpZmljYWRvcl9wYXJ0aWNpcGFudGUYCiABKAkSEgoKcXVhbnRpZGFkZRgLIAEoBRIZChFwb250b3NfY29uY2VkaWRvcxgMIAEoBSKLAQoZUmVnaXN0cmFyRGVzY2FydGVSZXNwb3N0YRIXCg9vcGVyYWNhb19hY2VpdGEYASABKAgSGgoSbWVuc2FnZW1fcmVzdWx0YWRvGAIgASgJEjkKCHJlZ2lzdHJvGAMgASgLMicubGl4b19jZXJ0by52MS5SZWdpc3Ryb0Rlc2NhcnRlUmVzcG9zdGEiHwodTGlzdGFyTWV1c0Rlc2NhcnRlc1JlcXVpc2ljYW8iWQobTGlzdGFyTWV1c0Rlc2NhcnRlc1Jlc3Bvc3RhEjoKCXJlZ2lzdHJvcxgBIAMoCzInLmxpeG9fY2VydG8udjEuUmVnaXN0cm9EZXNjYXJ0ZVJlc3Bvc3RhIjEKH0xpc3RhckRlc2NhcnRlc0dlc3Rhb1JlcXVpc2ljYW8SDgoGc3RhdHVzGAEgASgJIlsKHUxpc3RhckRlc2NhcnRlc0dlc3Rhb1Jlc3Bvc3RhEjoKCXJlZ2lzdHJvcxgBIAMoCzInLmxpeG9fY2VydG8udjEuUmVnaXN0cm9EZXNjYXJ0ZVJlc3Bvc3RhIkAKGVJldmlzYXJEZXNjYXJ0ZVJlcXVpc2ljYW8SEwoLaWRfcmVnaXN0cm8YASABKAkSDgoGc3RhdHVzGAIgASgJIokBChdSZXZpc2FyRGVzY2FydGVSZXNwb3N0YRIXCg9vcGVyYWNhb19hY2VpdGEYASABKAgSGgoSbWVuc2FnZW1fcmVzdWx0YWRvGAIgASgJEjkKCHJlZ2lzdHJvGAMgASgLMicubGl4b19jZXJ0by52MS5SZWdpc3Ryb0Rlc2NhcnRlUmVzcG9zdGEy+gkKE1NlcnZpY29Qb250b3NDb2xldGESbAoSTGlzdGFyUG9udG9zQ29sZXRhEisubGl4b19jZXJ0by52MS5MaXN0YXJQb250b3NDb2xldGFSZXF1aXNpY2FvGikubGl4b19jZXJ0by52MS5MaXN0YXJQb250b3NDb2xldGFSZXNwb3N0YRJmChBPYnRlclBvbnRvQ29sZXRhEikubGl4b19jZXJ0by52MS5PYnRlclBvbnRvQ29sZXRhUmVxdWlzaWNhbxonLmxpeG9fY2VydG8udjEuT2J0ZXJQb250b0NvbGV0YVJlc3Bvc3RhEmYKEENyaWFyUG9udG9Db2xldGESKS5saXhvX2NlcnRvLnYxLkNyaWFyUG9udG9Db2xldGFSZXF1aXNpY2FvGicubGl4b19jZXJ0by52MS5DcmlhclBvbnRvQ29sZXRhUmVzcG9zdGEScgoUQXR1YWxpemFyUG9udG9Db2xldGESLS5saXhvX2NlcnRvLnYxLkF0dWFsaXphclBvbnRvQ29sZXRhUmVxdWlzaWNhbxorLmxpeG9fY2VydG8udjEuQXR1YWxpemFyUG9udG9Db2xldGFSZXNwb3N0YRJsChJFeGNsdWlyUG9udG9Db2xldGESKy5saXhvX2NlcnRvLnYxLkV4Y2x1aXJQb250b0NvbGV0YVJlcXVpc2ljYW8aKS5saXhvX2NlcnRvLnYxLkV4Y2x1aXJQb250b0NvbGV0YVJlc3Bvc3RhEn4KGEFsdGVyYXJTdGF0dXNQb250b0NvbGV0YRIxLmxpeG9fY2VydG8udjEuQWx0ZXJhclN0YXR1c1BvbnRvQ29sZXRhUmVxdWlzaWNhbxovLmxpeG9fY2VydG8udjEuQWx0ZXJhclN0YXR1c1BvbnRvQ29sZXRhUmVzcG9zdGESigEKHEJ1c2NhckVuZGVyZWNvUG9yQ29vcmRlbmFkYXMSNS5saXhvX2NlcnRvLnYxLkJ1c2NhckVuZGVyZWNvUG9yQ29vcmRlbmFkYXNSZXF1aXNpY2FvGjMubGl4b19jZXJ0by52MS5CdXNjYXJFbmRlcmVjb1BvckNvb3JkZW5hZGFzUmVzcG9zdGESaQoRUmVnaXN0cmFyRGVzY2FydGUSKi5saXhvX2NlcnRvLnYxLlJlZ2lzdHJhckRlc2NhcnRlUmVxdWlzaWNhbxooLmxpeG9fY2VydG8udjEuUmVnaXN0cmFyRGVzY2FydGVSZXNwb3N0YRJvChNMaXN0YXJNZXVzRGVzY2FydGVzEiwubGl4b19jZXJ0by52MS5MaXN0YXJNZXVzRGVzY2FydGVzUmVxdWlzaWNhbxoqLmxpeG9fY2VydG8udjEuTGlzdGFyTWV1c0Rlc2NhcnRlc1Jlc3Bvc3RhEnUKFUxpc3RhckRlc2NhcnRlc0dlc3RhbxIuLmxpeG9fY2VydG8udjEuTGlzdGFyRGVzY2FydGVzR2VzdGFvUmVxdWlzaWNhbxosLmxpeG9fY2VydG8udjEuTGlzdGFyRGVzY2FydGVzR2VzdGFvUmVzcG9zdGESYwoPUmV2aXNhckRlc2NhcnRlEigubGl4b19jZXJ0by52MS5SZXZpc2FyRGVzY2FydGVSZXF1aXNpY2FvGiYubGl4b19jZXJ0by52MS5SZXZpc2FyRGVzY2FydGVSZXNwb3N0YWIGcHJvdG8z");
 
 /**
  * @generated from message lixo_certo.v1.ListarPontosColetaRequisicao
@@ -505,6 +505,245 @@ export const AlterarStatusPontoColetaRespostaSchema: GenMessage<AlterarStatusPon
   messageDesc(file_lixo_certo_v1_servico_pontos_coleta, 15);
 
 /**
+ * @generated from message lixo_certo.v1.RegistrarDescarteRequisicao
+ */
+export type RegistrarDescarteRequisicao = Message<"lixo_certo.v1.RegistrarDescarteRequisicao"> & {
+  /**
+   * @generated from field: string id_ponto_coleta = 1;
+   */
+  idPontoColeta: string;
+
+  /**
+   * @generated from field: string categoria_material = 2;
+   */
+  categoriaMaterial: string;
+
+  /**
+   * @generated from field: string relato = 3;
+   */
+  relato: string;
+};
+
+/**
+ * Describes the message lixo_certo.v1.RegistrarDescarteRequisicao.
+ * Use `create(RegistrarDescarteRequisicaoSchema)` to create a new message.
+ */
+export const RegistrarDescarteRequisicaoSchema: GenMessage<RegistrarDescarteRequisicao> = /*@__PURE__*/
+  messageDesc(file_lixo_certo_v1_servico_pontos_coleta, 16);
+
+/**
+ * @generated from message lixo_certo.v1.RegistroDescarteResposta
+ */
+export type RegistroDescarteResposta = Message<"lixo_certo.v1.RegistroDescarteResposta"> & {
+  /**
+   * @generated from field: string id_registro = 1;
+   */
+  idRegistro: string;
+
+  /**
+   * @generated from field: string id_ponto_coleta = 2;
+   */
+  idPontoColeta: string;
+
+  /**
+   * @generated from field: string nome_ponto_coleta = 3;
+   */
+  nomePontoColeta: string;
+
+  /**
+   * @generated from field: string cidade_ponto_coleta = 4;
+   */
+  cidadePontoColeta: string;
+
+  /**
+   * @generated from field: string categoria_material = 5;
+   */
+  categoriaMaterial: string;
+
+  /**
+   * @generated from field: string status = 6;
+   */
+  status: string;
+
+  /**
+   * @generated from field: string data_registro = 7;
+   */
+  dataRegistro: string;
+
+  /**
+   * @generated from field: string data_revisao = 8;
+   */
+  dataRevisao: string;
+
+  /**
+   * @generated from field: string relato = 9;
+   */
+  relato: string;
+
+  /**
+   * @generated from field: string identificador_participante = 10;
+   */
+  identificadorParticipante: string;
+
+  /**
+   * @generated from field: int32 quantidade = 11;
+   */
+  quantidade: number;
+
+  /**
+   * @generated from field: int32 pontos_concedidos = 12;
+   */
+  pontosConcedidos: number;
+};
+
+/**
+ * Describes the message lixo_certo.v1.RegistroDescarteResposta.
+ * Use `create(RegistroDescarteRespostaSchema)` to create a new message.
+ */
+export const RegistroDescarteRespostaSchema: GenMessage<RegistroDescarteResposta> = /*@__PURE__*/
+  messageDesc(file_lixo_certo_v1_servico_pontos_coleta, 17);
+
+/**
+ * @generated from message lixo_certo.v1.RegistrarDescarteResposta
+ */
+export type RegistrarDescarteResposta = Message<"lixo_certo.v1.RegistrarDescarteResposta"> & {
+  /**
+   * @generated from field: bool operacao_aceita = 1;
+   */
+  operacaoAceita: boolean;
+
+  /**
+   * @generated from field: string mensagem_resultado = 2;
+   */
+  mensagemResultado: string;
+
+  /**
+   * @generated from field: lixo_certo.v1.RegistroDescarteResposta registro = 3;
+   */
+  registro?: RegistroDescarteResposta | undefined;
+};
+
+/**
+ * Describes the message lixo_certo.v1.RegistrarDescarteResposta.
+ * Use `create(RegistrarDescarteRespostaSchema)` to create a new message.
+ */
+export const RegistrarDescarteRespostaSchema: GenMessage<RegistrarDescarteResposta> = /*@__PURE__*/
+  messageDesc(file_lixo_certo_v1_servico_pontos_coleta, 18);
+
+/**
+ * @generated from message lixo_certo.v1.ListarMeusDescartesRequisicao
+ */
+export type ListarMeusDescartesRequisicao = Message<"lixo_certo.v1.ListarMeusDescartesRequisicao"> & {
+};
+
+/**
+ * Describes the message lixo_certo.v1.ListarMeusDescartesRequisicao.
+ * Use `create(ListarMeusDescartesRequisicaoSchema)` to create a new message.
+ */
+export const ListarMeusDescartesRequisicaoSchema: GenMessage<ListarMeusDescartesRequisicao> = /*@__PURE__*/
+  messageDesc(file_lixo_certo_v1_servico_pontos_coleta, 19);
+
+/**
+ * @generated from message lixo_certo.v1.ListarMeusDescartesResposta
+ */
+export type ListarMeusDescartesResposta = Message<"lixo_certo.v1.ListarMeusDescartesResposta"> & {
+  /**
+   * @generated from field: repeated lixo_certo.v1.RegistroDescarteResposta registros = 1;
+   */
+  registros: RegistroDescarteResposta[];
+};
+
+/**
+ * Describes the message lixo_certo.v1.ListarMeusDescartesResposta.
+ * Use `create(ListarMeusDescartesRespostaSchema)` to create a new message.
+ */
+export const ListarMeusDescartesRespostaSchema: GenMessage<ListarMeusDescartesResposta> = /*@__PURE__*/
+  messageDesc(file_lixo_certo_v1_servico_pontos_coleta, 20);
+
+/**
+ * @generated from message lixo_certo.v1.ListarDescartesGestaoRequisicao
+ */
+export type ListarDescartesGestaoRequisicao = Message<"lixo_certo.v1.ListarDescartesGestaoRequisicao"> & {
+  /**
+   * @generated from field: string status = 1;
+   */
+  status: string;
+};
+
+/**
+ * Describes the message lixo_certo.v1.ListarDescartesGestaoRequisicao.
+ * Use `create(ListarDescartesGestaoRequisicaoSchema)` to create a new message.
+ */
+export const ListarDescartesGestaoRequisicaoSchema: GenMessage<ListarDescartesGestaoRequisicao> = /*@__PURE__*/
+  messageDesc(file_lixo_certo_v1_servico_pontos_coleta, 21);
+
+/**
+ * @generated from message lixo_certo.v1.ListarDescartesGestaoResposta
+ */
+export type ListarDescartesGestaoResposta = Message<"lixo_certo.v1.ListarDescartesGestaoResposta"> & {
+  /**
+   * @generated from field: repeated lixo_certo.v1.RegistroDescarteResposta registros = 1;
+   */
+  registros: RegistroDescarteResposta[];
+};
+
+/**
+ * Describes the message lixo_certo.v1.ListarDescartesGestaoResposta.
+ * Use `create(ListarDescartesGestaoRespostaSchema)` to create a new message.
+ */
+export const ListarDescartesGestaoRespostaSchema: GenMessage<ListarDescartesGestaoResposta> = /*@__PURE__*/
+  messageDesc(file_lixo_certo_v1_servico_pontos_coleta, 22);
+
+/**
+ * @generated from message lixo_certo.v1.RevisarDescarteRequisicao
+ */
+export type RevisarDescarteRequisicao = Message<"lixo_certo.v1.RevisarDescarteRequisicao"> & {
+  /**
+   * @generated from field: string id_registro = 1;
+   */
+  idRegistro: string;
+
+  /**
+   * @generated from field: string status = 2;
+   */
+  status: string;
+};
+
+/**
+ * Describes the message lixo_certo.v1.RevisarDescarteRequisicao.
+ * Use `create(RevisarDescarteRequisicaoSchema)` to create a new message.
+ */
+export const RevisarDescarteRequisicaoSchema: GenMessage<RevisarDescarteRequisicao> = /*@__PURE__*/
+  messageDesc(file_lixo_certo_v1_servico_pontos_coleta, 23);
+
+/**
+ * @generated from message lixo_certo.v1.RevisarDescarteResposta
+ */
+export type RevisarDescarteResposta = Message<"lixo_certo.v1.RevisarDescarteResposta"> & {
+  /**
+   * @generated from field: bool operacao_aceita = 1;
+   */
+  operacaoAceita: boolean;
+
+  /**
+   * @generated from field: string mensagem_resultado = 2;
+   */
+  mensagemResultado: string;
+
+  /**
+   * @generated from field: lixo_certo.v1.RegistroDescarteResposta registro = 3;
+   */
+  registro?: RegistroDescarteResposta | undefined;
+};
+
+/**
+ * Describes the message lixo_certo.v1.RevisarDescarteResposta.
+ * Use `create(RevisarDescarteRespostaSchema)` to create a new message.
+ */
+export const RevisarDescarteRespostaSchema: GenMessage<RevisarDescarteResposta> = /*@__PURE__*/
+  messageDesc(file_lixo_certo_v1_servico_pontos_coleta, 24);
+
+/**
  * @generated from service lixo_certo.v1.ServicoPontosColeta
  */
 export const ServicoPontosColeta: GenService<{
@@ -563,6 +802,38 @@ export const ServicoPontosColeta: GenService<{
     methodKind: "unary";
     input: typeof BuscarEnderecoPorCoordenadasRequisicaoSchema;
     output: typeof BuscarEnderecoPorCoordenadasRespostaSchema;
+  },
+  /**
+   * @generated from rpc lixo_certo.v1.ServicoPontosColeta.RegistrarDescarte
+   */
+  registrarDescarte: {
+    methodKind: "unary";
+    input: typeof RegistrarDescarteRequisicaoSchema;
+    output: typeof RegistrarDescarteRespostaSchema;
+  },
+  /**
+   * @generated from rpc lixo_certo.v1.ServicoPontosColeta.ListarMeusDescartes
+   */
+  listarMeusDescartes: {
+    methodKind: "unary";
+    input: typeof ListarMeusDescartesRequisicaoSchema;
+    output: typeof ListarMeusDescartesRespostaSchema;
+  },
+  /**
+   * @generated from rpc lixo_certo.v1.ServicoPontosColeta.ListarDescartesGestao
+   */
+  listarDescartesGestao: {
+    methodKind: "unary";
+    input: typeof ListarDescartesGestaoRequisicaoSchema;
+    output: typeof ListarDescartesGestaoRespostaSchema;
+  },
+  /**
+   * @generated from rpc lixo_certo.v1.ServicoPontosColeta.RevisarDescarte
+   */
+  revisarDescarte: {
+    methodKind: "unary";
+    input: typeof RevisarDescarteRequisicaoSchema;
+    output: typeof RevisarDescarteRespostaSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_lixo_certo_v1_servico_pontos_coleta, 0);

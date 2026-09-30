@@ -26,6 +26,7 @@ import MateriaisCrud from "@/components/MateriaisCrud";
 import QuestionariosCrud from "@/components/QuestionariosCrud";
 import DesafiosCrud from "@/components/DesafiosCrud";
 import PontosColetaCrud from "@/components/PontosColetaCrud";
+import RegistrosDescarte from "@/components/RegistrosDescarte";
 import PesquisaExperiencia from "@/components/PesquisaExperiencia";
 import { useAuth } from "@/_core/hooks/useAuth";
 import {
@@ -49,6 +50,8 @@ type DashboardState = {
   ecoPoints: number;
   currentStreak: number;
   badgesUnlocked: number;
+  seals: Array<{ code: string; name: string; description: string; minimumPoints: number; earned: boolean }>;
+  pointsBySource: Array<{ source: string; points: number; events: number }>;
   dailyTip: string;
   quickActions: { id: string; label: string; description: string }[];
 };
@@ -193,6 +196,8 @@ export default function Home() {
           ecoPoints: painel.quantidadePontos,
           currentStreak: painel.sequenciaDias,
           badgesUnlocked: painel.quantidadeConquistas,
+          seals: painel.selos.map(selo => ({ code: selo.codigo, name: selo.nome, description: selo.descricao, minimumPoints: selo.pontosMinimos, earned: selo.conquistado })),
+          pointsBySource: painel.resumoPorOrigem.map(item => ({ source: item.origem, points: item.quantidadePontos, events: item.quantidadeEventos })),
           dailyTip: "Pequenas escolhas repetidas criam impacto ambiental mensurável.",
           quickActions: [
             { id: "guide", label: "Consultar guia", description: "Aprenda como descartar melhor." },
@@ -351,6 +356,28 @@ export default function Home() {
 
         {indicadores.length ? <section className="grid gap-4 md:grid-cols-3">{indicadores.map(indicador => <IndicadorCard key={indicador.titulo} indicador={indicador} />)}</section> : null}
 
+        {podeLerGamificacao && dashboard ? <section className="grid gap-5 xl:grid-cols-[1.4fr_.6fr]">
+          <article className="rounded-[24px] border border-[#e1ebe2] bg-white p-5 shadow-[0_18px_36px_-30px_rgba(23,54,42,.6)] sm:p-6">
+            <div className="flex items-start justify-between gap-4"><div><p className="text-[11px] font-black uppercase tracking-[0.15em] text-[#3d9664]">Coleção de conquistas</p><h3 className="mt-2 text-xl font-black tracking-tight">Selos LixoCerto</h3><p className="mt-1 text-sm text-[#698375]">Marcos desbloqueados pelo total de pontos acumulados.</p></div><Trophy className="h-6 w-6 text-[#b1842c]" /></div>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {dashboard.seals.map(selo => <div key={selo.code} className={`rounded-2xl border p-4 ${selo.earned ? "border-[#d5e8c7] bg-[#f2f8e9]" : "border-[#e5e9e4] bg-[#f8faf7] opacity-70"}`}>
+                <div className="flex items-center justify-between gap-2"><span className={`grid h-9 w-9 place-items-center rounded-xl ${selo.earned ? "bg-[#dceecb] text-[#397649]" : "bg-[#e9ece8] text-[#859187]"}`}>{selo.earned ? <Award className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}</span><span className="text-[10px] font-black uppercase tracking-[0.1em] text-[#718579]">{selo.earned ? "Conquistado" : `${selo.minimumPoints} pontos`}</span></div>
+                <strong className="mt-3 block text-sm font-black text-[#244637]">{selo.name}</strong><p className="mt-1 text-xs leading-5 text-[#718579]">{selo.description}</p>
+              </div>)}
+            </div>
+          </article>
+          <article className="rounded-[24px] border border-[#e1ebe2] bg-white p-5 shadow-[0_18px_36px_-30px_rgba(23,54,42,.6)] sm:p-6">
+            <p className="text-[11px] font-black uppercase tracking-[0.15em] text-[#3d9664]">Origem da pontuação</p><h3 className="mt-2 text-xl font-black tracking-tight">Pontos transparentes</h3>
+            <div className="mt-4 space-y-3">{[
+              ["descarte_validado", "Descartes aprovados"], ["quiz_correto", "Quizzes corretos"], ["desafio_concluido", "Desafios concluídos"],
+            ].map(([origem, rotulo]) => {
+              const item = dashboard.pointsBySource.find(resumo => resumo.source === origem);
+              return <div key={origem} className="flex items-center justify-between gap-3 rounded-xl bg-[#f6f9f5] px-3.5 py-3"><span className="text-xs font-bold text-[#587261]">{rotulo}</span><strong className="text-sm font-black text-[#1d7953]">{item?.points ?? 0} pts <span className="font-semibold text-[#809789]">· {item?.events ?? 0} eventos</span></strong></div>;
+            })}</div>
+            <p className="mt-4 text-[11px] leading-5 text-[#82978a]">O total inclui o histórico anterior à implantação do detalhamento; a divisão por origem registra novas recompensas validadas.</p>
+          </article>
+        </section> : null}
+
         <section className="grid gap-5 xl:grid-cols-[1.25fr_.75fr]">
           <article className="rounded-[24px] border border-[#e1ebe2] bg-white p-5 shadow-[0_18px_36px_-30px_rgba(23,54,42,.6)] sm:p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
@@ -433,7 +460,7 @@ export default function Home() {
   }
 
   function renderizarDesafios() {
-    return <DesafiosCrud podeAdministrar={pode("gamificacao:administrar")} podeLer={podeLerGamificacao} podeParticipar={pode("gamificacao:participar")} />;
+    return <div className="space-y-8"><DesafiosCrud podeAdministrar={pode("gamificacao:administrar")} podeLer={podeLerGamificacao} podeParticipar={pode("gamificacao:participar")} /><RegistrosDescarte podeRegistrar={pode("gamificacao:participar")} podeLer={podeLerGamificacao} podeRevisar={pode("pontos_coleta:aprovar")} /></div>;
   }
 
   function renderizarPesquisa() {

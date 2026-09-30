@@ -41,6 +41,10 @@ import {
   CriarPontoColetaRequisicaoSchema,
   ExcluirPontoColetaRequisicaoSchema,
   ListarPontosColetaRequisicaoSchema,
+  ListarMeusDescartesRequisicaoSchema,
+  ListarDescartesGestaoRequisicaoSchema,
+  RegistrarDescarteRequisicaoSchema,
+  RevisarDescarteRequisicaoSchema,
   ObterPontoColetaRequisicaoSchema,
   ServicoPontosColeta,
 } from "@shared/gen/lixo_certo/v1/servico_pontos_coleta_pb";
@@ -227,6 +231,18 @@ export function alterarStatusPontoColeta(idPontoColeta: string, statusVerificaca
 export function buscarEnderecoPorCoordenadas(latitude: number, longitude: number) {
   return pontosColetaClient.buscarEnderecoPorCoordenadas(create(BuscarEnderecoPorCoordenadasRequisicaoSchema, { latitude, longitude }));
 }
+export function registrarDescarte(idPontoColeta: string, categoriaMaterial: string, relato = "") {
+  return pontosColetaClient.registrarDescarte(create(RegistrarDescarteRequisicaoSchema, { idPontoColeta, categoriaMaterial, relato }));
+}
+export function listarMeusDescartes() {
+  return pontosColetaClient.listarMeusDescartes(create(ListarMeusDescartesRequisicaoSchema, {}));
+}
+export function listarDescartesGestao(status = "pendente") {
+  return pontosColetaClient.listarDescartesGestao(create(ListarDescartesGestaoRequisicaoSchema, { status }));
+}
+export function revisarDescarte(idRegistro: string, status: "aprovado" | "rejeitado") {
+  return pontosColetaClient.revisarDescarte(create(RevisarDescarteRequisicaoSchema, { idRegistro, status }));
+}
 
 export function obterResumoAdministrativo() {
   return administracaoClient.obterResumoAdministrativo(create(ObterResumoAdministrativoRequisicaoSchema, {}));
@@ -280,6 +296,7 @@ export type DadosQuestaoApi = {
   enunciadoQuestao: string;
   explicacaoQuestao: string;
   quantidadePontos: number;
+  temaQuestao: string;
   alternativas: Array<{ idAlternativa?: string; textoAlternativa: string; indicaCorreta: boolean; ordemExibicao: number }>;
 };
 
@@ -304,6 +321,8 @@ export type DadosDesafioApi = {
   quantidadePontos: number;
   dataInicio: string;
   dataFim: string;
+  periodicidade: "unica" | "diaria" | "semanal" | "mensal";
+  criterios: Array<{ tipo: "descarte" | "quiz" | "categorias_distintas"; meta: number; categoria: string; tema: string; categorias: string[] }>;
 };
 export function listarDesafios() {
   return desafiosClient.listarDesafios(create(ListarDesafiosRequisicaoSchema, { numeroPagina: 1, tamanhoPagina: 100 }));

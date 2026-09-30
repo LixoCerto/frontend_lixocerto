@@ -10,7 +10,71 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file lixo_certo/v1/servico_desafios.proto.
  */
 export const file_lixo_certo_v1_servico_desafios: GenFile = /*@__PURE__*/
-  fileDesc("CiRsaXhvX2NlcnRvL3YxL3NlcnZpY29fZGVzYWZpb3MucHJvdG8SDWxpeG9fY2VydG8udjEiSQoYTGlzdGFyRGVzYWZpb3NSZXF1aXNpY2FvEhUKDW51bWVyb19wYWdpbmEYASABKAUSFgoOdGFtYW5ob19wYWdpbmEYAiABKAUi8AEKD0Rlc2FmaW9SZXNwb3N0YRISCgppZF9kZXNhZmlvGAEgASgJEhQKDG5vbWVfZGVzYWZpbxgCIAEoCRIZChFkZXNjcmljYW9fZGVzYWZpbxgDIAEoCRIRCgl0aXBvX2FjYW8YBCABKAkSFwoPbWV0YV9xdWFudGlkYWRlGAUgASgFEhkKEXF1YW50aWRhZGVfcG9udG9zGAYgASgFEhYKDnN0YXR1c19kZXNhZmlvGAcgASgJEhwKFHF1YW50aWRhZGVfcHJvZ3Jlc3NvGAggASgFEhsKE3N0YXR1c19wYXJ0aWNpcGFjYW8YCSABKAkiSgoWTGlzdGFyRGVzYWZpb3NSZXNwb3N0YRIwCghkZXNhZmlvcxgBIAMoCzIeLmxpeG9fY2VydG8udjEuRGVzYWZpb1Jlc3Bvc3RhIjEKG1BhcnRpY2lwYXJEZXNhZmlvUmVxdWlzaWNhbxISCgppZF9kZXNhZmlvGAEgASgJIoUBChlQYXJ0aWNpcGFyRGVzYWZpb1Jlc3Bvc3RhEhsKE3BhcnRpY2lwYWNhb19hY2VpdGEYASABKAgSLwoHZGVzYWZpbxgCIAEoCzIeLmxpeG9fY2VydG8udjEuRGVzYWZpb1Jlc3Bvc3RhEhoKEm1lbnNhZ2VtX3Jlc3VsdGFkbxgDIAEoCSJjCiJSZWdpc3RyYXJBY2FvU3VzdGVudGF2ZWxSZXF1aXNpY2FvEhIKCmlkX2Rlc2FmaW8YASABKAkSEQoJdGlwb19hY2FvGAIgASgJEhYKDmRlc2NyaWNhb19hY2FvGAMgASgJIqcBCiBSZWdpc3RyYXJBY2FvU3VzdGVudGF2ZWxSZXNwb3N0YRITCgthY2FvX2FjZWl0YRgBIAEoCBIZChFxdWFudGlkYWRlX3BvbnRvcxgCIAEoBRIcChRxdWFudGlkYWRlX3Byb2dyZXNzbxgDIAEoBRIZChFkZXNhZmlvX2NvbmNsdWlkbxgEIAEoCBIaChJtZW5zYWdlbV9yZXN1bHRhZG8YBSABKAkirQEKDERhZG9zRGVzYWZpbxIUCgxub21lX2Rlc2FmaW8YASABKAkSGQoRZGVzY3JpY2FvX2Rlc2FmaW8YAiABKAkSEQoJdGlwb19hY2FvGAMgASgJEhcKD21ldGFfcXVhbnRpZGFkZRgEIAEoBRIZChFxdWFudGlkYWRlX3BvbnRvcxgFIAEoBRITCgtkYXRhX2luaWNpbxgGIAEoCRIQCghkYXRhX2ZpbRgHIAEoCSJ/Ch5MaXN0YXJEZXNhZmlvc0dlc3Rhb1JlcXVpc2ljYW8SFgoOdGV4dG9fcGVzcXVpc2EYASABKAkSFgoOc3RhdHVzX2Rlc2FmaW8YAiABKAkSFQoNbnVtZXJvX3BhZ2luYRgDIAEoBRIWCg50YW1hbmhvX3BhZ2luYRgEIAEoBSLiAQoVRGVzYWZpb0dlc3Rhb1Jlc3Bvc3RhEhIKCmlkX2Rlc2FmaW8YASABKAkSFAoMbm9tZV9kZXNhZmlvGAIgASgJEhkKEWRlc2NyaWNhb19kZXNhZmlvGAMgASgJEhEKCXRpcG9fYWNhbxgEIAEoCRIXCg9tZXRhX3F1YW50aWRhZGUYBSABKAUSGQoRcXVhbnRpZGFkZV9wb250b3MYBiABKAUSFgoOc3RhdHVzX2Rlc2FmaW8YByABKAkSEwoLZGF0YV9pbmljaW8YCCABKAkSEAoIZGF0YV9maW0YCSABKAkicAocTGlzdGFyRGVzYWZpb3NHZXN0YW9SZXNwb3N0YRI2CghkZXNhZmlvcxgBIAMoCzIkLmxpeG9fY2VydG8udjEuRGVzYWZpb0dlc3Rhb1Jlc3Bvc3RhEhgKEHF1YW50aWRhZGVfdG90YWwYAiABKAUiRAoWQ3JpYXJEZXNhZmlvUmVxdWlzaWNhbxIqCgVkYWRvcxgBIAEoCzIbLmxpeG9fY2VydG8udjEuRGFkb3NEZXNhZmlvIoIBChRDcmlhckRlc2FmaW9SZXNwb3N0YRIXCg9vcGVyYWNhb19hY2VpdGEYASABKAgSGgoSbWVuc2FnZW1fcmVzdWx0YWRvGAIgASgJEjUKB2Rlc2FmaW8YAyABKAsyJC5saXhvX2NlcnRvLnYxLkRlc2FmaW9HZXN0YW9SZXNwb3N0YSJcChpBdHVhbGl6YXJEZXNhZmlvUmVxdWlzaWNhbxISCgppZF9kZXNhZmlvGAEgASgJEioKBWRhZG9zGAIgASgLMhsubGl4b19jZXJ0by52MS5EYWRvc0Rlc2FmaW8ihgEKGEF0dWFsaXphckRlc2FmaW9SZXNwb3N0YRIXCg9vcGVyYWNhb19hY2VpdGEYASABKAgSGgoSbWVuc2FnZW1fcmVzdWx0YWRvGAIgASgJEjUKB2Rlc2FmaW8YAyABKAsyJC5saXhvX2NlcnRvLnYxLkRlc2FmaW9HZXN0YW9SZXNwb3N0YSJMCh5BbHRlcmFyU3RhdHVzRGVzYWZpb1JlcXVpc2ljYW8SEgoKaWRfZGVzYWZpbxgBIAEoCRIWCg5zdGF0dXNfZGVzYWZpbxgCIAEoCSKKAQocQWx0ZXJhclN0YXR1c0Rlc2FmaW9SZXNwb3N0YRIXCg9vcGVyYWNhb19hY2VpdGEYASABKAgSGgoSbWVuc2FnZW1fcmVzdWx0YWRvGAIgASgJEjUKB2Rlc2FmaW8YAyABKAsyJC5saXhvX2NlcnRvLnYxLkRlc2FmaW9HZXN0YW9SZXNwb3N0YTKKBgoPU2Vydmljb0Rlc2FmaW9zEmAKDkxpc3RhckRlc2FmaW9zEicubGl4b19jZXJ0by52MS5MaXN0YXJEZXNhZmlvc1JlcXVpc2ljYW8aJS5saXhvX2NlcnRvLnYxLkxpc3RhckRlc2FmaW9zUmVzcG9zdGESaQoRUGFydGljaXBhckRlc2FmaW8SKi5saXhvX2NlcnRvLnYxLlBhcnRpY2lwYXJEZXNhZmlvUmVxdWlzaWNhbxooLmxpeG9fY2VydG8udjEuUGFydGljaXBhckRlc2FmaW9SZXNwb3N0YRJ+ChhSZWdpc3RyYXJBY2FvU3VzdGVudGF2ZWwSMS5saXhvX2NlcnRvLnYxLlJlZ2lzdHJhckFjYW9TdXN0ZW50YXZlbFJlcXVpc2ljYW8aLy5saXhvX2NlcnRvLnYxLlJlZ2lzdHJhckFjYW9TdXN0ZW50YXZlbFJlc3Bvc3RhEnIKFExpc3RhckRlc2FmaW9zR2VzdGFvEi0ubGl4b19jZXJ0by52MS5MaXN0YXJEZXNhZmlvc0dlc3Rhb1JlcXVpc2ljYW8aKy5saXhvX2NlcnRvLnYxLkxpc3RhckRlc2FmaW9zR2VzdGFvUmVzcG9zdGESWgoMQ3JpYXJEZXNhZmlvEiUubGl4b19jZXJ0by52MS5DcmlhckRlc2FmaW9SZXF1aXNpY2FvGiMubGl4b19jZXJ0by52MS5DcmlhckRlc2FmaW9SZXNwb3N0YRJmChBBdHVhbGl6YXJEZXNhZmlvEikubGl4b19jZXJ0by52MS5BdHVhbGl6YXJEZXNhZmlvUmVxdWlzaWNhbxonLmxpeG9fY2VydG8udjEuQXR1YWxpemFyRGVzYWZpb1Jlc3Bvc3RhEnIKFEFsdGVyYXJTdGF0dXNEZXNhZmlvEi0ubGl4b19jZXJ0by52MS5BbHRlcmFyU3RhdHVzRGVzYWZpb1JlcXVpc2ljYW8aKy5saXhvX2NlcnRvLnYxLkFsdGVyYXJTdGF0dXNEZXNhZmlvUmVzcG9zdGFiBnByb3RvMw");
+  fileDesc("CiRsaXhvX2NlcnRvL3YxL3NlcnZpY29fZGVzYWZpb3MucHJvdG8SDWxpeG9fY2VydG8udjEiYgoPQ3JpdGVyaW9EZXNhZmlvEgwKBHRpcG8YASABKAkSDAoEbWV0YRgCIAEoBRIRCgljYXRlZ29yaWEYAyABKAkSDAoEdGVtYRgEIAEoCRISCgpjYXRlZ29yaWFzGAUgAygJInIKGFByb2dyZXNzb0NyaXRlcmlvRGVzYWZpbxIwCghjcml0ZXJpbxgBIAEoCzIeLmxpeG9fY2VydG8udjEuQ3JpdGVyaW9EZXNhZmlvEhEKCXByb2dyZXNzbxgCIAEoBRIRCgljb25jbHVpZG8YAyABKAgiSQoYTGlzdGFyRGVzYWZpb3NSZXF1aXNpY2FvEhUKDW51bWVyb19wYWdpbmEYASABKAUSFgoOdGFtYW5ob19wYWdpbmEYAiABKAUisQMKD0Rlc2FmaW9SZXNwb3N0YRISCgppZF9kZXNhZmlvGAEgASgJEhQKDG5vbWVfZGVzYWZpbxgCIAEoCRIZChFkZXNjcmljYW9fZGVzYWZpbxgDIAEoCRIRCgl0aXBvX2FjYW8YBCABKAkSFwoPbWV0YV9xdWFudGlkYWRlGAUgASgFEhkKEXF1YW50aWRhZGVfcG9udG9zGAYgASgFEhYKDnN0YXR1c19kZXNhZmlvGAcgASgJEhwKFHF1YW50aWRhZGVfcHJvZ3Jlc3NvGAggASgFEhsKE3N0YXR1c19wYXJ0aWNpcGFjYW8YCSABKAkSFQoNcGVyaW9kaWNpZGFkZRgKIAEoCRIVCg1wZXJpb2RvX2NoYXZlGAsgASgJEjEKCWNyaXRlcmlvcxgMIAMoCzIeLmxpeG9fY2VydG8udjEuQ3JpdGVyaW9EZXNhZmlvEkQKE3Byb2dyZXNzb19jcml0ZXJpb3MYDSADKAsyJy5saXhvX2NlcnRvLnYxLlByb2dyZXNzb0NyaXRlcmlvRGVzYWZpbxIYChBkYXRhX2ZpbV9wZXJpb2RvGA4gASgJIkoKFkxpc3RhckRlc2FmaW9zUmVzcG9zdGESMAoIZGVzYWZpb3MYASADKAsyHi5saXhvX2NlcnRvLnYxLkRlc2FmaW9SZXNwb3N0YSIxChtQYXJ0aWNpcGFyRGVzYWZpb1JlcXVpc2ljYW8SEgoKaWRfZGVzYWZpbxgBIAEoCSKFAQoZUGFydGljaXBhckRlc2FmaW9SZXNwb3N0YRIbChNwYXJ0aWNpcGFjYW9fYWNlaXRhGAEgASgIEi8KB2Rlc2FmaW8YAiABKAsyHi5saXhvX2NlcnRvLnYxLkRlc2FmaW9SZXNwb3N0YRIaChJtZW5zYWdlbV9yZXN1bHRhZG8YAyABKAkiYwoiUmVnaXN0cmFyQWNhb1N1c3RlbnRhdmVsUmVxdWlzaWNhbxISCgppZF9kZXNhZmlvGAEgASgJEhEKCXRpcG9fYWNhbxgCIAEoCRIWCg5kZXNjcmljYW9fYWNhbxgDIAEoCSKnAQogUmVnaXN0cmFyQWNhb1N1c3RlbnRhdmVsUmVzcG9zdGESEwoLYWNhb19hY2VpdGEYASABKAgSGQoRcXVhbnRpZGFkZV9wb250b3MYAiABKAUSHAoUcXVhbnRpZGFkZV9wcm9ncmVzc28YAyABKAUSGQoRZGVzYWZpb19jb25jbHVpZG8YBCABKAgSGgoSbWVuc2FnZW1fcmVzdWx0YWRvGAUgASgJIvcBCgxEYWRvc0Rlc2FmaW8SFAoMbm9tZV9kZXNhZmlvGAEgASgJEhkKEWRlc2NyaWNhb19kZXNhZmlvGAIgASgJEhEKCXRpcG9fYWNhbxgDIAEoCRIXCg9tZXRhX3F1YW50aWRhZGUYBCABKAUSGQoRcXVhbnRpZGFkZV9wb250b3MYBSABKAUSEwoLZGF0YV9pbmljaW8YBiABKAkSEAoIZGF0YV9maW0YByABKAkSFQoNcGVyaW9kaWNpZGFkZRgIIAEoCRIxCgljcml0ZXJpb3MYCSADKAsyHi5saXhvX2NlcnRvLnYxLkNyaXRlcmlvRGVzYWZpbyJ/Ch5MaXN0YXJEZXNhZmlvc0dlc3Rhb1JlcXVpc2ljYW8SFgoOdGV4dG9fcGVzcXVpc2EYASABKAkSFgoOc3RhdHVzX2Rlc2FmaW8YAiABKAkSFQoNbnVtZXJvX3BhZ2luYRgDIAEoBRIWCg50YW1hbmhvX3BhZ2luYRgEIAEoBSKsAgoVRGVzYWZpb0dlc3Rhb1Jlc3Bvc3RhEhIKCmlkX2Rlc2FmaW8YASABKAkSFAoMbm9tZV9kZXNhZmlvGAIgASgJEhkKEWRlc2NyaWNhb19kZXNhZmlvGAMgASgJEhEKCXRpcG9fYWNhbxgEIAEoCRIXCg9tZXRhX3F1YW50aWRhZGUYBSABKAUSGQoRcXVhbnRpZGFkZV9wb250b3MYBiABKAUSFgoOc3RhdHVzX2Rlc2FmaW8YByABKAkSEwoLZGF0YV9pbmljaW8YCCABKAkSEAoIZGF0YV9maW0YCSABKAkSFQoNcGVyaW9kaWNpZGFkZRgKIAEoCRIxCgljcml0ZXJpb3MYCyADKAsyHi5saXhvX2NlcnRvLnYxLkNyaXRlcmlvRGVzYWZpbyJwChxMaXN0YXJEZXNhZmlvc0dlc3Rhb1Jlc3Bvc3RhEjYKCGRlc2FmaW9zGAEgAygLMiQubGl4b19jZXJ0by52MS5EZXNhZmlvR2VzdGFvUmVzcG9zdGESGAoQcXVhbnRpZGFkZV90b3RhbBgCIAEoBSJEChZDcmlhckRlc2FmaW9SZXF1aXNpY2FvEioKBWRhZG9zGAEgASgLMhsubGl4b19jZXJ0by52MS5EYWRvc0Rlc2FmaW8iggEKFENyaWFyRGVzYWZpb1Jlc3Bvc3RhEhcKD29wZXJhY2FvX2FjZWl0YRgBIAEoCBIaChJtZW5zYWdlbV9yZXN1bHRhZG8YAiABKAkSNQoHZGVzYWZpbxgDIAEoCzIkLmxpeG9fY2VydG8udjEuRGVzYWZpb0dlc3Rhb1Jlc3Bvc3RhIlwKGkF0dWFsaXphckRlc2FmaW9SZXF1aXNpY2FvEhIKCmlkX2Rlc2FmaW8YASABKAkSKgoFZGFkb3MYAiABKAsyGy5saXhvX2NlcnRvLnYxLkRhZG9zRGVzYWZpbyKGAQoYQXR1YWxpemFyRGVzYWZpb1Jlc3Bvc3RhEhcKD29wZXJhY2FvX2FjZWl0YRgBIAEoCBIaChJtZW5zYWdlbV9yZXN1bHRhZG8YAiABKAkSNQoHZGVzYWZpbxgDIAEoCzIkLmxpeG9fY2VydG8udjEuRGVzYWZpb0dlc3Rhb1Jlc3Bvc3RhIkwKHkFsdGVyYXJTdGF0dXNEZXNhZmlvUmVxdWlzaWNhbxISCgppZF9kZXNhZmlvGAEgASgJEhYKDnN0YXR1c19kZXNhZmlvGAIgASgJIooBChxBbHRlcmFyU3RhdHVzRGVzYWZpb1Jlc3Bvc3RhEhcKD29wZXJhY2FvX2FjZWl0YRgBIAEoCBIaChJtZW5zYWdlbV9yZXN1bHRhZG8YAiABKAkSNQoHZGVzYWZpbxgDIAEoCzIkLmxpeG9fY2VydG8udjEuRGVzYWZpb0dlc3Rhb1Jlc3Bvc3RhMooGCg9TZXJ2aWNvRGVzYWZpb3MSYAoOTGlzdGFyRGVzYWZpb3MSJy5saXhvX2NlcnRvLnYxLkxpc3RhckRlc2FmaW9zUmVxdWlzaWNhbxolLmxpeG9fY2VydG8udjEuTGlzdGFyRGVzYWZpb3NSZXNwb3N0YRJpChFQYXJ0aWNpcGFyRGVzYWZpbxIqLmxpeG9fY2VydG8udjEuUGFydGljaXBhckRlc2FmaW9SZXF1aXNpY2FvGigubGl4b19jZXJ0by52MS5QYXJ0aWNpcGFyRGVzYWZpb1Jlc3Bvc3RhEn4KGFJlZ2lzdHJhckFjYW9TdXN0ZW50YXZlbBIxLmxpeG9fY2VydG8udjEuUmVnaXN0cmFyQWNhb1N1c3RlbnRhdmVsUmVxdWlzaWNhbxovLmxpeG9fY2VydG8udjEuUmVnaXN0cmFyQWNhb1N1c3RlbnRhdmVsUmVzcG9zdGEScgoUTGlzdGFyRGVzYWZpb3NHZXN0YW8SLS5saXhvX2NlcnRvLnYxLkxpc3RhckRlc2FmaW9zR2VzdGFvUmVxdWlzaWNhbxorLmxpeG9fY2VydG8udjEuTGlzdGFyRGVzYWZpb3NHZXN0YW9SZXNwb3N0YRJaCgxDcmlhckRlc2FmaW8SJS5saXhvX2NlcnRvLnYxLkNyaWFyRGVzYWZpb1JlcXVpc2ljYW8aIy5saXhvX2NlcnRvLnYxLkNyaWFyRGVzYWZpb1Jlc3Bvc3RhEmYKEEF0dWFsaXphckRlc2FmaW8SKS5saXhvX2NlcnRvLnYxLkF0dWFsaXphckRlc2FmaW9SZXF1aXNpY2FvGicubGl4b19jZXJ0by52MS5BdHVhbGl6YXJEZXNhZmlvUmVzcG9zdGEScgoUQWx0ZXJhclN0YXR1c0Rlc2FmaW8SLS5saXhvX2NlcnRvLnYxLkFsdGVyYXJTdGF0dXNEZXNhZmlvUmVxdWlzaWNhbxorLmxpeG9fY2VydG8udjEuQWx0ZXJhclN0YXR1c0Rlc2FmaW9SZXNwb3N0YWIGcHJvdG8z");
+
+/**
+ * @generated from message lixo_certo.v1.CriterioDesafio
+ */
+export type CriterioDesafio = Message<"lixo_certo.v1.CriterioDesafio"> & {
+  /**
+   * @generated from field: string tipo = 1;
+   */
+  tipo: string;
+
+  /**
+   * @generated from field: int32 meta = 2;
+   */
+  meta: number;
+
+  /**
+   * @generated from field: string categoria = 3;
+   */
+  categoria: string;
+
+  /**
+   * @generated from field: string tema = 4;
+   */
+  tema: string;
+
+  /**
+   * @generated from field: repeated string categorias = 5;
+   */
+  categorias: string[];
+};
+
+/**
+ * Describes the message lixo_certo.v1.CriterioDesafio.
+ * Use `create(CriterioDesafioSchema)` to create a new message.
+ */
+export const CriterioDesafioSchema: GenMessage<CriterioDesafio> = /*@__PURE__*/
+  messageDesc(file_lixo_certo_v1_servico_desafios, 0);
+
+/**
+ * @generated from message lixo_certo.v1.ProgressoCriterioDesafio
+ */
+export type ProgressoCriterioDesafio = Message<"lixo_certo.v1.ProgressoCriterioDesafio"> & {
+  /**
+   * @generated from field: lixo_certo.v1.CriterioDesafio criterio = 1;
+   */
+  criterio?: CriterioDesafio | undefined;
+
+  /**
+   * @generated from field: int32 progresso = 2;
+   */
+  progresso: number;
+
+  /**
+   * @generated from field: bool concluido = 3;
+   */
+  concluido: boolean;
+};
+
+/**
+ * Describes the message lixo_certo.v1.ProgressoCriterioDesafio.
+ * Use `create(ProgressoCriterioDesafioSchema)` to create a new message.
+ */
+export const ProgressoCriterioDesafioSchema: GenMessage<ProgressoCriterioDesafio> = /*@__PURE__*/
+  messageDesc(file_lixo_certo_v1_servico_desafios, 1);
 
 /**
  * @generated from message lixo_certo.v1.ListarDesafiosRequisicao
@@ -32,7 +96,7 @@ export type ListarDesafiosRequisicao = Message<"lixo_certo.v1.ListarDesafiosRequ
  * Use `create(ListarDesafiosRequisicaoSchema)` to create a new message.
  */
 export const ListarDesafiosRequisicaoSchema: GenMessage<ListarDesafiosRequisicao> = /*@__PURE__*/
-  messageDesc(file_lixo_certo_v1_servico_desafios, 0);
+  messageDesc(file_lixo_certo_v1_servico_desafios, 2);
 
 /**
  * @generated from message lixo_certo.v1.DesafioResposta
@@ -82,6 +146,31 @@ export type DesafioResposta = Message<"lixo_certo.v1.DesafioResposta"> & {
    * @generated from field: string status_participacao = 9;
    */
   statusParticipacao: string;
+
+  /**
+   * @generated from field: string periodicidade = 10;
+   */
+  periodicidade: string;
+
+  /**
+   * @generated from field: string periodo_chave = 11;
+   */
+  periodoChave: string;
+
+  /**
+   * @generated from field: repeated lixo_certo.v1.CriterioDesafio criterios = 12;
+   */
+  criterios: CriterioDesafio[];
+
+  /**
+   * @generated from field: repeated lixo_certo.v1.ProgressoCriterioDesafio progresso_criterios = 13;
+   */
+  progressoCriterios: ProgressoCriterioDesafio[];
+
+  /**
+   * @generated from field: string data_fim_periodo = 14;
+   */
+  dataFimPeriodo: string;
 };
 
 /**
@@ -89,7 +178,7 @@ export type DesafioResposta = Message<"lixo_certo.v1.DesafioResposta"> & {
  * Use `create(DesafioRespostaSchema)` to create a new message.
  */
 export const DesafioRespostaSchema: GenMessage<DesafioResposta> = /*@__PURE__*/
-  messageDesc(file_lixo_certo_v1_servico_desafios, 1);
+  messageDesc(file_lixo_certo_v1_servico_desafios, 3);
 
 /**
  * @generated from message lixo_certo.v1.ListarDesafiosResposta
@@ -106,7 +195,7 @@ export type ListarDesafiosResposta = Message<"lixo_certo.v1.ListarDesafiosRespos
  * Use `create(ListarDesafiosRespostaSchema)` to create a new message.
  */
 export const ListarDesafiosRespostaSchema: GenMessage<ListarDesafiosResposta> = /*@__PURE__*/
-  messageDesc(file_lixo_certo_v1_servico_desafios, 2);
+  messageDesc(file_lixo_certo_v1_servico_desafios, 4);
 
 /**
  * @generated from message lixo_certo.v1.ParticiparDesafioRequisicao
@@ -123,7 +212,7 @@ export type ParticiparDesafioRequisicao = Message<"lixo_certo.v1.ParticiparDesaf
  * Use `create(ParticiparDesafioRequisicaoSchema)` to create a new message.
  */
 export const ParticiparDesafioRequisicaoSchema: GenMessage<ParticiparDesafioRequisicao> = /*@__PURE__*/
-  messageDesc(file_lixo_certo_v1_servico_desafios, 3);
+  messageDesc(file_lixo_certo_v1_servico_desafios, 5);
 
 /**
  * @generated from message lixo_certo.v1.ParticiparDesafioResposta
@@ -150,7 +239,7 @@ export type ParticiparDesafioResposta = Message<"lixo_certo.v1.ParticiparDesafio
  * Use `create(ParticiparDesafioRespostaSchema)` to create a new message.
  */
 export const ParticiparDesafioRespostaSchema: GenMessage<ParticiparDesafioResposta> = /*@__PURE__*/
-  messageDesc(file_lixo_certo_v1_servico_desafios, 4);
+  messageDesc(file_lixo_certo_v1_servico_desafios, 6);
 
 /**
  * @generated from message lixo_certo.v1.RegistrarAcaoSustentavelRequisicao
@@ -177,7 +266,7 @@ export type RegistrarAcaoSustentavelRequisicao = Message<"lixo_certo.v1.Registra
  * Use `create(RegistrarAcaoSustentavelRequisicaoSchema)` to create a new message.
  */
 export const RegistrarAcaoSustentavelRequisicaoSchema: GenMessage<RegistrarAcaoSustentavelRequisicao> = /*@__PURE__*/
-  messageDesc(file_lixo_certo_v1_servico_desafios, 5);
+  messageDesc(file_lixo_certo_v1_servico_desafios, 7);
 
 /**
  * @generated from message lixo_certo.v1.RegistrarAcaoSustentavelResposta
@@ -214,7 +303,7 @@ export type RegistrarAcaoSustentavelResposta = Message<"lixo_certo.v1.RegistrarA
  * Use `create(RegistrarAcaoSustentavelRespostaSchema)` to create a new message.
  */
 export const RegistrarAcaoSustentavelRespostaSchema: GenMessage<RegistrarAcaoSustentavelResposta> = /*@__PURE__*/
-  messageDesc(file_lixo_certo_v1_servico_desafios, 6);
+  messageDesc(file_lixo_certo_v1_servico_desafios, 8);
 
 /**
  * @generated from message lixo_certo.v1.DadosDesafio
@@ -254,6 +343,16 @@ export type DadosDesafio = Message<"lixo_certo.v1.DadosDesafio"> & {
    * @generated from field: string data_fim = 7;
    */
   dataFim: string;
+
+  /**
+   * @generated from field: string periodicidade = 8;
+   */
+  periodicidade: string;
+
+  /**
+   * @generated from field: repeated lixo_certo.v1.CriterioDesafio criterios = 9;
+   */
+  criterios: CriterioDesafio[];
 };
 
 /**
@@ -261,7 +360,7 @@ export type DadosDesafio = Message<"lixo_certo.v1.DadosDesafio"> & {
  * Use `create(DadosDesafioSchema)` to create a new message.
  */
 export const DadosDesafioSchema: GenMessage<DadosDesafio> = /*@__PURE__*/
-  messageDesc(file_lixo_certo_v1_servico_desafios, 7);
+  messageDesc(file_lixo_certo_v1_servico_desafios, 9);
 
 /**
  * @generated from message lixo_certo.v1.ListarDesafiosGestaoRequisicao
@@ -293,7 +392,7 @@ export type ListarDesafiosGestaoRequisicao = Message<"lixo_certo.v1.ListarDesafi
  * Use `create(ListarDesafiosGestaoRequisicaoSchema)` to create a new message.
  */
 export const ListarDesafiosGestaoRequisicaoSchema: GenMessage<ListarDesafiosGestaoRequisicao> = /*@__PURE__*/
-  messageDesc(file_lixo_certo_v1_servico_desafios, 8);
+  messageDesc(file_lixo_certo_v1_servico_desafios, 10);
 
 /**
  * @generated from message lixo_certo.v1.DesafioGestaoResposta
@@ -343,6 +442,16 @@ export type DesafioGestaoResposta = Message<"lixo_certo.v1.DesafioGestaoResposta
    * @generated from field: string data_fim = 9;
    */
   dataFim: string;
+
+  /**
+   * @generated from field: string periodicidade = 10;
+   */
+  periodicidade: string;
+
+  /**
+   * @generated from field: repeated lixo_certo.v1.CriterioDesafio criterios = 11;
+   */
+  criterios: CriterioDesafio[];
 };
 
 /**
@@ -350,7 +459,7 @@ export type DesafioGestaoResposta = Message<"lixo_certo.v1.DesafioGestaoResposta
  * Use `create(DesafioGestaoRespostaSchema)` to create a new message.
  */
 export const DesafioGestaoRespostaSchema: GenMessage<DesafioGestaoResposta> = /*@__PURE__*/
-  messageDesc(file_lixo_certo_v1_servico_desafios, 9);
+  messageDesc(file_lixo_certo_v1_servico_desafios, 11);
 
 /**
  * @generated from message lixo_certo.v1.ListarDesafiosGestaoResposta
@@ -372,7 +481,7 @@ export type ListarDesafiosGestaoResposta = Message<"lixo_certo.v1.ListarDesafios
  * Use `create(ListarDesafiosGestaoRespostaSchema)` to create a new message.
  */
 export const ListarDesafiosGestaoRespostaSchema: GenMessage<ListarDesafiosGestaoResposta> = /*@__PURE__*/
-  messageDesc(file_lixo_certo_v1_servico_desafios, 10);
+  messageDesc(file_lixo_certo_v1_servico_desafios, 12);
 
 /**
  * @generated from message lixo_certo.v1.CriarDesafioRequisicao
@@ -389,7 +498,7 @@ export type CriarDesafioRequisicao = Message<"lixo_certo.v1.CriarDesafioRequisic
  * Use `create(CriarDesafioRequisicaoSchema)` to create a new message.
  */
 export const CriarDesafioRequisicaoSchema: GenMessage<CriarDesafioRequisicao> = /*@__PURE__*/
-  messageDesc(file_lixo_certo_v1_servico_desafios, 11);
+  messageDesc(file_lixo_certo_v1_servico_desafios, 13);
 
 /**
  * @generated from message lixo_certo.v1.CriarDesafioResposta
@@ -416,7 +525,7 @@ export type CriarDesafioResposta = Message<"lixo_certo.v1.CriarDesafioResposta">
  * Use `create(CriarDesafioRespostaSchema)` to create a new message.
  */
 export const CriarDesafioRespostaSchema: GenMessage<CriarDesafioResposta> = /*@__PURE__*/
-  messageDesc(file_lixo_certo_v1_servico_desafios, 12);
+  messageDesc(file_lixo_certo_v1_servico_desafios, 14);
 
 /**
  * @generated from message lixo_certo.v1.AtualizarDesafioRequisicao
@@ -438,7 +547,7 @@ export type AtualizarDesafioRequisicao = Message<"lixo_certo.v1.AtualizarDesafio
  * Use `create(AtualizarDesafioRequisicaoSchema)` to create a new message.
  */
 export const AtualizarDesafioRequisicaoSchema: GenMessage<AtualizarDesafioRequisicao> = /*@__PURE__*/
-  messageDesc(file_lixo_certo_v1_servico_desafios, 13);
+  messageDesc(file_lixo_certo_v1_servico_desafios, 15);
 
 /**
  * @generated from message lixo_certo.v1.AtualizarDesafioResposta
@@ -465,7 +574,7 @@ export type AtualizarDesafioResposta = Message<"lixo_certo.v1.AtualizarDesafioRe
  * Use `create(AtualizarDesafioRespostaSchema)` to create a new message.
  */
 export const AtualizarDesafioRespostaSchema: GenMessage<AtualizarDesafioResposta> = /*@__PURE__*/
-  messageDesc(file_lixo_certo_v1_servico_desafios, 14);
+  messageDesc(file_lixo_certo_v1_servico_desafios, 16);
 
 /**
  * @generated from message lixo_certo.v1.AlterarStatusDesafioRequisicao
@@ -487,7 +596,7 @@ export type AlterarStatusDesafioRequisicao = Message<"lixo_certo.v1.AlterarStatu
  * Use `create(AlterarStatusDesafioRequisicaoSchema)` to create a new message.
  */
 export const AlterarStatusDesafioRequisicaoSchema: GenMessage<AlterarStatusDesafioRequisicao> = /*@__PURE__*/
-  messageDesc(file_lixo_certo_v1_servico_desafios, 15);
+  messageDesc(file_lixo_certo_v1_servico_desafios, 17);
 
 /**
  * @generated from message lixo_certo.v1.AlterarStatusDesafioResposta
@@ -514,7 +623,7 @@ export type AlterarStatusDesafioResposta = Message<"lixo_certo.v1.AlterarStatusD
  * Use `create(AlterarStatusDesafioRespostaSchema)` to create a new message.
  */
 export const AlterarStatusDesafioRespostaSchema: GenMessage<AlterarStatusDesafioResposta> = /*@__PURE__*/
-  messageDesc(file_lixo_certo_v1_servico_desafios, 16);
+  messageDesc(file_lixo_certo_v1_servico_desafios, 18);
 
 /**
  * @generated from service lixo_certo.v1.ServicoDesafios
