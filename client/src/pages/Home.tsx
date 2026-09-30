@@ -196,7 +196,7 @@ export default function Home() {
       try {
         const [resultadoPainel, resultadoMateriais] = await Promise.allSettled([
           podeLerGamificacao ? obterProgressoUsuario() : Promise.resolve(null),
-          podeLerMateriais ? listarMateriais() : Promise.resolve(null),
+          podeLerMateriais ? listarMateriais("", "", "publicado") : Promise.resolve(null),
         ]);
         const painel = resultadoPainel.status === "fulfilled" ? resultadoPainel.value : null;
         const materiais = resultadoMateriais.status === "fulfilled" ? resultadoMateriais.value : null;
@@ -245,7 +245,7 @@ export default function Home() {
     }
     async function filtrarMateriais() {
       try {
-        const resposta = await listarMateriais(query, selectedCategory === "Todos" ? "" : selectedCategory);
+        const resposta = await listarMateriais(query, selectedCategory === "Todos" ? "" : selectedCategory, "publicado");
         setMaterials(resposta.materiais.map(material => ({
           id: material.idMaterial,
           name: material.nomeMaterial,
