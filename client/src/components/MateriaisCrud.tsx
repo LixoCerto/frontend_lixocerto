@@ -32,7 +32,7 @@ export default function MateriaisCrud({ podeEscrever, podeAprovar }: { podeEscre
   const [materiais, setMateriais] = useState<Material[]>([]);
   const [dados, setDados] = useState<DadosMaterialApi>(dadoVazio);
   const [filtroTexto, setFiltroTexto] = useState("");
-  const [filtroStatus, setFiltroStatus] = useState("todos");
+  const [filtroStatus, setFiltroStatus] = useState("rascunho");
   const [editando, setEditando] = useState<string | null>(null);
   const [aberto, setAberto] = useState(false);
   const [carregando, setCarregando] = useState(false);
@@ -172,9 +172,9 @@ export default function MateriaisCrud({ podeEscrever, podeAprovar }: { podeEscre
     <div className="space-y-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#3d9664]">Curadoria e revisão</p>
-          <h2 className="mt-2 text-2xl font-black text-[#17362a] sm:text-3xl">Catálogo do Guia de descarte</h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#668073]">Mantenha orientações, preparo, cautelas e fontes verificáveis. Alterações voltam para rascunho; arquivar é reversível.</p>
+          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#3d9664]">Fila de moderação</p>
+          <h2 className="mt-2 text-2xl font-black text-[#17362a] sm:text-3xl">Central de revisão de materiais</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#668073]">Revise os rascunhos, confira fontes e limites locais e publique somente orientações validadas. Edições voltam para revisão; arquivar é reversível.</p>
         </div>
         {podeEscrever ? <button type="button" onClick={novoMaterial} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1d7953] px-4 py-2.5 text-sm font-black text-white"><Plus className="h-4 w-4" /> Novo material</button> : null}
       </div>
