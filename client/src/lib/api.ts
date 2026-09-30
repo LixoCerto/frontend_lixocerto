@@ -212,7 +212,7 @@ export function listarPontosColeta(cidade = "João Pessoa", categoriaMaterial = 
 export function obterPontoColeta(idPontoColeta: string) {
   return pontosColetaClient.obterPontoColeta(create(ObterPontoColetaRequisicaoSchema, { idPontoColeta }));
 }
-export function criarPontoColeta(dados: { nomePontoColeta: string; enderecoPontoColeta: string; cepPontoColeta?: string; cidadePontoColeta: string; estadoPontoColeta: string; latitudePontoColeta: number; longitudePontoColeta: number; categoriasAceitas: string[]; origemInformacao?: string }) {
+export function criarPontoColeta(dados: { nomePontoColeta: string; enderecoPontoColeta: string; cepPontoColeta?: string; cidadePontoColeta: string; estadoPontoColeta: string; latitudePontoColeta: number; longitudePontoColeta: number; categoriasAceitas: string[]; origemInformacao?: string; horarioFuncionamento?: string; telefoneContato?: string; urlInformacoes?: string }) {
   return pontosColetaClient.criarPontoColeta(create(CriarPontoColetaRequisicaoSchema, { dados }));
 }
 export function atualizarPontoColeta(idPontoColeta: string, dados: Parameters<typeof criarPontoColeta>[0]) {

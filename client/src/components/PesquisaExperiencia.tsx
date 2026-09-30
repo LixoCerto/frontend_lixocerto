@@ -80,7 +80,7 @@ export default function PesquisaExperiencia({ podeEnviar, podeConsultar }: { pod
 
   return (
     <div className="space-y-6">
-      <header><p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#3d9664]">Pesquisa acadêmica</p><h2 className="mt-2 text-2xl font-black tracking-[-0.035em] text-[#17362a] sm:text-3xl">Avaliação de usabilidade da plataforma</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[#668073]">Este questionário padronizado avalia a facilidade de uso da plataforma por meio de dez afirmações. A participação é voluntária e faz parte da avaliação acadêmica do projeto; não está relacionada a serviços de saúde. As respostas individuais não são exibidas aos pesquisadores.</p></header>
+      <header><p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#3d9664]">Pesquisa acadêmica</p><h2 className="mt-2 text-2xl font-black tracking-[-0.035em] text-[#17362a] sm:text-3xl">Avaliação de usabilidade da plataforma</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[#668073]">Este questionário padronizado avalia a facilidade de uso da plataforma por meio de dez afirmações. A participação é voluntária e faz parte da avaliação acadêmica do projeto. As respostas individuais não são exibidas aos pesquisadores.</p></header>
 
       {erro ? <p role="alert" className="rounded-xl border border-[#f1c9c0] bg-[#fff4f0] px-4 py-3 text-sm font-semibold text-[#a85040]">{erro}</p> : null}
       {mensagem ? <p role="status" className="rounded-xl border border-[#cde5cf] bg-[#eff8ee] px-4 py-3 text-sm font-semibold text-[#28764e]">{mensagem}</p> : null}

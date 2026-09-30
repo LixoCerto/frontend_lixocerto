@@ -3,6 +3,7 @@ import {
   Check,
   Crosshair,
   ExternalLink,
+  Clock3,
   LoaderCircle,
   MapPinned,
   Pencil,
@@ -36,6 +37,10 @@ type Ponto = {
   distanciaKm?: number;
   statusVerificacao: string;
   categoriasAceitas: string[];
+  horarioFuncionamento: string;
+  telefoneContato: string;
+  urlInformacoes: string;
+  dataVerificacao: string;
 };
 type FiltroPontos = {
   cidade: string;
@@ -43,7 +48,7 @@ type FiltroPontos = {
   localizacao: { latitude: number; longitude: number } | null;
   raioKm: number;
 };
-type Dados = Omit<Ponto, "idPontoColeta" | "statusVerificacao">;
+type Dados = Omit<Ponto, "idPontoColeta" | "statusVerificacao" | "dataVerificacao">;
 
 const vazio: Dados = {
   nomePontoColeta: "",
@@ -54,6 +59,9 @@ const vazio: Dados = {
   latitudePontoColeta: 0,
   longitudePontoColeta: 0,
   categoriasAceitas: [],
+  horarioFuncionamento: "",
+  telefoneContato: "",
+  urlInformacoes: "",
 };
 const materiais = ["Recicláveis", "Eletroeletrônicos", "Orgânicos", "Óleo de cozinha", "Pilhas e baterias"];
 const rotulosStatus: Record<string, string> = {
@@ -418,11 +426,20 @@ export default function PontosColetaCrud({
             <div className="mt-4 flex flex-wrap gap-2" aria-label="Materiais aceitos">
               {ponto.categoriasAceitas.length ? ponto.categoriasAceitas.map(item => <span key={item} className="rounded-lg bg-[#f0f5f0] px-2 py-1 text-xs font-bold text-[#5b7969]">{item}</span>) : <span className="text-xs text-[#71897b]">Materiais aceitos não informados</span>}
             </div>
+            <div className="mt-3 grid gap-2 text-sm text-[#5d796a] sm:grid-cols-2">
+              {ponto.horarioFuncionamento ? <p className="flex items-start gap-2"><Clock3 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><span><strong>Atendimento:</strong> {ponto.horarioFuncionamento}</span></p> : null}
+              {ponto.telefoneContato ? <p><strong>Telefone:</strong> <a className="font-bold underline" href={`tel:${ponto.telefoneContato.replace(/[^+\d]/g, "")}`}>{ponto.telefoneContato}</a></p> : null}
+              {ponto.urlInformacoes && /^https?:\/\//i.test(ponto.urlInformacoes) ? <p><a className="inline-flex min-h-9 items-center gap-1 font-bold text-[#1d7953] underline" href={ponto.urlInformacoes} target="_blank" rel="noopener noreferrer">Informações do local <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" /></a></p> : null}
+              {ponto.dataVerificacao ? <p className="text-xs sm:col-span-2">Última validação: {Number.isNaN(Date.parse(ponto.dataVerificacao)) ? "data não informada" : new Date(ponto.dataVerificacao).toLocaleDateString("pt-BR")}</p> : null}
+            </div>
             <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-semibold text-[#6c8879]">
               {typeof ponto.distanciaKm === "number" ? <span className="font-black text-[#337a51]">{ponto.distanciaKm < 1 ? `${Math.round(ponto.distanciaKm * 1000)} m` : `${ponto.distanciaKm.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} km`} de você</span> : null}
               {(podeEscrever || podeAprovar) ? <span>{ponto.latitudePontoColeta.toFixed(5)}, {ponto.longitudePontoColeta.toFixed(5)}</span> : null}
               <a target="_blank" rel="noreferrer" aria-label={`Abrir mapa para ${ponto.nomePontoColeta} em nova aba`} href={`https://www.openstreetmap.org/?mlat=${ponto.latitudePontoColeta}&mlon=${ponto.longitudePontoColeta}#map=17/${ponto.latitudePontoColeta}/${ponto.longitudePontoColeta}`} className="inline-flex min-h-9 items-center gap-1 rounded-lg font-black text-[#1d7953] underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">
                 <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" /> Abrir mapa
+              </a>
+              <a target="_blank" rel="noopener noreferrer" aria-label={`Traçar rota até ${ponto.nomePontoColeta} em nova aba`} href={`https://www.google.com/maps/dir/?api=1&destination=${ponto.latitudePontoColeta},${ponto.longitudePontoColeta}`} className="inline-flex min-h-9 items-center gap-1 rounded-lg font-black text-[#1d7953] underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">
+                Traçar rota <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
               </a>
             </div>
             <div className="mt-4 flex flex-wrap gap-2 border-t border-[#edf2ed] pt-4">
@@ -507,6 +524,19 @@ export default function PontosColetaCrud({
               <label>
                 <span className="mb-1 block text-xs font-black uppercase text-[#5f7b6c]">Longitude</span>
                 <input type="number" step="any" value={dados.longitudePontoColeta || ""} onChange={event => atualizar("longitudePontoColeta", Number(event.target.value))} className="w-full rounded-xl border border-[#d9e6db] px-4 py-3 text-sm" />
+              </label>
+              <label className="sm:col-span-2">
+                <span className="mb-1 block text-xs font-black uppercase text-[#5f7b6c]">Horário de atendimento</span>
+                <textarea maxLength={500} rows={2} value={dados.horarioFuncionamento} onChange={event => atualizar("horarioFuncionamento", event.target.value)} placeholder="Ex.: seg. a sex., 8h às 17h; confirme com o local" className="w-full rounded-xl border border-[#d9e6db] px-4 py-3 text-sm" />
+                <span className="mt-1 block text-xs text-[#71897b]">Informe somente quando confirmado; horários podem mudar.</span>
+              </label>
+              <label>
+                <span className="mb-1 block text-xs font-black uppercase text-[#5f7b6c]">Telefone de contato</span>
+                <input type="tel" maxLength={40} autoComplete="tel" value={dados.telefoneContato} onChange={event => atualizar("telefoneContato", event.target.value)} placeholder="(00) 00000-0000" className="w-full rounded-xl border border-[#d9e6db] px-4 py-3 text-sm" />
+              </label>
+              <label>
+                <span className="mb-1 block text-xs font-black uppercase text-[#5f7b6c]">Site ou informações oficiais</span>
+                <input type="url" maxLength={2048} value={dados.urlInformacoes} onChange={event => atualizar("urlInformacoes", event.target.value)} placeholder="https://..." className="w-full rounded-xl border border-[#d9e6db] px-4 py-3 text-sm" />
               </label>
             </div>
 
