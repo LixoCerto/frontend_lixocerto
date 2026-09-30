@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import AdministracaoCrud from "@/components/AdministracaoCrud";
+import GuiaMaterialCard, { type MaterialGuia } from "@/components/GuiaMaterialCard";
 import MateriaisCrud from "@/components/MateriaisCrud";
 import QuestionariosCrud from "@/components/QuestionariosCrud";
 import DesafiosCrud from "@/components/DesafiosCrud";
@@ -51,23 +52,7 @@ type DashboardState = {
   dailyTip: string;
   quickActions: { id: string; label: string; description: string }[];
 };
-type MaterialsState = {
-  id: string;
-  name: string;
-  category: string;
-  classification: string;
-  disposalInstruction: string;
-  impactNote: string;
-  synonyms: string[];
-  preparation: string;
-  cautions: string;
-  acceptedPointCategories: string[];
-  routes: string[];
-  scope: string;
-  scopeNote: string;
-  sources: { title: string; url: string; supports: string }[];
-  verifiedAt: string;
-}[];
+type MaterialsState = MaterialGuia[];
 type SessoesAtivasState = {
   id: string;
   agente: string;
@@ -120,6 +105,10 @@ function CabecalhoSecao({ etiqueta, titulo, descricao, acao }: { etiqueta: strin
   );
 }
 
+function normalizarBusca(valor: string): string {
+  return valor.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("pt-BR");
+}
+
 export default function Home() {
   const { user, identidade, isAuthenticated, loading: authLoading, error: authError, logout, solicitarVerificacaoEmail } = useAuth({
     redirectOnUnauthenticated: true,
@@ -160,7 +149,11 @@ export default function Home() {
   const [materials, setMaterials] = useState<MaterialsState>([]);
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [buscaInicio, setBuscaInicio] = useState("");
+  const [carregandoMateriais, setCarregandoMateriais] = useState(true);
+  const [erroMateriais, setErroMateriais] = useState(false);
+  const [versaoRecarregaGuia, setVersaoRecarregaGuia] = useState(0);
+  const [categoriaPontosInicial, setCategoriaPontosInicial] = useState("");
   const [erroDados, setErroDados] = useState(false);
   const [sessoesAtivas, setSessoesAtivas] = useState<SessoesAtivasState>([]);
   const [carregandoSessoes, setCarregandoSessoes] = useState(false);
@@ -172,7 +165,6 @@ export default function Home() {
   const iniciais = nomeAutenticado.split(/\s+/).filter(Boolean).slice(0, 2).map(parte => parte[0]?.toUpperCase()).join("") || perfilBase.iniciais;
   const perfil = { ...perfilBase, nomeDemonstracao: nomeAutenticado, iniciais };
   const pode = (permissao: CodigoPermissao) => permissoes.includes(permissao);
-  const quantidadePermissoes = permissoes.length;
   const nomeCurto = nomeAutenticado.split(/\s+/).slice(0, 2).join(" ");
   const podeLerGamificacao = pode("gamificacao:ler");
   const podeLerMateriais = pode("materiais:ler");
@@ -193,12 +185,10 @@ export default function Home() {
     async function carregarDados() {
       setErroDados(false);
       try {
-        const [resultadoPainel, resultadoMateriais] = await Promise.allSettled([
+        const [resultadoPainel] = await Promise.allSettled([
           podeLerGamificacao ? obterProgressoUsuario() : Promise.resolve(null),
-          podeLerMateriais ? listarMateriais("", "", "publicado") : Promise.resolve(null),
         ]);
         const painel = resultadoPainel.status === "fulfilled" ? resultadoPainel.value : null;
-        const materiais = resultadoMateriais.status === "fulfilled" ? resultadoMateriais.value : null;
         setDashboard(painel ? {
           ecoPoints: painel.quantidadePontos,
           currentStreak: painel.sequenciaDias,
@@ -210,41 +200,28 @@ export default function Home() {
             { id: "challenge", label: "Ver desafios", description: "Transforme intenção em hábito." },
           ],
         } : null);
-        setMaterials(materiais?.materiais.map(material => ({
-          id: material.idMaterial,
-          name: material.nomeMaterial,
-          category: material.categoriaMaterial,
-          classification: material.classificacao,
-          disposalInstruction: material.instrucaoDescarte,
-          impactNote: material.observacaoImpacto,
-          synonyms: material.sinonimos,
-          preparation: material.preparacao,
-          cautions: material.cuidados,
-          acceptedPointCategories: material.categoriasPontos,
-          routes: material.rotasReferencia,
-          scope: material.abrangencia,
-          scopeNote: material.notaAbrangencia,
-          sources: material.fontesReferencia.map(fonte => ({ title: fonte.titulo, url: fonte.url, supports: fonte.comprova })),
-          verifiedAt: material.dataVerificacao,
-        })) ?? []);
-        setErroDados(resultadoPainel.status === "rejected" || resultadoMateriais.status === "rejected");
+        setErroDados(resultadoPainel.status === "rejected");
       } catch {
         setErroDados(true);
-      } finally {
-        setLoading(false);
       }
     }
     void carregarDados();
-  }, [isAuthenticated, podeLerGamificacao, podeLerMateriais]);
+  }, [isAuthenticated, podeLerGamificacao]);
 
   useEffect(() => {
     if (!isAuthenticated || !podeLerMateriais) {
       setMaterials([]);
+      setCarregandoMateriais(false);
+      setErroMateriais(false);
       return;
     }
+    let ativo = true;
+    setCarregandoMateriais(true);
+    setErroMateriais(false);
     async function filtrarMateriais() {
       try {
-        const resposta = await listarMateriais(query, selectedCategory === "Todos" ? "" : selectedCategory, "publicado");
+        const resposta = await listarMateriais("", "", "publicado");
+        if (!ativo) return;
         setMaterials(resposta.materiais.map(material => ({
           id: material.idMaterial,
           name: material.nomeMaterial,
@@ -263,12 +240,16 @@ export default function Home() {
           verifiedAt: material.dataVerificacao,
         })));
       } catch {
-        setErroDados(true);
+        if (ativo) setErroMateriais(true);
+      } finally {
+        if (ativo) setCarregandoMateriais(false);
       }
     }
-    const temporizador = window.setTimeout(() => void filtrarMateriais(), 180);
-    return () => window.clearTimeout(temporizador);
-  }, [isAuthenticated, podeLerMateriais, query, selectedCategory]);
+    void filtrarMateriais();
+    return () => {
+      ativo = false;
+    };
+  }, [isAuthenticated, podeLerMateriais, versaoRecarregaGuia]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -307,23 +288,64 @@ export default function Home() {
     ];
   }, [dashboard, podeLerGamificacao]);
 
+  const materiaisFiltrados = useMemo(() => {
+    const termo = normalizarBusca(query.trim());
+    const categoriaSelecionada = normalizarBusca(selectedCategory);
+    return materials.filter(material => {
+      const correspondeCategoria = selectedCategory === "Todos" || normalizarBusca(material.category) === categoriaSelecionada;
+      const texto = normalizarBusca([
+        material.name,
+        material.category,
+        material.classification,
+        material.disposalInstruction,
+        ...material.synonyms,
+      ].join(" "));
+      return correspondeCategoria && (!termo || texto.includes(termo));
+    });
+  }, [materials, query, selectedCategory]);
+
+  function abrirPontosParaMaterial(categorias: string[]) {
+    setCategoriaPontosInicial(categorias[0] ?? "");
+    setPaginaAtiva("pontos");
+  }
+
   function renderizarInicio() {
     return (
       <div className="space-y-7">
         <section className="relative overflow-hidden rounded-[28px] bg-[#17362a] px-6 py-7 text-white shadow-[0_28px_60px_-36px_rgba(23,54,42,.8)] sm:px-8 sm:py-9">
           <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#77be78]/25 blur-3xl" />
           <div className="absolute -bottom-16 left-1/3 h-36 w-36 rounded-full bg-[#e6c866]/20 blur-3xl" />
-          <div className="relative grid gap-6 lg:grid-cols-[1.2fr_.8fr] lg:items-end">
+          <div className="relative grid gap-6 lg:grid-cols-[1.1fr_.9fr] lg:items-end">
             <div>
-              <span className="inline-flex items-center gap-2 rounded-full border border-[#638c74] bg-white/5 px-3 py-1.5 text-xs font-bold text-[#d4ead7]"><Sparkles className="h-3.5 w-3.5 text-[#d6efad]" /> Espaço personalizado</span>
-              <h2 className="mt-4 max-w-2xl text-3xl font-black tracking-[-0.04em] sm:text-4xl">Olá, {nomeCurto}. Seu painel acompanha o papel de <span className="text-[#d6efad]">{perfil.rotulo.toLowerCase()}.</span></h2>
-              <p className="mt-4 max-w-xl text-sm leading-6 text-[#bfd4c4]">{perfil.descricao} A navegação é filtrada pelas permissões disponíveis; a autorização final continua sendo responsabilidade da API gRPC.</p>
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#638c74] bg-white/5 px-3 py-1.5 text-xs font-bold text-[#d4ead7]"><Sparkles className="h-3.5 w-3.5 text-[#d6efad]" aria-hidden="true" /> Descarte com mais orientação</span>
+              <h2 className="mt-4 max-w-2xl text-3xl font-black tracking-[-0.04em] sm:text-4xl">Olá, {nomeCurto}. Vamos encontrar o destino certo para o seu material?</h2>
+              <p className="mt-4 max-w-xl text-sm leading-6 text-[#bfd4c4]">Consulte orientações de descarte e encontre pontos de coleta que recebem cada categoria.</p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-black/10 p-4 backdrop-blur-sm">
-              <div className="flex items-center justify-between text-xs font-bold text-[#d9e8dc]"><span>Permissões disponíveis</span><span className="text-[#d6efad]">{quantidadePermissoes} ativas</span></div>
-              <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gradient-to-r from-[#5eb57a] to-[#d6efad]" style={{ width: `${Math.min(100, Math.round((quantidadePermissoes / CODIGOS_PERMISSAO.length) * 100))}%` }} /></div>
-              <p className="mt-3 text-xs leading-5 text-[#adc8b4]">Suas áreas de trabalho foram carregadas com base nas permissões associadas à sua sessão autenticada.</p>
-            </div>
+            <form
+              onSubmit={event => {
+                event.preventDefault();
+                setQuery(buscaInicio.trim());
+                setSelectedCategory("Todos");
+                setPaginaAtiva("materiais");
+              }}
+              className="rounded-2xl border border-white/10 bg-white p-4 text-[#17362a] shadow-lg sm:p-5"
+            >
+              <label htmlFor="busca-material-inicio" className="block text-sm font-black">O que você quer descartar?</label>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <input
+                  id="busca-material-inicio"
+                  value={buscaInicio}
+                  onChange={event => setBuscaInicio(event.target.value)}
+                  placeholder="Ex.: celular, vidro, papel"
+                  autoComplete="off"
+                  className="min-h-11 min-w-0 flex-1 rounded-xl border border-[#d9e6db] bg-[#fbfdfb] px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[#4e9b68]"
+                />
+                <button type="submit" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#1d7953] px-4 py-2 text-sm font-black text-white transition hover:bg-[#176543] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">
+                  <Search className="h-4 w-4" aria-hidden="true" /> Buscar
+                </button>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-[#6b8576]">A busca abre o Guia com os materiais publicados que correspondem ao termo.</p>
+            </form>
           </div>
         </section>
 
@@ -335,7 +357,7 @@ export default function Home() {
               <div><p className="text-[11px] font-black uppercase tracking-[0.15em] text-[#3d9664]">Próximo movimento</p><h3 className="mt-2 text-xl font-black tracking-tight">Transforme informação em hábito.</h3></div>
               <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#e9f6e8] text-[#25734d]"><Target className="h-5 w-5" /></span>
             </div>
-            <p className="mt-3 text-sm leading-6 text-[#698375]">{dashboard?.dailyTip ?? (podeLerGamificacao ? "Carregando recomendação personalizada..." : "Seu espaço está pronto com base nas permissões atuais da conta.")}</p>
+            <p className="mt-3 text-sm leading-6 text-[#698375]">{dashboard?.dailyTip ?? (podeLerGamificacao ? "Carregando recomendação personalizada..." : "Pesquise um material no Guia ou procure um ponto de coleta próximo.")}</p>
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               {(dashboard?.quickActions ?? []).filter(acao => {
                 const permissao = acao.id === "quiz"
@@ -365,23 +387,45 @@ export default function Home() {
   }
 
   function renderizarMateriais() {
+    const possuiFiltro = Boolean(query.trim()) || selectedCategory !== "Todos";
+
     return (
       <div className="space-y-6">
         <CabecalhoSecao etiqueta="Base educativa" titulo="Guia de descarte" descricao="Pesquise materiais e encontre orientações claras para um descarte mais responsável." />
         <div className="rounded-2xl border border-[#e0eae1] bg-white p-4 sm:p-5">
-          <label className="flex items-center gap-3 rounded-xl border border-[#d9e6db] bg-[#fbfdfb] px-4 py-3 focus-within:border-[#4e9b68] focus-within:ring-4 focus-within:ring-[#dcefdc]/60"><Search className="h-5 w-5 text-[#638775]" /><input className="w-full bg-transparent text-sm font-semibold outline-none placeholder:text-[#9aae9f]" value={query} onChange={event => setQuery(event.target.value)} placeholder="Ex.: celular, vidro, papel..." /></label>
-          <div className="mt-4 flex flex-wrap gap-2">{["Todos", ...Array.from(new Set(materials.map(material => material.category))).sort((a, b) => a.localeCompare(b, "pt-BR"))].map(categoria => <button key={categoria} type="button" onClick={() => setSelectedCategory(categoria)} className={`rounded-full px-3 py-1.5 text-xs font-black transition ${selectedCategory === categoria ? "bg-[#1d7953] text-white" : "bg-[#edf3ed] text-[#5d796a] hover:bg-[#dff0de]"}`}>{categoria}</button>)}</div>
+          <label htmlFor="busca-guia-material" className="sr-only">Buscar material pelo nome ou categoria</label>
+          <div className="flex items-center gap-3 rounded-xl border border-[#d9e6db] bg-[#fbfdfb] px-4 py-3 focus-within:border-[#4e9b68] focus-within:ring-4 focus-within:ring-[#dcefdc]/60">
+            <Search className="h-5 w-5 shrink-0 text-[#638775]" aria-hidden="true" />
+            <input id="busca-guia-material" className="w-full bg-transparent text-sm font-semibold outline-none placeholder:text-[#9aae9f]" value={query} onChange={event => setQuery(event.target.value)} placeholder="Ex.: celular, vidro, papel..." />
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Filtrar por categoria">
+            {["Todos", ...Array.from(new Set(materials.map(material => material.category))).sort((a, b) => a.localeCompare(b, "pt-BR"))].map(categoria => <button key={categoria} type="button" aria-pressed={selectedCategory === categoria} onClick={() => setSelectedCategory(categoria)} className={`min-h-9 rounded-full px-3 py-1.5 text-xs font-black transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953] ${selectedCategory === categoria ? "bg-[#1d7953] text-white" : "bg-[#edf3ed] text-[#5d796a] hover:bg-[#dff0de]"}`}>{categoria}</button>)}
+          </div>
         </div>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {materials.map(material => <article key={material.id} className="rounded-2xl border border-[#e1ebe2] bg-white p-5 shadow-[0_16px_32px_-30px_rgba(23,54,42,.6)]"><div className="flex items-start justify-between gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#eaf5e8] text-[#2b7a52]"><Recycle className="h-5 w-5" /></span><span className="rounded-full bg-[#f1f5ed] px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-[#69907a]">{material.category}</span></div><h3 className="mt-5 text-base font-black">{material.name}</h3>{material.classification ? <p className="mt-1 text-xs leading-5 text-[#71897b]">{material.classification}</p> : null}<p className="mt-2 text-sm leading-6 text-[#638071]">{material.disposalInstruction}</p>{material.preparation ? <p className="mt-3 rounded-xl bg-[#f5faf4] p-3 text-xs leading-5 text-[#55715d]"><strong>Como preparar:</strong> {material.preparation}</p> : null}{material.cautions ? <p className="mt-3 rounded-xl bg-[#fff8e7] p-3 text-xs leading-5 text-[#745f2d]"><strong>Atenção:</strong> {material.cautions}</p> : null}{material.scopeNote ? <p className="mt-3 rounded-xl bg-[#eef5ed] p-3 text-xs leading-5 text-[#55715d]"><strong>Abrangência e limites:</strong> {material.scopeNote}</p> : null}{material.acceptedPointCategories.length ? <div className="mt-3"><p className="text-[10px] font-black uppercase text-[#71897b]">Categorias de pontos relacionadas</p><div className="mt-1 flex flex-wrap gap-1.5">{material.acceptedPointCategories.map(item => <span key={item} className="rounded-full bg-[#edf3ed] px-2 py-1 text-[10px] font-bold text-[#5d796a]">{item}</span>)}</div></div> : null}{material.routes.length ? <div className="mt-3 rounded-xl bg-[#f5faf4] p-3"><p className="text-[10px] font-black uppercase text-[#55715d]">Rotas citadas nas fontes — confirmar aceitação local</p><ul className="mt-2 list-disc space-y-1 pl-4 text-xs leading-5 text-[#638071]">{material.routes.map((route, index) => <li key={`${route}-${index}`}>{route}</li>)}</ul></div> : null}<p className="mt-4 border-t border-[#edf2ed] pt-3 text-xs font-semibold leading-5 text-[#7b9485]">{material.impactNote}</p><p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-[#668073]">{material.scope === "logistica_reversa" ? "Sistema de logística reversa" : material.scope === "orientacao_geral" ? "Orientação geral" : "Confirme a regra local e a aceitação do ponto"}{material.verifiedAt ? ` · Fonte verificada em ${new Date(`${material.verifiedAt}T12:00:00`).toLocaleDateString("pt-BR")}` : ""}</p>{material.sources.length ? <div className="mt-3 flex flex-wrap gap-2">{material.sources.map((fonte, indice) => <a key={`${fonte.url}-${indice}`} href={fonte.url} target="_blank" rel="noreferrer" title={fonte.supports} className="rounded-lg bg-[#eef5ed] px-2.5 py-1.5 text-xs font-black text-[#337a51] underline">Fonte: {fonte.title}</a>)}</div> : null}</article>)}
-          {!loading && materials.length === 0 ? <p className="col-span-full rounded-2xl bg-white p-8 text-center text-sm font-semibold text-[#708a7b]">{query.trim() || selectedCategory !== "Todos" ? "Nenhum material corresponde à busca ou categoria selecionada." : "O Guia ainda não tem materiais publicados. O catálogo está em revisão; confirme também as orientações do município antes do descarte."}</p> : null}
+          {carregandoMateriais ? <p className="col-span-full rounded-2xl bg-white p-8 text-center text-sm font-semibold text-[#708a7b]" role="status" aria-live="polite">Buscando orientações…</p> : null}
+          {!carregandoMateriais && !erroMateriais ? materiaisFiltrados.map(material => <GuiaMaterialCard key={material.id} material={material} onEncontrarPonto={abrirPontosParaMaterial} />) : null}
+          {erroMateriais ? <div className="col-span-full rounded-2xl border border-[#f0c1bd] bg-white p-6 text-center" role="alert"><p className="text-sm font-semibold text-[#a8493e]">Não foi possível carregar as orientações agora. Tente novamente.</p><button type="button" onClick={() => setVersaoRecarregaGuia(versao => versao + 1)} className="mt-4 min-h-10 rounded-xl bg-[#17362a] px-4 py-2 text-sm font-black text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">Tentar novamente</button></div> : null}
+          {!carregandoMateriais && !erroMateriais && materials.length > 0 && materiaisFiltrados.length === 0 && possuiFiltro ? (
+            <div className="col-span-full rounded-2xl bg-white p-8 text-center" role="status">
+              <p className="text-sm font-semibold text-[#708a7b]">Não encontramos materiais para essa busca e categoria.</p>
+              <button type="button" onClick={() => { setQuery(""); setSelectedCategory("Todos"); }} className="mt-4 min-h-10 rounded-xl border border-[#cfe3d1] px-4 py-2 text-sm font-black text-[#1d7953] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">Limpar busca e filtros</button>
+            </div>
+          ) : null}
+          {!carregandoMateriais && !erroMateriais && materials.length === 0 ? (
+            <div className="col-span-full rounded-2xl bg-white p-8 text-center" role="status">
+              <p className="text-base font-black text-[#244637]">Ainda não há orientações publicadas no Guia.</p>
+              <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[#708a7b]">Enquanto o conteúdo é preparado, você pode procurar um ponto de coleta na sua cidade ou perto de você.</p>
+              <button type="button" onClick={() => setPaginaAtiva("pontos")} className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#1d7953] px-4 py-3 text-sm font-black text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">Encontrar ponto de coleta</button>
+            </div>
+          ) : null}
         </div>
       </div>
     );
   }
 
   function renderizarPontos() {
-    return <PontosColetaCrud podeEscrever={pode("pontos_coleta:escrever")} podeAprovar={pode("pontos_coleta:aprovar")} />;
+    return <PontosColetaCrud podeEscrever={pode("pontos_coleta:escrever")} podeAprovar={pode("pontos_coleta:aprovar")} categoriaInicial={categoriaPontosInicial} />;
   }
 
   function renderizarQuestionarios() {
@@ -576,7 +620,7 @@ export default function Home() {
           {avisoVerificacao ? <p className="mt-3 text-xs font-bold text-[#6b4a12]">{avisoVerificacao}</p> : null}
         </div>
       ) : null}
-      {erroDados ? <div className="mb-5 rounded-2xl border border-[#f2d0c8] bg-[#fff4f0] px-4 py-3 text-sm font-semibold text-[#a85040]">Não foi possível carregar todos os dados da API agora. O layout continua disponível, mas alguns indicadores podem estar incompletos.</div> : null}
+      {erroDados ? <div role="alert" className="mb-5 rounded-2xl border border-[#f2d0c8] bg-[#fff4f0] px-4 py-3 text-sm font-semibold text-[#a85040]">Não foi possível atualizar seu progresso agora. As demais áreas continuam disponíveis; tente novamente mais tarde.</div> : null}
       {renderizarArea()}
     </AppShell>
   );

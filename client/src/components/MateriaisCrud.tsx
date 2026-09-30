@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Archive, BookOpenCheck, Check, ExternalLink, LoaderCircle, Pencil, Plus, Save, Search, Undo2, X } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { alterarStatusMaterial, atualizarMaterial, criarMaterial, listarMateriais, type DadosMaterialApi, type FonteReferenciaMaterialApi } from "@/lib/api";
 
 type Material = DadosMaterialApi & {
@@ -220,10 +221,11 @@ export default function MateriaisCrud({ podeEscrever, podeAprovar }: { podeEscre
         ))}
       </div>
 
-      {aberto ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-[#17362a]/40 p-4">
-          <form onSubmit={event => void salvar(event)} className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-[28px] bg-white p-6 shadow-2xl sm:p-8">
-            <div className="flex items-center justify-between gap-4"><div><p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#3d9664]">Rascunho com rastreabilidade</p><h3 className="mt-1 text-2xl font-black text-[#17362a]">{editando ? "Editar material" : "Novo material"}</h3></div><button type="button" onClick={() => setAberto(false)} className="rounded-xl p-2 text-[#648074] hover:bg-[#edf3ed]" aria-label="Fechar formulário"><X /></button></div>
+      <Dialog open={aberto} onOpenChange={setAberto}>
+        {aberto ? (
+          <DialogContent showCloseButton={false} className="max-h-[92vh] w-full max-w-[calc(100%-2rem)] overflow-y-auto rounded-[28px] border-0 bg-white p-0 shadow-2xl sm:max-w-3xl">
+          <form onSubmit={event => void salvar(event)} className="p-6 sm:p-8">
+            <div className="flex items-center justify-between gap-4"><div><p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#3d9664]">Rascunho com rastreabilidade</p><DialogTitle className="mt-1 text-left text-2xl font-black text-[#17362a]">{editando ? "Editar material" : "Novo material"}</DialogTitle><DialogDescription className="sr-only">Cadastre ou edite uma orientação de descarte com contexto, limites e fontes de referência.</DialogDescription></div><button type="button" onClick={() => setAberto(false)} className="rounded-xl p-2 text-[#648074] hover:bg-[#edf3ed] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#1d7953]" aria-label="Fechar formulário"><X aria-hidden="true" /></button></div>
             {erro ? <div role="alert" className="mt-5 rounded-xl border border-[#f0c1bd] bg-[#fff4f0] p-3 text-sm font-bold text-[#a8493e]">{erro}</div> : null}
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               <label><span className="mb-1 block text-xs font-black uppercase text-[#5f7b6c]">Nome do material</span><input required maxLength={160} value={dados.nomeMaterial} onChange={event => atualizar("nomeMaterial", event.target.value)} className="w-full rounded-xl border border-[#d9e6db] px-4 py-3 text-sm" /></label>
@@ -243,8 +245,9 @@ export default function MateriaisCrud({ podeEscrever, podeAprovar }: { podeEscre
             </div>
             <div className="mt-7 flex justify-end gap-3"><button type="button" onClick={() => setAberto(false)} className="rounded-xl border border-[#cfe3d1] px-4 py-3 text-sm font-black text-[#5d796a]">Cancelar</button><button type="submit" disabled={salvando} className="inline-flex items-center gap-2 rounded-xl bg-[#17362a] px-5 py-3 text-sm font-black text-white disabled:opacity-60">{salvando ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}{salvando ? "Salvando…" : "Salvar rascunho"}</button></div>
           </form>
-        </div>
-      ) : null}
+          </DialogContent>
+        ) : null}
+      </Dialog>
     </div>
   );
 }
