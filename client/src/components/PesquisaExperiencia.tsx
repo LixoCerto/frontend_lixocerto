@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { BarChart3, CheckCircle2, Users } from "lucide-react";
 import { enviarAvaliacaoSus, obterResultadosAgregados } from "@/lib/api";
 
-const PERGUNTAS_SUS = [
+const PERGUNTAS_USABILIDADE = [
   "Acho que gostaria de usar este sistema com frequência.",
   "Considerei o sistema desnecessariamente complexo.",
   "Achei o sistema fácil de usar.",
@@ -65,7 +65,7 @@ export default function PesquisaExperiencia({ podeEnviar, podeConsultar }: { pod
     try {
       const resposta = await enviarAvaliacaoSus(notas);
       if (!resposta.avaliacaoAceita) throw new Error(resposta.mensagemResultado || "A avaliação não foi aceita.");
-      setMensagem(`Avaliação registrada. Sua pontuação SUS foi ${resposta.pontuacaoSus}/100. Obrigado pela contribuição.`);
+      setMensagem(`Avaliação registrada. Sua pontuação de usabilidade foi ${resposta.pontuacaoSus}/100. Obrigado pela contribuição.`);
       setNotas(Array(10).fill(0));
       setConsentimento(false);
       if (podeConsultar) setResultados(await obterResultadosAgregados());
@@ -80,19 +80,19 @@ export default function PesquisaExperiencia({ podeEnviar, podeConsultar }: { pod
 
   return (
     <div className="space-y-6">
-      <header><p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#3d9664]">Pesquisa e experiência de uso</p><h2 className="mt-2 text-2xl font-black tracking-[-0.035em] text-[#17362a] sm:text-3xl">Avaliação SUS da plataforma</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[#668073]">A escala SUS mede a percepção de usabilidade em dez afirmações. A participação é voluntária; respostas individuais não são exibidas aos pesquisadores.</p></header>
+      <header><p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#3d9664]">Pesquisa acadêmica</p><h2 className="mt-2 text-2xl font-black tracking-[-0.035em] text-[#17362a] sm:text-3xl">Avaliação de usabilidade da plataforma</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-[#668073]">Este questionário padronizado avalia a facilidade de uso da plataforma por meio de dez afirmações. A participação é voluntária e faz parte da avaliação acadêmica do projeto; não está relacionada a serviços de saúde. As respostas individuais não são exibidas aos pesquisadores.</p></header>
 
       {erro ? <p role="alert" className="rounded-xl border border-[#f1c9c0] bg-[#fff4f0] px-4 py-3 text-sm font-semibold text-[#a85040]">{erro}</p> : null}
       {mensagem ? <p role="status" className="rounded-xl border border-[#cde5cf] bg-[#eff8ee] px-4 py-3 text-sm font-semibold text-[#28764e]">{mensagem}</p> : null}
 
       {podeEnviar ? <form onSubmit={event => void enviar(event)} className="space-y-5 rounded-[22px] border border-[#e1ebe2] bg-white p-5 sm:p-6">
         <div><h3 className="text-lg font-black text-[#244637]">Sua experiência</h3><p className="mt-1 text-xs leading-5 text-[#71897b]">Para cada frase, selecione uma opção de 1 (discordo totalmente) a 5 (concordo totalmente).</p></div>
-        <div className="space-y-3">{PERGUNTAS_SUS.map((pergunta, indice) => <fieldset key={pergunta} className="rounded-xl border border-[#e8eee8] p-4"><legend className="max-w-full px-1 text-sm font-bold leading-6 text-[#315c47]">{indice + 1}. {pergunta}</legend><div className="mt-2 flex flex-wrap gap-2 sm:gap-4">{[1, 2, 3, 4, 5].map(valor => <label key={valor} className="flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-semibold text-[#587261] hover:bg-[#f5faf4]"><input type="radio" name={`sus-item-${indice + 1}`} value={valor} checked={notas[indice] === valor} onChange={() => setNotas(atual => atual.map((nota, posicao) => posicao === indice ? valor : nota))} className="accent-[#1d7953]" />{valor}<span className="sr-only"> de 5</span></label>)}</div></fieldset>)}</div>
+        <div className="space-y-3">{PERGUNTAS_USABILIDADE.map((pergunta, indice) => <fieldset key={pergunta} className="rounded-xl border border-[#e8eee8] p-4"><legend className="max-w-full px-1 text-sm font-bold leading-6 text-[#315c47]">{indice + 1}. {pergunta}</legend><div className="mt-2 flex flex-wrap gap-2 sm:gap-4">{[1, 2, 3, 4, 5].map(valor => <label key={valor} className="flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-semibold text-[#587261] hover:bg-[#f5faf4]"><input type="radio" name={`usabilidade-item-${indice + 1}`} value={valor} checked={notas[indice] === valor} onChange={() => setNotas(atual => atual.map((nota, posicao) => posicao === indice ? valor : nota))} className="accent-[#1d7953]" />{valor}<span className="sr-only"> de 5</span></label>)}</div></fieldset>)}</div>
         <label className="flex items-start gap-3 rounded-xl border border-[#dce8de] bg-[#f7faf6] p-4 text-xs leading-5 text-[#587261]"><input type="checkbox" checked={consentimento} onChange={event => setConsentimento(event.target.checked)} className="mt-0.5 accent-[#1d7953]" /><span>Li as informações e aceito participar voluntariamente. A conta autenticada é usada apenas para pseudonimizar e limitar a identificação; o código bruto não é armazenado junto às respostas, e os resultados de pesquisa são apresentados de forma agregada.</span></label>
         <button type="submit" disabled={enviando} className="rounded-xl bg-[#1d7953] px-5 py-3 text-sm font-black text-white transition hover:bg-[#176342] disabled:cursor-wait disabled:opacity-60">{enviando ? "Enviando avaliação…" : "Enviar avaliação"}</button>
       </form> : null}
 
-      {podeConsultar ? <section className="space-y-4"><div><h3 className="text-lg font-black text-[#244637]">Resultados agregados</h3><p className="mt-1 text-xs leading-5 text-[#71897b]">Acesso somente a estatísticas gerais; nenhuma resposta individual ou identificador é exibido.</p></div>{carregandoResultados && !resultados ? <p className="rounded-xl bg-white p-5 text-sm font-semibold text-[#71897b]">Carregando resultados…</p> : null}{resultados ? <div className="grid gap-4 md:grid-cols-3"><IndicadorPesquisa titulo="Escore SUS médio" valor={`${resultados.mediaPontuacaoSus.toFixed(1)}/100`} detalhe="Média das avaliações válidas" icone={BarChart3} /><IndicadorPesquisa titulo="Mediana SUS" valor={`${resultados.medianaPontuacaoSus.toFixed(1)}/100`} detalhe="Valor central dos escores" icone={CheckCircle2} /><IndicadorPesquisa titulo="Participantes" valor={resultados.quantidadeParticipantes.toLocaleString("pt-BR")} detalhe="Avaliações consentidas registradas" icone={Users} /></div> : null}</section> : null}
+      {podeConsultar ? <section className="space-y-4"><div><h3 className="text-lg font-black text-[#244637]">Resultados agregados</h3><p className="mt-1 text-xs leading-5 text-[#71897b]">Acesso somente a estatísticas gerais; nenhuma resposta individual ou identificador é exibido.</p></div>{carregandoResultados && !resultados ? <p className="rounded-xl bg-white p-5 text-sm font-semibold text-[#71897b]">Carregando resultados…</p> : null}{resultados ? <div className="grid gap-4 md:grid-cols-3"><IndicadorPesquisa titulo="Pontuação média de usabilidade" valor={`${resultados.mediaPontuacaoSus.toFixed(1)}/100`} detalhe="Média das avaliações válidas" icone={BarChart3} /><IndicadorPesquisa titulo="Mediana da pontuação" valor={`${resultados.medianaPontuacaoSus.toFixed(1)}/100`} detalhe="Valor central das avaliações" icone={CheckCircle2} /><IndicadorPesquisa titulo="Participantes" valor={resultados.quantidadeParticipantes.toLocaleString("pt-BR")} detalhe="Avaliações consentidas registradas" icone={Users} /></div> : null}</section> : null}
 
       <aside className="rounded-[20px] bg-[#17362a] p-5 text-white"><h3 className="font-black">Privacidade por padrão</h3><p className="mt-2 text-sm leading-6 text-[#bdd2c3]">A API valida a permissão no servidor. O identificador do participante é derivado da sessão autenticada e pseudonimizado antes da gravação; somente perfis autorizados recebem estatísticas agregadas.</p></aside>
     </div>

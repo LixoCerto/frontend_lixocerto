@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  ITENS_NAVEGACAO,
   obterNavegacaoPermitida,
   obterNavegacaoPermitidaPorPermissoes,
   obterPermissoes,
@@ -8,6 +9,12 @@ import {
 } from "@shared/permissoes";
 
 describe("matriz de autorização do frontend", () => {
+  it("identifica a área como pesquisa de usabilidade, sem sigla ambígua", () => {
+    const pesquisa = ITENS_NAVEGACAO.find(item => item.id === "pesquisa");
+    expect(pesquisa?.rotulo).toBe("Pesquisa de usabilidade");
+    expect(pesquisa?.rotulo).not.toMatch(/\bSUS\b/i);
+  });
+
   it("mostra ao usuário comum somente aprendizagem, pesquisa de envio e áreas pessoais", () => {
     expect(temPermissao(["usuario"], "questionarios:responder")).toBe(true);
     expect(temPermissao(["usuario"], "gamificacao:participar")).toBe(true);

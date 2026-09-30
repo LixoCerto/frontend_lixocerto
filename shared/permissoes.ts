@@ -104,7 +104,7 @@ export const ITENS_NAVEGACAO: readonly ItemNavegacao[] = [
   { id: "pontos", rotulo: "Pontos de coleta", descricao: "Locais e verificações", icone: "MapPinned" },
   { id: "questionarios", rotulo: "Quiz e questionários", descricao: "Aprendizagem e banco de questões", icone: "CircleHelp" },
   { id: "desafios", rotulo: "Desafios", descricao: "Ações sustentáveis", icone: "Trophy" },
-  { id: "pesquisa", rotulo: "Pesquisa e SUS", descricao: "Avaliação e indicadores agregados", icone: "ChartNoAxesCombined" },
+  { id: "pesquisa", rotulo: "Pesquisa de usabilidade", descricao: "Experiência e indicadores agregados", icone: "ChartNoAxesCombined" },
   { id: "revisao", rotulo: "Central de revisão", descricao: "Fila de moderação", icone: "ClipboardCheck" },
   { id: "administracao", rotulo: "Administração", descricao: "Governança da plataforma", icone: "ShieldCheck" },
   { id: "perfil", rotulo: "Perfil e sessões", descricao: "Conta e segurança", icone: "UserRound" },

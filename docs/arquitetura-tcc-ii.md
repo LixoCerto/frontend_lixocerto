@@ -33,15 +33,15 @@ O frontend é estático e não possui backend próprio. O Envoy converte chamada
 
 ## Contratos RPC
 
-Os contratos Protobuf são mantidos na API e gerados no frontend com Buf. Os serviços atuais incluem autenticação, identidade, materiais, pontos de coleta, questionários, gamificação, avaliação SUS, perfil, sessões, administração, auditoria e saúde.
+Os contratos Protobuf são mantidos na API e gerados no frontend com Buf. Os serviços atuais incluem autenticação, identidade, materiais, pontos de coleta, questionários, gamificação, avaliação de usabilidade, perfil, sessões, administração, auditoria e saúde.
 
 A API é responsável por retornar identidade, papéis e permissões. O frontend usa esses dados para compor o layout por nível, mas a autorização efetiva permanece no backend em cada chamada protegida.
 
 ## Persistência e pesquisa
 
-O PostgreSQL externo mantém materiais, pontos de coleta, questões, alternativas, tentativas, progresso, sessões, auditoria e respostas da avaliação SUS conforme as migrations da API. Dados de participantes devem ser tratados com consentimento, pseudonimização e resultados agregados.
+O PostgreSQL externo mantém materiais, pontos de coleta, questões, alternativas, tentativas, progresso, sessões, auditoria e respostas da avaliação de usabilidade conforme as migrations da API. Dados de participantes devem ser tratados com consentimento, pseudonimização e resultados agregados.
 
-A SUS avalia percepção de usabilidade; um escore SUS não comprova, sozinho, aprendizagem ou mudança de comportamento ambiental. O texto acadêmico deve interpretar cada instrumento dentro de sua finalidade metodológica.
+O questionário padronizado de dez afirmações avalia a percepção de facilidade de uso; sua pontuação não comprova, sozinha, aprendizagem ou mudança de comportamento ambiental. O texto acadêmico deve interpretar cada instrumento dentro de sua finalidade metodológica.
 
 ## Segurança
 
