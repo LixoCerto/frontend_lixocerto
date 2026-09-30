@@ -8,6 +8,7 @@ import {
   MapPinned,
   Pencil,
   Plus,
+  Recycle,
   Save,
   Search,
   Trash2,
@@ -74,11 +75,15 @@ const rotulosStatus: Record<string, string> = {
 export default function PontosColetaCrud({
   podeEscrever,
   podeAprovar,
+  podeRegistrar,
   categoriaInicial = "",
+  onIniciarDescarte,
 }: {
   podeEscrever: boolean;
   podeAprovar: boolean;
+  podeRegistrar: boolean;
   categoriaInicial?: string;
+  onIniciarDescarte: (ponto: Pick<Ponto, "idPontoColeta" | "nomePontoColeta" | "cidadePontoColeta">) => void;
 }) {
   const [pontos, setPontos] = useState<Ponto[]>([]);
   const [dados, setDados] = useState<Dados>(vazio);
@@ -443,6 +448,7 @@ export default function PontosColetaCrud({
               </a>
             </div>
             <div className="mt-4 flex flex-wrap gap-2 border-t border-[#edf2ed] pt-4">
+              {podeRegistrar && ponto.statusVerificacao === "verificado" ? <button type="button" onClick={() => onIniciarDescarte({ idPontoColeta: ponto.idPontoColeta, nomePontoColeta: ponto.nomePontoColeta, cidadePontoColeta: ponto.cidadePontoColeta })} className="inline-flex min-h-10 items-center gap-1 rounded-lg bg-[#1d7953] px-3 py-2 text-xs font-black text-white hover:bg-[#176342] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]"><Recycle className="h-3.5 w-3.5" aria-hidden="true" /> Iniciar descarte</button> : null}
               {podeEscrever ? <>
                 <button type="button" onClick={() => abrirEdicao(ponto)} className="inline-flex items-center gap-1 rounded-lg bg-[#eef5ed] px-3 py-2 text-xs font-black text-[#337a51]"><Pencil className="h-3.5 w-3.5" /> Editar</button>
                 <button type="button" onClick={() => void remover(ponto.idPontoColeta)} className="inline-flex items-center gap-1 rounded-lg bg-[#fff1ef] px-3 py-2 text-xs font-black text-[#a8493e]"><Trash2 className="h-3.5 w-3.5" /> Excluir</button>

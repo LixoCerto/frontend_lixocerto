@@ -157,6 +157,7 @@ export default function Home() {
   const [erroMateriais, setErroMateriais] = useState(false);
   const [versaoRecarregaGuia, setVersaoRecarregaGuia] = useState(0);
   const [categoriaPontosInicial, setCategoriaPontosInicial] = useState("");
+  const [pontoDescarteInicial, setPontoDescarteInicial] = useState<{ idPontoColeta: string; nomePontoColeta: string; cidadePontoColeta: string } | null>(null);
   const [erroDados, setErroDados] = useState(false);
   const [sessoesAtivas, setSessoesAtivas] = useState<SessoesAtivasState>([]);
   const [carregandoSessoes, setCarregandoSessoes] = useState(false);
@@ -452,7 +453,7 @@ export default function Home() {
   }
 
   function renderizarPontos() {
-    return <PontosColetaCrud podeEscrever={pode("pontos_coleta:escrever")} podeAprovar={pode("pontos_coleta:aprovar")} categoriaInicial={categoriaPontosInicial} />;
+    return <div className="space-y-8"><PontosColetaCrud podeEscrever={pode("pontos_coleta:escrever")} podeAprovar={pode("pontos_coleta:aprovar")} podeRegistrar={pode("gamificacao:participar")} categoriaInicial={categoriaPontosInicial} onIniciarDescarte={setPontoDescarteInicial} /><RegistrosDescarte podeRegistrar={pode("gamificacao:participar")} podeLer={podeLerGamificacao} podeRevisar={pode("pontos_coleta:aprovar")} pontoInicial={pontoDescarteInicial} onPontoInicialAplicado={() => setPontoDescarteInicial(null)} /></div>;
   }
 
   function renderizarQuestionarios() {
@@ -460,7 +461,7 @@ export default function Home() {
   }
 
   function renderizarDesafios() {
-    return <div className="space-y-8"><DesafiosCrud podeAdministrar={pode("gamificacao:administrar")} podeLer={podeLerGamificacao} podeParticipar={pode("gamificacao:participar")} /><RegistrosDescarte podeRegistrar={pode("gamificacao:participar")} podeLer={podeLerGamificacao} podeRevisar={pode("pontos_coleta:aprovar")} /></div>;
+    return <DesafiosCrud podeAdministrar={pode("gamificacao:administrar")} podeLer={podeLerGamificacao} podeParticipar={pode("gamificacao:participar")} />;
   }
 
   function renderizarPesquisa() {

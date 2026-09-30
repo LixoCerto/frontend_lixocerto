@@ -43,7 +43,9 @@ import {
   ListarPontosColetaRequisicaoSchema,
   ListarMeusDescartesRequisicaoSchema,
   ListarDescartesGestaoRequisicaoSchema,
-  RegistrarDescarteRequisicaoSchema,
+  IniciarCheckinDescarteRequisicaoSchema,
+  ConcluirDescarteRequisicaoSchema,
+  ObterEvidenciaDescarteRequisicaoSchema,
   RevisarDescarteRequisicaoSchema,
   ObterPontoColetaRequisicaoSchema,
   ServicoPontosColeta,
@@ -231,8 +233,14 @@ export function alterarStatusPontoColeta(idPontoColeta: string, statusVerificaca
 export function buscarEnderecoPorCoordenadas(latitude: number, longitude: number) {
   return pontosColetaClient.buscarEnderecoPorCoordenadas(create(BuscarEnderecoPorCoordenadasRequisicaoSchema, { latitude, longitude }));
 }
-export function registrarDescarte(idPontoColeta: string, categoriaMaterial: string, relato = "") {
-  return pontosColetaClient.registrarDescarte(create(RegistrarDescarteRequisicaoSchema, { idPontoColeta, categoriaMaterial, relato }));
+export function iniciarCheckinDescarte(dados: { idPontoColeta: string; latitude: number; longitude: number; precisaoMetros: number }) {
+  return pontosColetaClient.iniciarCheckinDescarte(create(IniciarCheckinDescarteRequisicaoSchema, dados));
+}
+export function concluirDescarte(idCheckin: string, itens: Array<{ categoriaMaterial: string; foto: Uint8Array; relato: string }>) {
+  return pontosColetaClient.concluirDescarte(create(ConcluirDescarteRequisicaoSchema, { idCheckin, itens }));
+}
+export function obterEvidenciaDescarte(idRegistro: string) {
+  return pontosColetaClient.obterEvidenciaDescarte(create(ObterEvidenciaDescarteRequisicaoSchema, { idRegistro }));
 }
 export function listarMeusDescartes() {
   return pontosColetaClient.listarMeusDescartes(create(ListarMeusDescartesRequisicaoSchema, {}));
