@@ -335,8 +335,8 @@ export function obterRanking(limiteResultado = 10) {
   return gamificacaoClient.obterRanking(create(ObterRankingRequisicaoSchema, { limiteResultado }));
 }
 
-export function enviarAvaliacaoSus(codigoParticipante: string, notasItens: number[]) {
-  return avaliacaoClient.enviarAvaliacaoSus(create(EnviarAvaliacaoSusRequisicaoSchema, { codigoParticipante, indicaConsentimento: true, notasItens }));
+export function enviarAvaliacaoSus(notasItens: number[]) {
+  return avaliacaoClient.enviarAvaliacaoSus(create(EnviarAvaliacaoSusRequisicaoSchema, { codigoParticipante: "", indicaConsentimento: true, notasItens }));
 }
 
 export function obterResultadosAgregados() {

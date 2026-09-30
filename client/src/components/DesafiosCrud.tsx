@@ -19,8 +19,10 @@ const inputClass = "w-full rounded-xl border border-[#dce8de] bg-white px-3.5 py
 const buttonPrimary = "rounded-xl bg-[#1d7953] px-4 py-2.5 text-sm font-black text-white transition hover:bg-[#176342] disabled:cursor-wait disabled:opacity-60";
 const buttonSecondary = "rounded-xl border border-[#dce8de] bg-white px-3 py-2 text-xs font-bold text-[#386348] transition hover:bg-[#f4f8f3] disabled:opacity-50";
 
-export default function DesafiosCrud({ podeAdministrar }: { podeAdministrar: boolean }) {
+export default function DesafiosCrud({ podeAdministrar, podeLer, podeParticipar }: { podeAdministrar: boolean; podeLer: boolean; podeParticipar: boolean }) {
+  const podeParticiparDesafios = podeLer && podeParticipar;
   const [aba, setAba] = useState<"participar" | "gestao">(podeAdministrar ? "gestao" : "participar");
+  const abaAtual = aba === "participar" && !podeParticiparDesafios ? "gestao" : aba === "gestao" && !podeAdministrar ? "participar" : aba;
   const [desafiosPublicos, setDesafiosPublicos] = useState<DesafioPublico[]>([]);
   const [desafiosGestao, setDesafiosGestao] = useState<DesafioGestao[]>([]);
   const [statusFiltro, setStatusFiltro] = useState("todos");
@@ -35,14 +37,15 @@ export default function DesafiosCrud({ podeAdministrar }: { podeAdministrar: boo
   const [erro, setErro] = useState("");
 
   useEffect(() => {
+    if (!podeParticiparDesafios) return;
     let ativo = true;
     void listarDesafios().then(resultado => { if (ativo) setDesafiosPublicos(resultado.desafios); })
       .catch(() => { if (ativo) setErro("Não foi possível carregar os desafios disponíveis."); });
     return () => { ativo = false; };
-  }, []);
+  }, [podeParticiparDesafios]);
 
   useEffect(() => {
-    if (!podeAdministrar || aba !== "gestao") return;
+    if (!podeAdministrar || abaAtual !== "gestao") return;
     let ativo = true;
     setCarregando(true);
     void listarDesafiosGestao(buscaAplicada, statusFiltro).then(resultado => {
@@ -51,12 +54,15 @@ export default function DesafiosCrud({ podeAdministrar }: { podeAdministrar: boo
       if (ativo) setErro("Não foi possível carregar os desafios para gestão.");
     }).finally(() => { if (ativo) setCarregando(false); });
     return () => { ativo = false; };
-  }, [podeAdministrar, aba, buscaAplicada, statusFiltro]);
+  }, [podeAdministrar, abaAtual, buscaAplicada, statusFiltro]);
 
   async function recarregar() {
-    const [gestao, publicos] = await Promise.all([listarDesafiosGestao(buscaAplicada, statusFiltro), listarDesafios()]);
+    const gestao = await listarDesafiosGestao(buscaAplicada, statusFiltro);
     setDesafiosGestao(gestao.desafios);
-    setDesafiosPublicos(publicos.desafios);
+    if (podeParticiparDesafios) {
+      const publicos = await listarDesafios();
+      setDesafiosPublicos(publicos.desafios);
+    }
   }
 
   function iniciarEdicao(desafio: DesafioGestao) {
@@ -129,16 +135,18 @@ export default function DesafiosCrud({ podeAdministrar }: { podeAdministrar: boo
     } catch (falha) { setErro(mensagemErro(falha, "Não foi possível registrar a ação.")); }
   }
 
+  if (!podeAdministrar && !podeParticiparDesafios) return null;
+
   return (
     <div className="space-y-6">
       <header className="flex flex-col gap-4 rounded-[24px] bg-[#17362a] p-6 text-white sm:flex-row sm:items-end sm:justify-between">
         <div><p className="text-xs font-black uppercase tracking-[0.16em] text-[#c7e5bf]">Gamificação</p><h2 className="mt-2 text-2xl font-black">Desafios sustentáveis</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-[#d1e0d5]">Organize campanhas com metas e recompensas, acompanhe o progresso e mantenha o histórico de participação.</p></div>
-        {podeAdministrar ? <div className="flex rounded-xl bg-white/10 p-1"><button type="button" onClick={() => setAba("participar")} className={`rounded-lg px-3 py-2 text-xs font-black ${aba === "participar" ? "bg-white text-[#1d4934]" : "text-white"}`}>Ver desafios</button><button type="button" onClick={() => setAba("gestao")} className={`rounded-lg px-3 py-2 text-xs font-black ${aba === "gestao" ? "bg-white text-[#1d4934]" : "text-white"}`}>Gerenciar</button></div> : null}
+        {podeAdministrar || podeParticiparDesafios ? <div className="flex rounded-xl bg-white/10 p-1">{podeParticiparDesafios ? <button type="button" onClick={() => setAba("participar")} className={`rounded-lg px-3 py-2 text-xs font-black ${abaAtual === "participar" ? "bg-white text-[#1d4934]" : "text-white"}`}>Ver desafios</button> : null}{podeAdministrar ? <button type="button" onClick={() => setAba("gestao")} className={`rounded-lg px-3 py-2 text-xs font-black ${abaAtual === "gestao" ? "bg-white text-[#1d4934]" : "text-white"}`}>Gerenciar</button> : null}</div> : null}
       </header>
       {erro ? <p role="alert" className="rounded-xl border border-[#f1c9c0] bg-[#fff4f0] px-4 py-3 text-sm font-semibold text-[#a85040]">{erro}</p> : null}
       {aviso ? <p role="status" className="rounded-xl border border-[#cde5cf] bg-[#eff8ee] px-4 py-3 text-sm font-semibold text-[#28764e]">{aviso}</p> : null}
 
-      {aba === "participar" ? <section className="grid gap-4 lg:grid-cols-2">
+      {abaAtual === "participar" ? <section className="grid gap-4 lg:grid-cols-2">
         {desafiosPublicos.map(desafio => {
           const participando = desafio.statusParticipacao === "participando";
           const concluido = desafio.statusParticipacao === "concluido";

@@ -1,21 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
-  ArrowUpRight,
   Award,
-  BarChart3,
   BookOpen,
-  CheckCircle2,
   ChevronRight,
   CircleHelp,
-  ClipboardCheck,
   Clock3,
-  FileCheck2,
   Flame,
   KeyRound,
   Leaf,
   MailWarning,
-  MapPinned,
   Pencil,
   Save,
   Recycle,
@@ -24,7 +18,6 @@ import {
   Sparkles,
   Target,
   Trophy,
-  Users,
 } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import AdministracaoCrud from "@/components/AdministracaoCrud";
@@ -32,10 +25,10 @@ import MateriaisCrud from "@/components/MateriaisCrud";
 import QuestionariosCrud from "@/components/QuestionariosCrud";
 import DesafiosCrud from "@/components/DesafiosCrud";
 import PontosColetaCrud from "@/components/PontosColetaCrud";
+import PesquisaExperiencia from "@/components/PesquisaExperiencia";
 import { useAuth } from "@/_core/hooks/useAuth";
 import {
   listarMateriais,
-  listarPontosColeta,
   listarSessoes,
   obterPerfilAtual,
   atualizarPerfil,
@@ -46,6 +39,7 @@ import {
 import {
   CODIGOS_PERMISSAO,
   PERFIS_ACESSO,
+  podeAcessarPagina,
   type CodigoPermissao,
   type PapelAcesso,
 } from "@shared/permissoes";
@@ -73,14 +67,6 @@ type MaterialsState = {
   scopeNote: string;
   sources: { title: string; url: string; supports: string }[];
   verifiedAt: string;
-}[];
-type CollectionPointsState = {
-  id: string;
-  name: string;
-  address: string;
-  city: string;
-  acceptedCategories: string[];
-  isVerified: boolean;
 }[];
 type SessoesAtivasState = {
   id: string;
@@ -172,7 +158,6 @@ export default function Home() {
   const [paginaAtiva, setPaginaAtiva] = useState("inicio");
   const [dashboard, setDashboard] = useState<DashboardState | null>(null);
   const [materials, setMaterials] = useState<MaterialsState>([]);
-  const [collectionPoints, setCollectionPoints] = useState<CollectionPointsState>([]);
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [modoGestaoMateriais, setModoGestaoMateriais] = useState(false);
   const [query, setQuery] = useState("");
@@ -190,6 +175,11 @@ export default function Home() {
   const pode = (permissao: CodigoPermissao) => permissoes.includes(permissao);
   const quantidadePermissoes = permissoes.length;
   const nomeCurto = nomeAutenticado.split(/\s+/).slice(0, 2).join(" ");
+  const podeLerGamificacao = pode("gamificacao:ler");
+  const podeLerMateriais = pode("materiais:ler");
+  const podeConsultarSus = pode("avaliacao_usabilidade:consultar_agregados");
+  const podeEnviarSus = pode("avaliacao_usabilidade:enviar");
+  const paginaEfetiva = podeAcessarPagina(paginaAtiva, permissoes) ? paginaAtiva : "inicio";
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -202,13 +192,15 @@ export default function Home() {
   useEffect(() => {
     if (!isAuthenticated) return;
     async function carregarDados() {
+      setErroDados(false);
       try {
-        const [painel, materiais, pontos] = await Promise.all([
-          obterProgressoUsuario(),
-          listarMateriais(),
-          listarPontosColeta(),
+        const [resultadoPainel, resultadoMateriais] = await Promise.allSettled([
+          podeLerGamificacao ? obterProgressoUsuario() : Promise.resolve(null),
+          podeLerMateriais ? listarMateriais() : Promise.resolve(null),
         ]);
-        setDashboard({
+        const painel = resultadoPainel.status === "fulfilled" ? resultadoPainel.value : null;
+        const materiais = resultadoMateriais.status === "fulfilled" ? resultadoMateriais.value : null;
+        setDashboard(painel ? {
           ecoPoints: painel.quantidadePontos,
           currentStreak: painel.sequenciaDias,
           badgesUnlocked: painel.quantidadeConquistas,
@@ -218,8 +210,8 @@ export default function Home() {
             { id: "quiz", label: "Responder quiz", description: "Teste seu conhecimento ambiental." },
             { id: "challenge", label: "Ver desafios", description: "Transforme intenção em hábito." },
           ],
-        });
-        setMaterials(materiais.materiais.map(material => ({
+        } : null);
+        setMaterials(materiais?.materiais.map(material => ({
           id: material.idMaterial,
           name: material.nomeMaterial,
           category: material.categoriaMaterial,
@@ -235,15 +227,8 @@ export default function Home() {
           scopeNote: material.notaAbrangencia,
           sources: material.fontesReferencia.map(fonte => ({ title: fonte.titulo, url: fonte.url, supports: fonte.comprova })),
           verifiedAt: material.dataVerificacao,
-        })));
-        setCollectionPoints(pontos.pontosColeta.map(ponto => ({
-          id: ponto.idPontoColeta,
-          name: ponto.nomePontoColeta,
-          address: ponto.enderecoPontoColeta,
-          city: ponto.cidadePontoColeta,
-          acceptedCategories: ponto.categoriasAceitas,
-          isVerified: ponto.statusVerificacao.toLowerCase() === "verificado" || ponto.statusVerificacao.toLowerCase() === "aprovado",
-        })));
+        })) ?? []);
+        setErroDados(resultadoPainel.status === "rejected" || resultadoMateriais.status === "rejected");
       } catch {
         setErroDados(true);
       } finally {
@@ -251,10 +236,13 @@ export default function Home() {
       }
     }
     void carregarDados();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, podeLerGamificacao, podeLerMateriais]);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || !podeLerMateriais) {
+      setMaterials([]);
+      return;
+    }
     async function filtrarMateriais() {
       try {
         const resposta = await listarMateriais(query, selectedCategory === "Todos" ? "" : selectedCategory);
@@ -281,7 +269,7 @@ export default function Home() {
     }
     const temporizador = window.setTimeout(() => void filtrarMateriais(), 180);
     return () => window.clearTimeout(temporizador);
-  }, [isAuthenticated, query, selectedCategory]);
+  }, [isAuthenticated, podeLerMateriais, query, selectedCategory]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -312,33 +300,13 @@ export default function Home() {
 
   const progresso = useMemo(() => Math.min(100, Math.round(((dashboard?.ecoPoints ?? 0) / 1500) * 100)), [dashboard]);
   const indicadores = useMemo<Indicador[]>(() => {
-    if (papel === "pesquisador") {
-      return [
-        { titulo: "Escore SUS médio", valor: "82,5", detalhe: "+4,2 pontos no período", icone: BarChart3, tom: "azul" },
-        { titulo: "Respostas válidas", valor: "48", detalhe: "100% com consentimento", icone: FileCheck2, tom: "verde" },
-        { titulo: "Desafios concluídos", valor: "126", detalhe: "Base agregada da plataforma", icone: Trophy, tom: "ouro" },
-      ];
-    }
-    if (papel === "revisor") {
-      return [
-        { titulo: "Fila de revisão", valor: "12", detalhe: "Itens aguardando análise", icone: ClipboardCheck, tom: "ouro" },
-        { titulo: "Pontos verificados", valor: "34", detalhe: "8 aprovados nesta semana", icone: MapPinned, tom: "verde" },
-        { titulo: "Questões ativas", valor: "26", detalhe: "Banco de aprendizagem", icone: CircleHelp, tom: "azul" },
-      ];
-    }
-    if (papel === "administrador") {
-      return [
-        { titulo: "Usuários ativos", valor: "1.248", detalhe: "+8,4% no mês", icone: Users, tom: "verde" },
-        { titulo: "Eventos auditados", valor: "2.846", detalhe: "Sem alerta crítico aberto", icone: ShieldCheck, tom: "azul" },
-        { titulo: "Pontos pendentes", valor: "12", detalhe: "Aguardando revisão", icone: MapPinned, tom: "ouro" },
-      ];
-    }
+    if (!podeLerGamificacao || !dashboard) return [];
     return [
       { titulo: "Eco pontos", valor: String(dashboard?.ecoPoints ?? "—"), detalhe: "Seu impacto acumulado", icone: Award, tom: "ouro" },
       { titulo: "Dias ativos", valor: String(dashboard?.currentStreak ?? "—"), detalhe: "Sua melhor sequência", icone: Flame, tom: "rosa" },
       { titulo: "Conquistas", valor: String(dashboard?.badgesUnlocked ?? "—"), detalhe: "Selos desbloqueados", icone: Trophy, tom: "verde" },
     ];
-  }, [dashboard, papel]);
+  }, [dashboard, podeLerGamificacao]);
 
   function renderizarInicio() {
     return (
@@ -354,13 +322,13 @@ export default function Home() {
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/10 p-4 backdrop-blur-sm">
               <div className="flex items-center justify-between text-xs font-bold text-[#d9e8dc]"><span>Permissões disponíveis</span><span className="text-[#d6efad]">{quantidadePermissoes} ativas</span></div>
-              <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gradient-to-r from-[#5eb57a] to-[#d6efad]" style={{ width: `${papel === "administrador" ? 100 : papel === "revisor" ? 64 : papel === "pesquisador" ? 52 : 45}%` }} /></div>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gradient-to-r from-[#5eb57a] to-[#d6efad]" style={{ width: `${Math.min(100, Math.round((quantidadePermissoes / CODIGOS_PERMISSAO.length) * 100))}%` }} /></div>
               <p className="mt-3 text-xs leading-5 text-[#adc8b4]">Suas áreas de trabalho foram carregadas com base nas permissões associadas à sua sessão autenticada.</p>
             </div>
           </div>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-3">{indicadores.map(indicador => <IndicadorCard key={indicador.titulo} indicador={indicador} />)}</section>
+        {indicadores.length ? <section className="grid gap-4 md:grid-cols-3">{indicadores.map(indicador => <IndicadorCard key={indicador.titulo} indicador={indicador} />)}</section> : null}
 
         <section className="grid gap-5 xl:grid-cols-[1.25fr_.75fr]">
           <article className="rounded-[24px] border border-[#e1ebe2] bg-white p-5 shadow-[0_18px_36px_-30px_rgba(23,54,42,.6)] sm:p-6">
@@ -368,14 +336,14 @@ export default function Home() {
               <div><p className="text-[11px] font-black uppercase tracking-[0.15em] text-[#3d9664]">Próximo movimento</p><h3 className="mt-2 text-xl font-black tracking-tight">Transforme informação em hábito.</h3></div>
               <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#e9f6e8] text-[#25734d]"><Target className="h-5 w-5" /></span>
             </div>
-            <p className="mt-3 text-sm leading-6 text-[#698375]">{dashboard?.dailyTip ?? "Carregando recomendação personalizada..."}</p>
+            <p className="mt-3 text-sm leading-6 text-[#698375]">{dashboard?.dailyTip ?? (podeLerGamificacao ? "Carregando recomendação personalizada..." : "Seu espaço está pronto com base nas permissões atuais da conta.")}</p>
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               {(dashboard?.quickActions ?? []).filter(acao => {
                 const permissao = acao.id === "quiz"
                   ? "questionarios:responder"
                   : acao.id === "guide"
                     ? "materiais:ler"
-                    : "gamificacao:ler";
+                    : "gamificacao:participar";
                 return pode(permissao);
               }).map(acao => (
                 <button key={acao.id} type="button" onClick={() => setPaginaAtiva(acao.id === "guide" ? "materiais" : acao.id === "quiz" ? "questionarios" : "desafios")} className="group rounded-2xl border border-[#e4ece4] p-4 text-left transition hover:-translate-y-0.5 hover:border-[#a9d3b0] hover:bg-[#f5faf4]">
@@ -385,13 +353,13 @@ export default function Home() {
               ))}
             </div>
           </article>
-          <article className="rounded-[24px] bg-[#e6f1d0] p-5 sm:p-6">
+          {podeLerGamificacao ? <article className="rounded-[24px] bg-[#e6f1d0] p-5 sm:p-6">
             <div className="flex items-center justify-between"><span className="text-[11px] font-black uppercase tracking-[0.15em] text-[#587148]">Progresso ambiental</span><Leaf className="h-5 w-5 text-[#397a4e]" /></div>
             <strong className="mt-5 block text-3xl font-black tracking-tight text-[#1d4a34]">{progresso}%</strong>
             <p className="mt-1 text-sm text-[#55715d]">Rumo ao próximo nível de impacto.</p>
             <div className="mt-5 h-3 overflow-hidden rounded-full bg-white/70"><div className="h-full rounded-full bg-[#278050] transition-all duration-500" style={{ width: `${progresso}%` }} /></div>
             <div className="mt-6 flex items-center gap-3 border-t border-[#ccdfb4] pt-4 text-xs font-bold text-[#4c6652]"><Recycle className="h-4 w-4 text-[#278050]" /> Educação ambiental baseada em escolhas práticas.</div>
-          </article>
+          </article> : null}
         </section>
       </div>
     );
@@ -430,15 +398,15 @@ export default function Home() {
   }
 
   function renderizarQuestionarios() {
-    return <QuestionariosCrud podeAdministrar={pode("questionarios:administrar")} />;
+    return <QuestionariosCrud podeAdministrar={pode("questionarios:administrar")} podeResponder={pode("questionarios:responder")} />;
   }
 
   function renderizarDesafios() {
-    return <DesafiosCrud podeAdministrar={pode("gamificacao:administrar")} />;
+    return <DesafiosCrud podeAdministrar={pode("gamificacao:administrar")} podeLer={podeLerGamificacao} podeParticipar={pode("gamificacao:participar")} />;
   }
 
   function renderizarPesquisa() {
-    return <div className="space-y-6"><CabecalhoSecao etiqueta="Dados agregados" titulo="Pesquisa e experiência de uso" descricao="Indicadores acadêmicos são apresentados de forma agregada, com consentimento e sem expor respostas individuais." /><section className="grid gap-4 md:grid-cols-3"><IndicadorCard indicador={{ titulo: "Escore SUS", valor: "82,5", detalhe: "Meta ≥ 75", icone: BarChart3, tom: "azul" }} /><IndicadorCard indicador={{ titulo: "Participantes", valor: "48", detalhe: "Respostas válidas", icone: Users, tom: "verde" }} /><IndicadorCard indicador={{ titulo: "Consentimento", valor: "100%", detalhe: "Registro obrigatório", icone: CheckCircle2, tom: "ouro" }} /></section><section className="grid gap-5 lg:grid-cols-[1.2fr_.8fr]"><article className="rounded-2xl border border-[#e1ebe2] bg-white p-6"><h3 className="font-black">Distribuição de percepção</h3><div className="mt-7 flex h-44 items-end gap-3">{[52, 68, 76, 84, 73, 92, 80].map((valor, indice) => <div key={indice} className="flex flex-1 flex-col items-center gap-2"><div className="w-full rounded-t-xl bg-gradient-to-t from-[#287b52] to-[#bfe39f]" style={{ height: `${valor}%` }} /><span className="text-[10px] font-bold text-[#789082]">S{indice + 1}</span></div>)}</div><p className="mt-5 text-xs leading-5 text-[#738c7d]">Visualização demonstrativa dos indicadores que serão retornados de forma agregada pela API de avaliação SUS.</p></article><aside className="rounded-[24px] bg-[#17362a] p-6 text-white"><ShieldCheck className="h-6 w-6 text-[#d6efad]" /><h3 className="mt-5 text-xl font-black">Privacidade por padrão</h3><p className="mt-3 text-sm leading-6 text-[#bdd2c3]">Resultados só podem ser consultados por perfis autorizados. A plataforma utiliza consentimento obrigatório e pseudonimização.</p></aside></section></div>;
+    return <PesquisaExperiencia podeEnviar={podeEnviarSus} podeConsultar={podeConsultarSus} />;
   }
 
   function renderizarRevisao() {
@@ -446,7 +414,7 @@ export default function Home() {
   }
 
   function renderizarAdministracao() {
-    return <AdministracaoCrud podeGerenciarAcessos={pode("administracao:gerenciar_acessos")} />;
+    return <AdministracaoCrud podeConsultarResumo={pode("administracao:consultar")} podeGerenciarAcessos={pode("administracao:gerenciar_acessos")} podeConsultarAuditoria={pode("auditoria:consultar")} />;
   }
 
   function formatarDataSessao(valor: string): string {
@@ -560,15 +528,20 @@ export default function Home() {
   }
 
   function renderizarArea() {
-    if (paginaAtiva === "materiais") return renderizarMateriais();
-    if (paginaAtiva === "pontos") return renderizarPontos();
-    if (paginaAtiva === "questionarios") return renderizarQuestionarios();
-    if (paginaAtiva === "desafios") return renderizarDesafios();
-    if (paginaAtiva === "pesquisa") return renderizarPesquisa();
-    if (paginaAtiva === "revisao") return renderizarRevisao();
-    if (paginaAtiva === "administracao") return renderizarAdministracao();
-    if (paginaAtiva === "perfil") return renderizarPerfil();
+    if (!podeAcessarPagina(paginaEfetiva, permissoes)) return renderizarInicio();
+    if (paginaEfetiva === "materiais") return renderizarMateriais();
+    if (paginaEfetiva === "pontos") return renderizarPontos();
+    if (paginaEfetiva === "questionarios") return renderizarQuestionarios();
+    if (paginaEfetiva === "desafios") return renderizarDesafios();
+    if (paginaEfetiva === "pesquisa") return renderizarPesquisa();
+    if (paginaEfetiva === "revisao") return renderizarRevisao();
+    if (paginaEfetiva === "administracao") return renderizarAdministracao();
+    if (paginaEfetiva === "perfil") return renderizarPerfil();
     return renderizarInicio();
+  }
+
+  function mudarPaginaAutorizada(pagina: string) {
+    if (podeAcessarPagina(pagina, permissoes)) setPaginaAtiva(pagina);
   }
 
   if (authError) {
@@ -596,7 +569,7 @@ export default function Home() {
   }
 
   return (
-    <AppShell papel={papel} permissoes={permissoes} nome={perfil.nomeDemonstracao} email={user.email} iniciais={perfil.iniciais} paginaAtiva={paginaAtiva} onMudarPagina={setPaginaAtiva} onLogout={logout}>
+    <AppShell papel={papel} permissoes={permissoes} nome={perfil.nomeDemonstracao} email={user.email} iniciais={perfil.iniciais} paginaAtiva={paginaEfetiva} onMudarPagina={mudarPaginaAutorizada} onLogout={logout}>
       {!emailVerificado ? (
         <div className="mb-5 rounded-2xl border border-[#f0dcb4] bg-[#fff8e8] px-4 py-3 text-sm font-semibold text-[#805a16]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

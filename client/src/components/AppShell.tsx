@@ -17,8 +17,8 @@ import {
   X,
 } from "lucide-react";
 import {
-  ITENS_NAVEGACAO,
   PERFIS_ACESSO,
+  obterNavegacaoPermitidaPorPermissoes,
   type CodigoPermissao,
   type PapelAcesso,
 } from "@shared/permissoes";
@@ -60,7 +60,7 @@ export default function AppShell({
 }: AppShellProps) {
   const [aberto, setAberto] = useState(false);
   const perfil = PERFIS_ACESSO[papel] ?? PERFIS_ACESSO.usuario;
-  const navegacao = ITENS_NAVEGACAO.filter(item => !item.permissao || permissoes.includes(item.permissao));
+  const navegacao = obterNavegacaoPermitidaPorPermissoes(permissoes);
   const itemAtivo = navegacao.find(item => item.id === paginaAtiva) ?? navegacao[0];
 
   function selecionarPagina(id: string) {

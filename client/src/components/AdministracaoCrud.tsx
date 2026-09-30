@@ -78,8 +78,8 @@ function Indicador({ titulo, valor, detalhe, icone: Icone }: { titulo: string; v
   );
 }
 
-export default function AdministracaoCrud({ podeGerenciarAcessos }: { podeGerenciarAcessos: boolean }) {
-  const [aba, setAba] = useState<Aba>("usuarios");
+export default function AdministracaoCrud({ podeConsultarResumo, podeGerenciarAcessos, podeConsultarAuditoria }: { podeConsultarResumo: boolean; podeGerenciarAcessos: boolean; podeConsultarAuditoria: boolean }) {
+  const [aba, setAba] = useState<Aba>(podeGerenciarAcessos ? "usuarios" : "auditoria");
   const [resumo, setResumo] = useState<Resumo | null>(null);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [totalUsuarios, setTotalUsuarios] = useState(0);
@@ -103,53 +103,60 @@ export default function AdministracaoCrud({ podeGerenciarAcessos }: { podeGerenc
   const [erro, setErro] = useState<string | null>(null);
   const [mensagem, setMensagem] = useState<string | null>(null);
 
+  const abasDisponiveis = useMemo(() => abas.filter(item => item.id === "auditoria" ? podeConsultarAuditoria : podeGerenciarAcessos), [podeConsultarAuditoria, podeGerenciarAcessos]);
+  const abaAtual = abasDisponiveis.some(item => item.id === aba) ? aba : abasDisponiveis[0]?.id ?? "usuarios";
   const papeisAtivos = useMemo(() => papeis.filter(papel => papel.statusPapel === "ativo"), [papeis]);
   const permissoesAtivas = useMemo(() => permissoes.filter(permissao => permissao.statusPermissao === "ativo"), [permissoes]);
 
   const carregarResumo = useCallback(async () => {
+    if (!podeConsultarResumo) return;
     const resposta = await obterResumoAdministrativo();
     setResumo(resposta);
-  }, []);
+  }, [podeConsultarResumo]);
 
   const carregarUsuarios = useCallback(async () => {
+    if (!podeGerenciarAcessos) return;
     const resposta = await listarUsuariosAdministrativos(buscaUsuario.trim(), statusUsuario, paginaUsuarios * LIMITE, LIMITE);
     setUsuarios(resposta.usuarios);
     setTotalUsuarios(resposta.total);
-  }, [buscaUsuario, paginaUsuarios, statusUsuario]);
+  }, [buscaUsuario, paginaUsuarios, podeGerenciarAcessos, statusUsuario]);
 
   const carregarPapeis = useCallback(async () => {
+    if (!podeGerenciarAcessos) return;
     const [respostaPapeis, respostaPermissoes] = await Promise.all([
       listarPapeisAdministrativos(true),
       listarPermissoesAdministrativas(),
     ]);
     setPapeis(respostaPapeis.papeis);
     setPermissoes(respostaPermissoes.permissoes);
-  }, []);
+  }, [podeGerenciarAcessos]);
 
   const carregarAuditoria = useCallback(async () => {
+    if (!podeConsultarAuditoria) return;
     const resposta = await listarAuditoria(filtroEvento.trim(), LIMITE, paginaAuditoria * LIMITE);
     setRegistros(resposta.registros);
     setTotalAuditoria(resposta.total);
-  }, [filtroEvento, paginaAuditoria]);
+  }, [filtroEvento, paginaAuditoria, podeConsultarAuditoria]);
 
   const recarregarTudo = useCallback(async () => {
     setCarregando(true);
     setErro(null);
     try {
-      await Promise.all([carregarResumo(), carregarUsuarios(), carregarPapeis()]);
-      if (aba === "auditoria") await carregarAuditoria();
+      const consultas = [
+        carregarResumo(),
+        carregarUsuarios(),
+        carregarPapeis(),
+      ];
+      if (abaAtual === "auditoria" && podeConsultarAuditoria) consultas.push(carregarAuditoria());
+      await Promise.all(consultas);
     } catch {
       setErro("Não foi possível carregar os dados administrativos. Verifique a conexão e suas permissões.");
     } finally {
       setCarregando(false);
     }
-  }, [aba, carregarAuditoria, carregarPapeis, carregarResumo, carregarUsuarios]);
+  }, [abaAtual, carregarAuditoria, carregarPapeis, carregarResumo, carregarUsuarios, podeConsultarAuditoria]);
 
   useEffect(() => { void recarregarTudo(); }, [recarregarTudo]);
-  useEffect(() => {
-    if (aba !== "auditoria") return;
-    void carregarAuditoria().catch(() => setErro("Não foi possível carregar a trilha de auditoria."));
-  }, [aba, carregarAuditoria]);
 
   function limparEditorPapel() {
     setPapelSelecionado(null);
@@ -304,9 +311,7 @@ export default function AdministracaoCrud({ podeGerenciarAcessos }: { podeGerenc
   const inicioAuditoria = totalAuditoria === 0 ? 0 : paginaAuditoria * LIMITE + 1;
   const fimAuditoria = Math.min(totalAuditoria, (paginaAuditoria + 1) * LIMITE);
 
-  if (!podeGerenciarAcessos) {
-    return <section className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm font-semibold text-amber-900">Seu perfil não possui a permissão de gestão de acessos. A autorização é validada também no servidor.</section>;
-  }
+  if (!podeConsultarResumo && !podeGerenciarAcessos && !podeConsultarAuditoria) return null;
 
   return (
     <div className="space-y-6">
@@ -318,20 +323,20 @@ export default function AdministracaoCrud({ podeGerenciarAcessos }: { podeGerenc
       {erro ? <div role="alert" className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800"><CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />{erro}</div> : null}
       {mensagem ? <div role="status" className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800"><Check className="mt-0.5 h-4 w-4 shrink-0" />{mensagem}</div> : null}
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {podeConsultarResumo ? <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <Indicador titulo="Usuários ativos" valor={resumo?.quantidadeUsuarios ?? 0} detalhe="Contas com acesso ativo" icone={Users} />
         <Indicador titulo="Papéis ativos" valor={resumo?.quantidadePapeis ?? 0} detalhe="Papel administrador protegido" icone={ShieldCheck} />
         <Indicador titulo="Conteúdos publicados" valor={resumo?.quantidadeMateriaisPublicados ?? 0} detalhe={`${(resumo?.quantidadeMateriais ?? 0).toLocaleString("pt-BR")} materiais no catálogo`} icone={Check} />
         <Indicador titulo="Pontos pendentes" valor={resumo?.quantidadePontosPendentes ?? 0} detalhe="Aguardam revisão administrativa" icone={CircleAlert} />
         <Indicador titulo="Eventos auditáveis" valor={resumo?.quantidadeEventosAuditoria ?? 0} detalhe="Registros disponíveis para consulta" icone={FileClock} />
         <Indicador titulo="Avaliações consentidas" valor={resumo?.quantidadeAvaliacoes ?? 0} detalhe="Sessões autorizadas para análise agregada" icone={ShieldCheck} />
-      </section>
+      </section> : null}
 
-      <div className="flex flex-wrap gap-2 border-b border-[#e1ebe2] pb-3" role="tablist" aria-label="Seções administrativas">
-        {abas.map(({ id, titulo, icone: Icone }) => <button key={id} type="button" role="tab" aria-selected={aba === id} onClick={() => { setAba(id); setErro(null); setMensagem(null); }} className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-black transition ${aba === id ? "bg-[#1d7953] text-white" : "bg-white text-[#5d796a] hover:bg-[#edf3ed]"}`}><Icone className="h-4 w-4" />{titulo}</button>)}
-      </div>
+      {abasDisponiveis.length ? <div className="flex flex-wrap gap-2 border-b border-[#e1ebe2] pb-3" role="tablist" aria-label="Seções administrativas">
+        {abasDisponiveis.map(({ id, titulo, icone: Icone }) => <button key={id} type="button" role="tab" aria-selected={abaAtual === id} onClick={() => { setAba(id); setErro(null); setMensagem(null); }} className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-black transition ${abaAtual === id ? "bg-[#1d7953] text-white" : "bg-white text-[#5d796a] hover:bg-[#edf3ed]"}`}><Icone className="h-4 w-4" />{titulo}</button>)}
+      </div> : null}
 
-      {aba === "usuarios" ? (
+      {podeGerenciarAcessos && abaAtual === "usuarios" ? (
         <section className="space-y-4">
           <div className="flex flex-col gap-3 rounded-2xl border border-[#e0eae1] bg-white p-4 sm:flex-row">
             <label className="flex min-w-56 flex-1 items-center gap-2 rounded-xl border border-[#d9e6db] px-3 py-2.5"><Search className="h-4 w-4 text-[#638775]" /><input value={buscaUsuario} onChange={event => { setBuscaUsuario(event.target.value); setPaginaUsuarios(0); }} placeholder="Buscar nome ou e-mail" className="w-full bg-transparent text-sm outline-none" /></label>
@@ -347,7 +352,7 @@ export default function AdministracaoCrud({ podeGerenciarAcessos }: { podeGerenc
         </section>
       ) : null}
 
-      {aba === "papeis" ? (
+      {podeGerenciarAcessos && abaAtual === "papeis" ? (
         <div className="grid gap-5 xl:grid-cols-[.8fr_1.2fr]">
           <section className="space-y-3">
             <div className="flex items-center justify-between gap-3"><div><h3 className="font-black text-[#244637]">Papéis da plataforma</h3><p className="mt-1 text-xs text-[#71897b]">Papéis base não podem ser renomeados ou arquivados; apenas o papel administrador tem matriz imutável.</p></div><button type="button" onClick={() => { limparEditorPapel(); setMensagem(null); }} className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-[#1d7953] px-3 py-2 text-xs font-black text-white"><Plus className="h-4 w-4" /> Novo papel</button></div>
@@ -367,7 +372,7 @@ export default function AdministracaoCrud({ podeGerenciarAcessos }: { podeGerenc
         </div>
       ) : null}
 
-      {aba === "auditoria" ? (
+      {podeConsultarAuditoria && abaAtual === "auditoria" ? (
         <section className="space-y-4">
           <div className="flex flex-col gap-3 rounded-2xl border border-[#e0eae1] bg-white p-4 sm:flex-row sm:items-center"><div className="flex-1"><h3 className="font-black text-[#244637]">Trilha de auditoria</h3><p className="mt-1 text-xs text-[#71897b]">Consulta somente leitura; detalhes sensíveis são redigidos no servidor.</p></div><label className="flex min-w-64 items-center gap-2 rounded-xl border border-[#d9e6db] px-3 py-2.5"><Search className="h-4 w-4 text-[#638775]" /><input value={filtroEvento} onChange={event => { setFiltroEvento(event.target.value); setPaginaAuditoria(0); }} placeholder="Filtrar por tipo de evento" className="w-full bg-transparent text-sm outline-none" /></label></div>
           <div className="overflow-hidden rounded-2xl border border-[#e0eae1] bg-white"><div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left text-sm"><thead className="bg-[#f5faf4] text-[11px] uppercase tracking-wide text-[#688574]"><tr><th className="px-4 py-3">Evento</th><th className="px-4 py-3">Recurso</th><th className="px-4 py-3">Ator</th><th className="px-4 py-3">Correlação</th><th className="px-4 py-3">Data</th></tr></thead><tbody className="divide-y divide-[#edf2ed]">{registros.map(registro => <tr key={registro.idRegistroAuditoria}><td className="px-4 py-4"><strong className="text-[#315c47]">{registro.tipoEvento}</strong></td><td className="px-4 py-4"><span className="block text-xs font-bold text-[#55715d]">{registro.recursoEvento || "—"}</span><span className="mt-1 block max-w-40 truncate text-[10px] text-[#82968a]">{registro.idRecurso || ""}</span></td><td className="px-4 py-4 text-xs text-[#71897b]">{registro.idUsuario || "Sistema"}</td><td className="max-w-48 truncate px-4 py-4 font-mono text-[10px] text-[#82968a]" title={registro.idCorrelacao}>{registro.idCorrelacao || "—"}</td><td className="whitespace-nowrap px-4 py-4 text-xs text-[#71897b]">{dataLocal(registro.dataCriacao)}</td></tr>)}

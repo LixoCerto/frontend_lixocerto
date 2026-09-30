@@ -30,8 +30,9 @@ const inputClass = "w-full rounded-xl border border-[#dce8de] bg-white px-3.5 py
 const buttonPrimary = "rounded-xl bg-[#1d7953] px-4 py-2.5 text-sm font-black text-white transition hover:bg-[#176342] disabled:cursor-wait disabled:opacity-60";
 const buttonSecondary = "rounded-xl border border-[#dce8de] bg-white px-3 py-2 text-xs font-bold text-[#386348] transition hover:bg-[#f4f8f3] disabled:opacity-50";
 
-export default function QuestionariosCrud({ podeAdministrar }: { podeAdministrar: boolean }) {
+export default function QuestionariosCrud({ podeAdministrar, podeResponder }: { podeAdministrar: boolean; podeResponder: boolean }) {
   const [aba, setAba] = useState<"quiz" | "gestao">(podeAdministrar ? "gestao" : "quiz");
+  const abaAtual = aba === "quiz" && !podeResponder ? "gestao" : aba === "gestao" && !podeAdministrar ? "quiz" : aba;
   const [questoesPublicas, setQuestoesPublicas] = useState<QuestaoPublica[]>([]);
   const [questoesGestao, setQuestoesGestao] = useState<QuestaoGestao[]>([]);
   const [respostas, setRespostas] = useState<Record<string, Feedback | undefined>>({});
@@ -47,6 +48,7 @@ export default function QuestionariosCrud({ podeAdministrar }: { podeAdministrar
   const [erro, setErro] = useState("");
 
   useEffect(() => {
+    if (!podeResponder) return;
     let ativo = true;
     void listarQuestoes(1, 100).then(resultado => {
       if (ativo) setQuestoesPublicas(resultado.questoes);
@@ -54,10 +56,10 @@ export default function QuestionariosCrud({ podeAdministrar }: { podeAdministrar
       if (ativo) setErro("Não foi possível carregar o quiz agora.");
     });
     return () => { ativo = false; };
-  }, []);
+  }, [podeResponder]);
 
   useEffect(() => {
-    if (!podeAdministrar || aba !== "gestao") return;
+    if (!podeAdministrar || abaAtual !== "gestao") return;
     let ativo = true;
     setCarregando(true);
     void listarQuestoesGestao(buscaAplicada, statusFiltro).then(resultado => {
@@ -68,7 +70,7 @@ export default function QuestionariosCrud({ podeAdministrar }: { podeAdministrar
       if (ativo) setCarregando(false);
     });
     return () => { ativo = false; };
-  }, [podeAdministrar, aba, buscaAplicada, statusFiltro]);
+  }, [podeAdministrar, abaAtual, buscaAplicada, statusFiltro]);
 
   function iniciarEdicao(questao: QuestaoGestao) {
     if (questao.statusQuestao === "arquivada") return;
@@ -96,8 +98,10 @@ export default function QuestionariosCrud({ podeAdministrar }: { podeAdministrar
   async function recarregarGestao() {
     const resultado = await listarQuestoesGestao(buscaAplicada, statusFiltro);
     setQuestoesGestao(resultado.questoes);
-    const publicadas = await listarQuestoes(1, 100);
-    setQuestoesPublicas(publicadas.questoes);
+    if (podeResponder) {
+      const publicadas = await listarQuestoes(1, 100);
+      setQuestoesPublicas(publicadas.questoes);
+    }
   }
 
   async function salvarQuestao(evento: React.FormEvent<HTMLFormElement>) {
@@ -150,6 +154,8 @@ export default function QuestionariosCrud({ podeAdministrar }: { podeAdministrar
     }
   }
 
+  if (!podeAdministrar && !podeResponder) return null;
+
   return (
     <div className="space-y-6">
       <header className="flex flex-col gap-4 rounded-[24px] bg-[#17362a] p-6 text-white sm:flex-row sm:items-end sm:justify-between">
@@ -158,10 +164,10 @@ export default function QuestionariosCrud({ podeAdministrar }: { podeAdministrar
           <h2 className="mt-2 text-2xl font-black">Quiz ambiental</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[#d1e0d5]">Questões publicadas aparecem para resposta. Revisores e administradores podem criar, editar, publicar e arquivar conteúdo.</p>
         </div>
-        {podeAdministrar ? (
+        {podeAdministrar || podeResponder ? (
           <div className="flex rounded-xl bg-white/10 p-1">
-            <button type="button" onClick={() => setAba("quiz")} className={`rounded-lg px-3 py-2 text-xs font-black ${aba === "quiz" ? "bg-white text-[#1d4934]" : "text-white"}`}>Responder quiz</button>
-            <button type="button" onClick={() => setAba("gestao")} className={`rounded-lg px-3 py-2 text-xs font-black ${aba === "gestao" ? "bg-white text-[#1d4934]" : "text-white"}`}>Gerenciar questões</button>
+            {podeResponder ? <button type="button" onClick={() => setAba("quiz")} className={`rounded-lg px-3 py-2 text-xs font-black ${abaAtual === "quiz" ? "bg-white text-[#1d4934]" : "text-white"}`}>Responder quiz</button> : null}
+            {podeAdministrar ? <button type="button" onClick={() => setAba("gestao")} className={`rounded-lg px-3 py-2 text-xs font-black ${abaAtual === "gestao" ? "bg-white text-[#1d4934]" : "text-white"}`}>Gerenciar questões</button> : null}
           </div>
         ) : null}
       </header>
@@ -169,7 +175,7 @@ export default function QuestionariosCrud({ podeAdministrar }: { podeAdministrar
       {erro ? <p role="alert" className="rounded-xl border border-[#f1c9c0] bg-[#fff4f0] px-4 py-3 text-sm font-semibold text-[#a85040]">{erro}</p> : null}
       {aviso ? <p role="status" className="rounded-xl border border-[#cde5cf] bg-[#eff8ee] px-4 py-3 text-sm font-semibold text-[#28764e]">{aviso}</p> : null}
 
-      {aba === "quiz" ? (
+      {abaAtual === "quiz" ? (
         <section className="grid gap-4 lg:grid-cols-2">
           {questoesPublicas.map(questao => {
             const feedback = respostas[questao.idQuestao];
