@@ -66,11 +66,11 @@ function motivoAdministrativo(acao: string): string | null {
   return motivo.trim();
 }
 
-function Indicador({ titulo, valor, detalhe, icone: Icone }: { titulo: string; valor: number; detalhe: string; icone: typeof Users }) {
+function Indicador({ titulo, valor, detalhe, icone: Icone }: { titulo: string; valor: number | null; detalhe: string; icone: typeof Users }) {
   return (
     <article className="rounded-2xl border border-[#e1ebe2] bg-white p-5 shadow-[0_16px_32px_-28px_rgba(19,62,43,.65)]">
       <div className="flex items-start justify-between gap-3">
-        <div><p className="text-xs font-bold text-[#7c9386]">{titulo}</p><strong className="mt-2 block text-2xl font-black text-[#17362a]">{valor.toLocaleString("pt-BR")}</strong></div>
+        <div><p className="text-xs font-bold text-[#7c9386]">{titulo}</p><strong className="mt-2 block text-2xl font-black text-[#17362a]">{valor === null ? "—" : valor.toLocaleString("pt-BR")}</strong></div>
         <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#e7f5e7] text-[#23734d]"><Icone className="h-5 w-5" /></span>
       </div>
       <p className="mt-3 text-xs font-semibold text-[#6c8879]">{detalhe}</p>
@@ -107,6 +107,7 @@ export default function AdministracaoCrud({ podeConsultarResumo, podeGerenciarAc
   const abaAtual = abasDisponiveis.some(item => item.id === aba) ? aba : abasDisponiveis[0]?.id ?? "usuarios";
   const papeisAtivos = useMemo(() => papeis.filter(papel => papel.statusPapel === "ativo"), [papeis]);
   const permissoesAtivas = useMemo(() => permissoes.filter(permissao => permissao.statusPermissao === "ativo"), [permissoes]);
+  const detalheResumo = (detalhe: string) => resumo ? detalhe : carregando ? "Consultando dados reais do banco…" : "Métrica indisponível no momento.";
 
   const carregarResumo = useCallback(async () => {
     if (!podeConsultarResumo) return;
@@ -324,12 +325,12 @@ export default function AdministracaoCrud({ podeConsultarResumo, podeGerenciarAc
       {mensagem ? <div role="status" className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800"><Check className="mt-0.5 h-4 w-4 shrink-0" />{mensagem}</div> : null}
 
       {podeConsultarResumo ? <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <Indicador titulo="Usuários ativos" valor={resumo?.quantidadeUsuarios ?? 0} detalhe="Contas com acesso ativo" icone={Users} />
-        <Indicador titulo="Papéis ativos" valor={resumo?.quantidadePapeis ?? 0} detalhe="Papel administrador protegido" icone={ShieldCheck} />
-        <Indicador titulo="Conteúdos publicados" valor={resumo?.quantidadeMateriaisPublicados ?? 0} detalhe={`${(resumo?.quantidadeMateriais ?? 0).toLocaleString("pt-BR")} materiais no catálogo`} icone={Check} />
-        <Indicador titulo="Pontos pendentes" valor={resumo?.quantidadePontosPendentes ?? 0} detalhe="Aguardam revisão administrativa" icone={CircleAlert} />
-        <Indicador titulo="Eventos auditáveis" valor={resumo?.quantidadeEventosAuditoria ?? 0} detalhe="Registros disponíveis para consulta" icone={FileClock} />
-        <Indicador titulo="Avaliações consentidas" valor={resumo?.quantidadeAvaliacoes ?? 0} detalhe="Sessões autorizadas para análise agregada" icone={ShieldCheck} />
+        <Indicador titulo="Usuários ativos" valor={resumo?.quantidadeUsuarios ?? null} detalhe={detalheResumo("Contas com acesso ativo")} icone={Users} />
+        <Indicador titulo="Papéis ativos" valor={resumo?.quantidadePapeis ?? null} detalhe={detalheResumo("Papel administrador protegido")} icone={ShieldCheck} />
+        <Indicador titulo="Conteúdos publicados" valor={resumo?.quantidadeMateriaisPublicados ?? null} detalhe={resumo ? `${resumo.quantidadeMateriais.toLocaleString("pt-BR")} materiais no catálogo` : detalheResumo("")} icone={Check} />
+        <Indicador titulo="Pontos pendentes" valor={resumo?.quantidadePontosPendentes ?? null} detalhe={detalheResumo("Aguardam revisão administrativa")} icone={CircleAlert} />
+        <Indicador titulo="Eventos auditáveis" valor={resumo?.quantidadeEventosAuditoria ?? null} detalhe={detalheResumo("Registros disponíveis para consulta")} icone={FileClock} />
+        <Indicador titulo="Avaliações consentidas" valor={resumo?.quantidadeAvaliacoes ?? null} detalhe={detalheResumo("Sessões autorizadas para análise agregada")} icone={ShieldCheck} />
       </section> : null}
 
       {abasDisponiveis.length ? <div className="flex flex-wrap gap-2 border-b border-[#e1ebe2] pb-3" role="tablist" aria-label="Seções administrativas">

@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { distanciaEmKm } from "@/lib/geo";
+import { registrarAcaoOnboarding } from "@/lib/onboarding";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import {
   alterarStatusPontoColeta,
@@ -76,12 +77,14 @@ export default function PontosColetaCrud({
   podeEscrever,
   podeAprovar,
   podeRegistrar,
+  permiteLocalizacaoBusca = true,
   categoriaInicial = "",
   onIniciarDescarte,
 }: {
   podeEscrever: boolean;
   podeAprovar: boolean;
   podeRegistrar: boolean;
+  permiteLocalizacaoBusca?: boolean;
   categoriaInicial?: string;
   onIniciarDescarte: (ponto: Pick<Ponto, "idPontoColeta" | "nomePontoColeta" | "cidadePontoColeta">) => void;
 }) {
@@ -169,12 +172,21 @@ export default function PontosColetaCrud({
   }
 
   function aplicarFiltros() {
+    const cidade = cidadeBusca.trim();
+    if (!localizacaoBusca && cidade.length < 2) {
+      setMensagem(null);
+      setErro("Informe uma cidade com pelo menos dois caracteres para pesquisar.");
+      return;
+    }
+    setErro(null);
+    setMensagem(null);
     setFiltrosAplicados({
-      cidade: localizacaoBusca ? "" : cidadeBusca.trim(),
+      cidade: localizacaoBusca ? "" : cidade,
       categoria,
       localizacao: localizacaoBusca,
       raioKm,
     });
+    if (!localizacaoBusca) registrarAcaoOnboarding("pesquisar_pontos");
   }
 
   async function buscarCep(valor = dados.cepPontoColeta) {
@@ -367,7 +379,7 @@ export default function PontosColetaCrud({
       {erro ? <div role="alert" className="rounded-2xl border border-[#f0c1bd] bg-[#fff4f0] p-4 text-sm font-bold text-[#a8493e]">{erro}</div> : null}
       {mensagem ? <div role="status" className="rounded-2xl border border-[#cfe3d1] bg-[#f2faf0] p-4 text-sm font-semibold text-[#356b4a]">{mensagem}</div> : null}
 
-      <form onSubmit={event => { event.preventDefault(); aplicarFiltros(); }} className="rounded-2xl border border-[#e0eae1] bg-white p-4 sm:p-5">
+      <form data-onboarding-action="pesquisar_pontos" onSubmit={event => { event.preventDefault(); aplicarFiltros(); }} className="rounded-2xl border border-[#e0eae1] bg-white p-4 sm:p-5">
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block">
             <span className="mb-1.5 block text-xs font-black text-[#5f7b6c]">Buscar por cidade</span>
@@ -391,10 +403,10 @@ export default function PontosColetaCrud({
           <button type="submit" disabled={carregando} className="min-h-11 rounded-xl border border-[#cfe3d1] px-4 py-3 text-sm font-black text-[#1d7953] disabled:cursor-wait disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">
             {carregando ? "Buscando…" : "Pesquisar"}
           </button>
-          <button type="button" onClick={buscarPertoDeMim} disabled={localizandoBusca} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#1d7953] px-4 py-3 text-sm font-black text-white disabled:cursor-wait disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">
+          {permiteLocalizacaoBusca ? <button type="button" onClick={buscarPertoDeMim} disabled={localizandoBusca} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#1d7953] px-4 py-3 text-sm font-black text-white disabled:cursor-wait disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">
             {localizandoBusca ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Crosshair className="h-4 w-4" aria-hidden="true" />}
             {localizandoBusca ? "Localizando…" : "Perto de mim"}
-          </button>
+          </button> : null}
           {filtrosAplicados.localizacao ? <>
             <label className="flex min-h-11 items-center gap-2 rounded-xl border border-[#d9e6db] px-3 text-sm font-semibold text-[#5d796a]">
               <span>Raio</span>

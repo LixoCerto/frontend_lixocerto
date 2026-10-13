@@ -3,6 +3,7 @@ import {
   cadastrarUsuario,
   confirmarEmail as confirmarEmailApi,
   entrar,
+  entrarComGoogle as entrarComGoogleApi,
   obterIdentidadeAtual,
   redefinirSenha as redefinirSenhaApi,
   renovarToken,
@@ -152,6 +153,21 @@ export function useAuth(options?: UseAuthOptions) {
     return resposta;
   }, [aplicarSessao]);
 
+  const executarLoginGoogle = useCallback(async (idTokenGoogle: string, nonce: string) => {
+    const resposta = await entrarComGoogleApi(idTokenGoogle, nonce);
+    if (!resposta.tokenAcesso || !resposta.tokenAtualizacao || !resposta.identidade) {
+      throw new Error("Não foi possível concluir o login com Google.");
+    }
+    aplicarSessao({
+      tokenAcesso: resposta.tokenAcesso,
+      tokenAtualizacao: resposta.tokenAtualizacao,
+      idSessao: resposta.idSessao,
+      expiraEmSegundos: resposta.expiraEmSegundos,
+      identidade: normalizarIdentidade(resposta.identidade),
+    });
+    return resposta;
+  }, [aplicarSessao]);
+
   const executarCadastro = useCallback(async (nome: string, email: string, senha: string) => {
     const resposta = await cadastrarUsuario(nome, email, senha);
     if (resposta.requerVerificacaoEmail || !resposta.tokenAcesso || !resposta.tokenAtualizacao || !resposta.identidade) return resposta;
@@ -198,6 +214,7 @@ export function useAuth(options?: UseAuthOptions) {
       error,
       isAuthenticated: Boolean(sessao?.tokenAcesso),
       login: executarLogin,
+      loginGoogle: executarLoginGoogle,
       cadastro: executarCadastro,
       logout,
       solicitarVerificacaoEmail,
@@ -209,6 +226,6 @@ export function useAuth(options?: UseAuthOptions) {
       expiraEm: expiracao,
       erroLegivel,
     }),
-    [carregar, error, executarCadastro, executarLogin, identidade, loading, logout, renovar, sessao?.tokenAcesso, user, expiracao],
+    [carregar, error, executarCadastro, executarLogin, executarLoginGoogle, identidade, loading, logout, renovar, sessao?.tokenAcesso, user, expiracao],
   );
 }

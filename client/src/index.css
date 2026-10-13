@@ -12,6 +12,27 @@
 
 html { scroll-behavior: smooth; }
 
+.skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 100;
+  transform: translateY(-160%);
+  border-radius: 0.75rem;
+  background: #17362a;
+  padding: 0.75rem 1rem;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 800;
+  box-shadow: 0 8px 24px rgba(19, 62, 43, 0.25);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+  outline: 3px solid #d6efad;
+  outline-offset: 3px;
+}
+
 body {
   margin: 0;
   min-width: 320px;
@@ -36,27 +57,111 @@ select:focus-visible {
 
 .app-sidebar {
   position: fixed;
-  inset: 0 auto 0 0;
+  inset: 0 auto auto 0;
+  height: 100vh;
+  height: 100dvh;
   z-index: 50;
   display: flex;
   width: 288px;
   flex-direction: column;
+  overflow: hidden;
+  visibility: hidden;
   border-right: 1px solid #dfe9e1;
   background: rgba(255, 255, 255, 0.96);
   box-shadow: 12px 0 48px -36px rgba(20, 59, 42, 0.5);
   transform: translateX(-103%);
-  transition: transform 220ms cubic-bezier(0.23, 1, 0.32, 1);
+  transition: transform 220ms cubic-bezier(0.23, 1, 0.32, 1), visibility 0s linear 220ms;
 }
 
-.app-sidebar--open { transform: translateX(0); }
+.app-sidebar--open { transform: translateX(0); visibility: visible; transition-delay: 0s; }
+.app-sidebar__nav {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
 .app-main { min-height: 100vh; }
 
 @media (min-width: 1024px) {
-  .app-sidebar { transform: translateX(0); }
+  .app-sidebar { transform: translateX(0); visibility: visible; transition: none; }
   .app-main { margin-left: 288px; }
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .app-sidebar, button, a { transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
   button:not(:disabled):active { transform: scale(0.98); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .app-sidebar,
+  button,
+  a { transition-duration: 0.01ms !important; }
+}
+
+.onboarding-action-target {
+  outline: 3px solid #9acb70 !important;
+  outline-offset: 5px;
+  box-shadow: 0 0 0 8px rgba(214, 239, 173, 0.45), 0 14px 34px -20px rgba(29, 121, 83, 0.7) !important;
+  animation: onboarding-target-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes onboarding-target-pulse {
+  50% { outline-color: #d6efad; box-shadow: 0 0 0 12px rgba(214, 239, 173, 0.18), 0 14px 34px -20px rgba(29, 121, 83, 0.7) !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-action-target { animation: none; }
+}
+
+
+/* Keep the desktop authentication card inside the viewport, including registration fields. */
+@media (min-width: 1024px) {
+  .login-main > section:nth-of-type(2) > div > div:nth-child(2) {
+    padding: 1.25rem;
+  }
+
+  .login-main > section:nth-of-type(2) > div > div:nth-child(2) > div:nth-child(-n + 3) {
+    margin-bottom: 1rem;
+  }
+
+  .login-main > section:nth-of-type(2) > div > div:nth-child(2) > div:nth-child(3) > div:first-child {
+    margin-bottom: 0.75rem;
+  }
+
+  .login-main > section:nth-of-type(2) > div > div:nth-child(2) > form.space-y-4 > :not(:first-child) {
+    margin-block-start: 0.75rem;
+  }
+
+  .login-main > section:nth-of-type(2) > div > div:nth-child(2) > form.space-y-4 > label > span:first-child {
+    margin-bottom: 0.25rem;
+  }
+
+  .login-main > section:nth-of-type(2) > div > div:nth-child(2) > form.space-y-4 > label > input {
+    padding-block: 0.625rem;
+  }
+
+  .login-main > section:nth-of-type(2) > div > div:nth-child(2) > form.space-y-4 > button {
+    padding-block: 0.75rem;
+  }
+
+  .login-main > section:nth-of-type(2) > div > div:nth-child(2) > p {
+    margin-top: 1rem;
+  }
+}
+
+@media (min-width: 1024px) and (max-height: 860px) {
+  .login-main {
+    padding-block: 1rem;
+  }
+
+  .login-main > section:first-of-type > div:last-child {
+    display: none;
+  }
+
+  .login-main > section:nth-of-type(2) > div > div:nth-child(2) > div:first-child > p:last-child,
+  .login-main > section:nth-of-type(2) > div > div:nth-child(2) > p,
+  .login-main > section:nth-of-type(2) > div > p {
+    display: none;
+  }
 }

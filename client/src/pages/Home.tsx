@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   Award,
@@ -18,6 +18,7 @@ import {
   Sparkles,
   Target,
   Trophy,
+  X,
 } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import AdministracaoCrud from "@/components/AdministracaoCrud";
@@ -29,6 +30,7 @@ import PontosColetaCrud from "@/components/PontosColetaCrud";
 import RegistrosDescarte from "@/components/RegistrosDescarte";
 import PesquisaExperiencia from "@/components/PesquisaExperiencia";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { registrarAcaoOnboarding, termosOnboardingEquivalentes } from "@/lib/onboarding";
 import {
   listarMateriais,
   listarSessoes,
@@ -112,6 +114,24 @@ function normalizarBusca(valor: string): string {
   return valor.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("pt-BR");
 }
 
+function calcularProgressoNivel(pontos: number): { percentual: number; mensagem: string } {
+  const faixas = [
+    { inicio: 0, fim: 500, nome: "Explorador" },
+    { inicio: 500, fim: 1000, nome: "Reciclador" },
+    { inicio: 1000, fim: 2000, nome: "Agente ambiental" },
+    { inicio: 2000, fim: 4000, nome: "Guerreiro ecológico" },
+  ];
+  if (pontos >= 4000) return { percentual: 100, mensagem: "Você alcançou o nível máximo." };
+
+  const faixa = faixas.find(item => pontos >= item.inicio && pontos < item.fim) ?? faixas[0];
+  const percentual = Math.max(0, Math.min(100, Math.round(((pontos - faixa.inicio) / (faixa.fim - faixa.inicio)) * 100)));
+  const faltam = Math.max(0, faixa.fim - pontos);
+  return {
+    percentual,
+    mensagem: `Faltam ${faltam.toLocaleString("pt-BR")} pontos para o nível ${faixa.nome}.`,
+  };
+}
+
 export default function Home() {
   const { user, identidade, isAuthenticated, loading: authLoading, error: authError, logout, solicitarVerificacaoEmail } = useAuth({
     redirectOnUnauthenticated: true,
@@ -148,10 +168,15 @@ export default function Home() {
     ? Array.from(new Set([...permissoesBanco, ...CODIGOS_PERMISSAO]))
     : permissoesBanco;
   const [paginaAtiva, setPaginaAtiva] = useState("inicio");
+  const [areaObrigatoria, setAreaObrigatoria] = useState<string | null>(null);
+  const termoBuscaInicialRef = useRef<string | null>(null);
   const [dashboard, setDashboard] = useState<DashboardState | null>(null);
+  const [carregandoDashboard, setCarregandoDashboard] = useState(true);
   const [materials, setMaterials] = useState<MaterialsState>([]);
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [query, setQuery] = useState("");
+  const [buscaGuia, setBuscaGuia] = useState("");
+  const [erroBuscaGuia, setErroBuscaGuia] = useState("");
   const [buscaInicio, setBuscaInicio] = useState("");
   const [carregandoMateriais, setCarregandoMateriais] = useState(true);
   const [erroMateriais, setErroMateriais] = useState(false);
@@ -187,6 +212,7 @@ export default function Home() {
   useEffect(() => {
     if (!isAuthenticated) return;
     async function carregarDados() {
+      setCarregandoDashboard(true);
       setErroDados(false);
       try {
         const [resultadoPainel] = await Promise.allSettled([
@@ -199,7 +225,7 @@ export default function Home() {
           badgesUnlocked: painel.quantidadeConquistas,
           seals: painel.selos.map(selo => ({ code: selo.codigo, name: selo.nome, description: selo.descricao, minimumPoints: selo.pontosMinimos, earned: selo.conquistado })),
           pointsBySource: painel.resumoPorOrigem.map(item => ({ source: item.origem, points: item.quantidadePontos, events: item.quantidadeEventos })),
-          dailyTip: "Pequenas escolhas repetidas criam impacto ambiental mensurável.",
+          dailyTip: "Sua pontuação reflete as atividades registradas e as recompensas concedidas na plataforma.",
           quickActions: [
             { id: "guide", label: "Consultar guia", description: "Aprenda como descartar melhor." },
             { id: "quiz", label: "Responder quiz", description: "Teste seu conhecimento ambiental." },
@@ -208,7 +234,10 @@ export default function Home() {
         } : null);
         setErroDados(resultadoPainel.status === "rejected");
       } catch {
+        setDashboard(null);
         setErroDados(true);
+      } finally {
+        setCarregandoDashboard(false);
       }
     }
     void carregarDados();
@@ -284,12 +313,12 @@ export default function Home() {
     return () => { ativo = false; };
   }, [isAuthenticated]);
 
-  const progresso = useMemo(() => Math.min(100, Math.round(((dashboard?.ecoPoints ?? 0) / 1500) * 100)), [dashboard]);
+  const progresso = useMemo(() => dashboard ? calcularProgressoNivel(dashboard.ecoPoints) : null, [dashboard]);
   const indicadores = useMemo<Indicador[]>(() => {
     if (!podeLerGamificacao || !dashboard) return [];
     return [
       { titulo: "Eco pontos", valor: String(dashboard?.ecoPoints ?? "—"), detalhe: "Seu impacto acumulado", icone: Award, tom: "ouro" },
-      { titulo: "Dias ativos", valor: String(dashboard?.currentStreak ?? "—"), detalhe: "Sua melhor sequência", icone: Flame, tom: "rosa" },
+      { titulo: "Dias ativos", valor: String(dashboard?.currentStreak ?? "—"), detalhe: "Sequência atual com atividade registrada", icone: Flame, tom: "rosa" },
       { titulo: "Conquistas", valor: String(dashboard?.badgesUnlocked ?? "—"), detalhe: "Selos desbloqueados", icone: Trophy, tom: "verde" },
     ];
   }, [dashboard, podeLerGamificacao]);
@@ -312,7 +341,7 @@ export default function Home() {
 
   function abrirPontosParaMaterial(categorias: string[]) {
     setCategoriaPontosInicial(categorias[0] ?? "");
-    setPaginaAtiva("pontos");
+    mudarPaginaAutorizada("pontos");
   }
 
   function renderizarInicio() {
@@ -330,18 +359,35 @@ export default function Home() {
             <form
               onSubmit={event => {
                 event.preventDefault();
-                setQuery(buscaInicio.trim());
+                const termo = buscaInicio.trim();
+                const campoBusca = document.getElementById("busca-material-inicio");
+                if (termo.length < 2) {
+                  if (campoBusca instanceof HTMLInputElement) {
+                    campoBusca.setCustomValidity("Digite pelo menos dois caracteres para pesquisar.");
+                    campoBusca.reportValidity();
+                  }
+                  return;
+                }
+                if (campoBusca instanceof HTMLInputElement) campoBusca.setCustomValidity("");
+                if (areaObrigatoria === "inicio") termoBuscaInicialRef.current = termo;
+                registrarAcaoOnboarding("buscar_inicio");
+                setQuery(termo);
+                setBuscaGuia(termo);
+                setErroBuscaGuia("");
                 setSelectedCategory("Todos");
                 setPaginaAtiva("materiais");
               }}
+              data-onboarding-action="buscar_inicio"
               className="rounded-2xl border border-white/10 bg-white p-4 text-[#17362a] shadow-lg sm:p-5"
             >
               <label htmlFor="busca-material-inicio" className="block text-sm font-black">O que você quer descartar?</label>
               <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                 <input
                   id="busca-material-inicio"
+                  required
+                  minLength={2}
                   value={buscaInicio}
-                  onChange={event => setBuscaInicio(event.target.value)}
+                  onChange={event => { event.currentTarget.setCustomValidity(""); setBuscaInicio(event.target.value); }}
                   placeholder="Ex.: celular, vidro, papel"
                   autoComplete="off"
                   className="min-h-11 min-w-0 flex-1 rounded-xl border border-[#d9e6db] bg-[#fbfdfb] px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[#4e9b68]"
@@ -385,7 +431,7 @@ export default function Home() {
               <div><p className="text-[11px] font-black uppercase tracking-[0.15em] text-[#3d9664]">Próximo movimento</p><h3 className="mt-2 text-xl font-black tracking-tight">Transforme informação em hábito.</h3></div>
               <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#e9f6e8] text-[#25734d]"><Target className="h-5 w-5" /></span>
             </div>
-            <p className="mt-3 text-sm leading-6 text-[#698375]">{dashboard?.dailyTip ?? (podeLerGamificacao ? "Carregando recomendação personalizada..." : "Pesquise um material no Guia ou procure um ponto de coleta próximo.")}</p>
+            <p className="mt-3 text-sm leading-6 text-[#698375]">{dashboard?.dailyTip ?? (podeLerGamificacao ? carregandoDashboard ? "Carregando seu resumo de atividades..." : "O resumo de atividades não está disponível agora." : "Pesquise um material no Guia ou procure um ponto de coleta próximo.")}</p>
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               {(dashboard?.quickActions ?? []).filter(acao => {
                 const permissao = acao.id === "quiz"
@@ -395,7 +441,7 @@ export default function Home() {
                     : "gamificacao:participar";
                 return pode(permissao);
               }).map(acao => (
-                <button key={acao.id} type="button" onClick={() => setPaginaAtiva(acao.id === "guide" ? "materiais" : acao.id === "quiz" ? "questionarios" : "desafios")} className="group rounded-2xl border border-[#e4ece4] p-4 text-left transition hover:-translate-y-0.5 hover:border-[#a9d3b0] hover:bg-[#f5faf4]">
+                <button key={acao.id} type="button" onClick={() => mudarPaginaAutorizada(acao.id === "guide" ? "materiais" : acao.id === "quiz" ? "questionarios" : "desafios")} className="group rounded-2xl border border-[#e4ece4] p-4 text-left transition hover:-translate-y-0.5 hover:border-[#a9d3b0] hover:bg-[#f5faf4]">
                   <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#edf5ea] text-[#2b7a52]">{acao.id === "quiz" ? <CircleHelp className="h-4 w-4" /> : acao.id === "guide" ? <BookOpen className="h-4 w-4" /> : <Trophy className="h-4 w-4" />}</span>
                   <strong className="mt-3 block text-sm">{acao.label}</strong><span className="mt-1 block text-xs leading-5 text-[#718a7b]">{acao.description}</span>
                 </button>
@@ -403,10 +449,10 @@ export default function Home() {
             </div>
           </article>
           {podeLerGamificacao ? <article className="rounded-[24px] bg-[#e6f1d0] p-5 sm:p-6">
-            <div className="flex items-center justify-between"><span className="text-[11px] font-black uppercase tracking-[0.15em] text-[#587148]">Progresso ambiental</span><Leaf className="h-5 w-5 text-[#397a4e]" /></div>
-            <strong className="mt-5 block text-3xl font-black tracking-tight text-[#1d4a34]">{progresso}%</strong>
-            <p className="mt-1 text-sm text-[#55715d]">Rumo ao próximo nível de impacto.</p>
-            <div className="mt-5 h-3 overflow-hidden rounded-full bg-white/70"><div className="h-full rounded-full bg-[#278050] transition-all duration-500" style={{ width: `${progresso}%` }} /></div>
+            <div className="flex items-center justify-between"><span className="text-[11px] font-black uppercase tracking-[0.15em] text-[#587148]">Progresso de nível</span><Leaf className="h-5 w-5 text-[#397a4e]" /></div>
+            <strong className="mt-5 block text-3xl font-black tracking-tight text-[#1d4a34]">{progresso ? `${progresso.percentual}%` : "—"}</strong>
+            <p className="mt-1 text-sm text-[#55715d]">{progresso?.mensagem ?? (carregandoDashboard ? "Consultando sua pontuação..." : "Seu progresso não está disponível agora.")}</p>
+            <div className="mt-5 h-3 overflow-hidden rounded-full bg-white/70">{progresso ? <div className="h-full rounded-full bg-[#278050] transition-all duration-500" style={{ width: `${progresso.percentual}%` }} /> : null}</div>
             <div className="mt-6 flex items-center gap-3 border-t border-[#ccdfb4] pt-4 text-xs font-bold text-[#4c6652]"><Recycle className="h-4 w-4 text-[#278050]" /> Educação ambiental baseada em escolhas práticas.</div>
           </article> : null}
         </section>
@@ -421,30 +467,70 @@ export default function Home() {
       <div className="space-y-6">
         <CabecalhoSecao etiqueta="Base educativa" titulo="Guia de descarte" descricao="Pesquise materiais e encontre orientações claras para um descarte mais responsável." />
         <div className="rounded-2xl border border-[#e0eae1] bg-white p-4 sm:p-5">
-          <label htmlFor="busca-guia-material" className="sr-only">Buscar material pelo nome ou categoria</label>
-          <div className="flex items-center gap-3 rounded-xl border border-[#d9e6db] bg-[#fbfdfb] px-4 py-3 focus-within:border-[#4e9b68] focus-within:ring-4 focus-within:ring-[#dcefdc]/60">
-            <Search className="h-5 w-5 shrink-0 text-[#638775]" aria-hidden="true" />
-            <input id="busca-guia-material" className="w-full bg-transparent text-sm font-semibold outline-none placeholder:text-[#9aae9f]" value={query} onChange={event => setQuery(event.target.value)} placeholder="Ex.: celular, vidro, papel..." />
-          </div>
+          <form
+            data-onboarding-action="buscar_guia"
+            onSubmit={event => {
+              event.preventDefault();
+              const termo = buscaGuia.trim();
+              const campoBusca = document.getElementById("busca-guia-material");
+              if (termo.length < 2) {
+                setErroBuscaGuia("Digite pelo menos dois caracteres para pesquisar.");
+                if (campoBusca instanceof HTMLInputElement) {
+                  campoBusca.setCustomValidity("Digite pelo menos dois caracteres para pesquisar.");
+                  campoBusca.reportValidity();
+                }
+                return;
+              }
+              const termoInicial = termoBuscaInicialRef.current;
+              if (areaObrigatoria === "materiais" && termoInicial && termosOnboardingEquivalentes(termo, termoInicial)) {
+                setErroBuscaGuia("Altere o termo da busca anterior para concluir esta etapa.");
+                if (campoBusca instanceof HTMLInputElement) {
+                  campoBusca.setCustomValidity("Altere o termo da busca anterior para concluir esta etapa.");
+                  campoBusca.reportValidity();
+                }
+                return;
+              }
+              if (campoBusca instanceof HTMLInputElement) campoBusca.setCustomValidity("");
+              setErroBuscaGuia("");
+              setQuery(termo);
+              setSelectedCategory("Todos");
+              if (areaObrigatoria === "materiais") registrarAcaoOnboarding("buscar_guia");
+            }}
+          >
+            <label htmlFor="busca-guia-material" className="sr-only">Buscar material pelo nome ou categoria</label>
+            <div className="flex items-center gap-3 rounded-xl border border-[#d9e6db] bg-[#fbfdfb] px-4 py-3 focus-within:border-[#4e9b68] focus-within:ring-4 focus-within:ring-[#dcefdc]/60">
+              <Search className="h-5 w-5 shrink-0 text-[#638775]" aria-hidden="true" />
+              <input id="busca-guia-material" type="search" required minLength={2} enterKeyHint="search" autoComplete="off" aria-controls="resultado-materiais" className="w-full min-w-0 bg-transparent text-sm font-semibold outline-none placeholder:text-[#9aae9f]" value={buscaGuia} onChange={event => { event.currentTarget.setCustomValidity(""); setBuscaGuia(event.currentTarget.value); setErroBuscaGuia(""); }} placeholder="Ex.: celular, vidro, papel..." />
+              {buscaGuia || query ? <button type="button" onClick={() => { setBuscaGuia(""); setQuery(""); setErroBuscaGuia(""); }} aria-label="Limpar busca do Guia" title="Limpar busca" className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[#638775] hover:bg-[#eaf3e8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]"><X className="h-4 w-4" aria-hidden="true" /></button> : null}
+            </div>
+            {erroBuscaGuia ? <p className="mt-2 text-xs font-semibold text-[#a8493e]" role="alert">{erroBuscaGuia}</p> : null}
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs leading-5 text-[#71897b]">A busca filtra as orientações publicadas pelo nome, sinônimos ou categoria.</p>
+              <button type="submit" className="inline-flex min-h-10 items-center justify-center gap-2 self-start rounded-xl bg-[#1d7953] px-4 py-2 text-sm font-black text-white hover:bg-[#176543] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953] sm:self-auto"><Search className="h-4 w-4" aria-hidden="true" />Buscar</button>
+            </div>
+          </form>
           <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Filtrar por categoria">
             {["Todos", ...Array.from(new Set(materials.map(material => material.category))).sort((a, b) => a.localeCompare(b, "pt-BR"))].map(categoria => <button key={categoria} type="button" aria-pressed={selectedCategory === categoria} onClick={() => setSelectedCategory(categoria)} className={`min-h-9 rounded-full px-3 py-1.5 text-xs font-black transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953] ${selectedCategory === categoria ? "bg-[#1d7953] text-white" : "bg-[#edf3ed] text-[#5d796a] hover:bg-[#dff0de]"}`}>{categoria}</button>)}
           </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <p className="text-xs font-semibold text-[#6b8576]" role="status" aria-live="polite" aria-atomic="true">
+          {carregandoMateriais ? "Buscando orientações…" : erroMateriais ? "Não foi possível consultar os resultados." : `${materiaisFiltrados.length} ${materiaisFiltrados.length === 1 ? "orientação encontrada" : "orientações encontradas"}${possuiFiltro ? " com estes filtros" : ""}.`}
+        </p>
+        <div id="resultado-materiais" className="grid gap-4 md:grid-cols-2 xl:grid-cols-3" aria-busy={carregandoMateriais}>
           {carregandoMateriais ? <p className="col-span-full rounded-2xl bg-white p-8 text-center text-sm font-semibold text-[#708a7b]" role="status" aria-live="polite">Buscando orientações…</p> : null}
           {!carregandoMateriais && !erroMateriais ? materiaisFiltrados.map(material => <GuiaMaterialCard key={material.id} material={material} onEncontrarPonto={abrirPontosParaMaterial} />) : null}
           {erroMateriais ? <div className="col-span-full rounded-2xl border border-[#f0c1bd] bg-white p-6 text-center" role="alert"><p className="text-sm font-semibold text-[#a8493e]">Não foi possível carregar as orientações agora. Tente novamente.</p><button type="button" onClick={() => setVersaoRecarregaGuia(versao => versao + 1)} className="mt-4 min-h-10 rounded-xl bg-[#17362a] px-4 py-2 text-sm font-black text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">Tentar novamente</button></div> : null}
           {!carregandoMateriais && !erroMateriais && materials.length > 0 && materiaisFiltrados.length === 0 && possuiFiltro ? (
             <div className="col-span-full rounded-2xl bg-white p-8 text-center" role="status">
               <p className="text-sm font-semibold text-[#708a7b]">Não encontramos materiais para essa busca e categoria.</p>
-              <button type="button" onClick={() => { setQuery(""); setSelectedCategory("Todos"); }} className="mt-4 min-h-10 rounded-xl border border-[#cfe3d1] px-4 py-2 text-sm font-black text-[#1d7953] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">Limpar busca e filtros</button>
+              <button type="button" onClick={() => { setQuery(""); setBuscaGuia(""); setErroBuscaGuia(""); setSelectedCategory("Todos"); }} className="mt-4 min-h-10 rounded-xl border border-[#cfe3d1] px-4 py-2 text-sm font-black text-[#1d7953] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">Limpar busca e filtros</button>
             </div>
           ) : null}
           {!carregandoMateriais && !erroMateriais && materials.length === 0 ? (
             <div className="col-span-full rounded-2xl bg-white p-8 text-center" role="status">
               <p className="text-base font-black text-[#244637]">Ainda não há orientações publicadas no Guia.</p>
               <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[#708a7b]">Enquanto o conteúdo é preparado, você pode procurar um ponto de coleta na sua cidade ou perto de você.</p>
-              <button type="button" onClick={() => setPaginaAtiva("pontos")} className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#1d7953] px-4 py-3 text-sm font-black text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">Encontrar ponto de coleta</button>
+              <button type="button" onClick={() => mudarPaginaAutorizada("pontos")} className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#1d7953] px-4 py-3 text-sm font-black text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">Encontrar ponto de coleta</button>
             </div>
           ) : null}
         </div>
@@ -453,7 +539,12 @@ export default function Home() {
   }
 
   function renderizarPontos() {
-    return <div className="space-y-8"><PontosColetaCrud podeEscrever={pode("pontos_coleta:escrever")} podeAprovar={pode("pontos_coleta:aprovar")} podeRegistrar={pode("gamificacao:participar")} categoriaInicial={categoriaPontosInicial} onIniciarDescarte={setPontoDescarteInicial} /><RegistrosDescarte podeRegistrar={pode("gamificacao:participar")} podeLer={podeLerGamificacao} podeRevisar={pode("pontos_coleta:aprovar")} pontoInicial={pontoDescarteInicial} onPontoInicialAplicado={() => setPontoDescarteInicial(null)} /></div>;
+    const permiteAlteracoes = !areaObrigatoria;
+    return <div className="space-y-8">
+      {areaObrigatoria === "pontos" ? <p role="status" className="rounded-2xl border border-[#d7e8ce] bg-[#f2f8eb] px-4 py-3 text-sm font-semibold leading-6 text-[#496b4d]">Durante o passo a passo, cadastro, moderação, descarte e busca por proximidade ficam temporariamente pausados. Eles serão liberados quando você concluir as três ações iniciais.</p> : null}
+      <PontosColetaCrud podeEscrever={pode("pontos_coleta:escrever") && permiteAlteracoes} podeAprovar={pode("pontos_coleta:aprovar") && permiteAlteracoes} podeRegistrar={pode("gamificacao:participar") && permiteAlteracoes} permiteLocalizacaoBusca={permiteAlteracoes} categoriaInicial={categoriaPontosInicial} onIniciarDescarte={setPontoDescarteInicial} />
+      <RegistrosDescarte podeRegistrar={pode("gamificacao:participar") && permiteAlteracoes} podeLer={podeLerGamificacao} podeRevisar={pode("pontos_coleta:aprovar") && permiteAlteracoes} pontoInicial={pontoDescarteInicial} onPontoInicialAplicado={() => setPontoDescarteInicial(null)} />
+    </div>;
   }
 
   function renderizarQuestionarios() {
@@ -600,6 +691,11 @@ export default function Home() {
   }
 
   function mudarPaginaAutorizada(pagina: string) {
+    if (areaObrigatoria && pagina !== areaObrigatoria) return;
+    if (podeAcessarPagina(pagina, permissoes)) setPaginaAtiva(pagina);
+  }
+
+  function abrirAreaOnboarding(pagina: string) {
     if (podeAcessarPagina(pagina, permissoes)) setPaginaAtiva(pagina);
   }
 
@@ -628,7 +724,7 @@ export default function Home() {
   }
 
   return (
-    <AppShell papel={papel} permissoes={permissoes} nome={perfil.nomeDemonstracao} email={user.email} iniciais={perfil.iniciais} paginaAtiva={paginaEfetiva} onMudarPagina={mudarPaginaAutorizada} onLogout={logout}>
+    <AppShell papel={papel} permissoes={permissoes} usuarioId={user.openId} areaObrigatoria={areaObrigatoria} onAreaObrigatoriaChange={setAreaObrigatoria} nome={perfil.nomeDemonstracao} email={user.email} iniciais={perfil.iniciais} paginaAtiva={paginaEfetiva} onMudarPagina={mudarPaginaAutorizada} onAbrirAreaOnboarding={abrirAreaOnboarding} onLogout={logout}>
       {!emailVerificado ? (
         <div className="mb-5 rounded-2xl border border-[#f0dcb4] bg-[#fff8e8] px-4 py-3 text-sm font-semibold text-[#805a16]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

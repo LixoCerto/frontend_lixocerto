@@ -5,6 +5,7 @@ import { createGrpcWebTransport } from "@connectrpc/connect-web";
 import {
   CadastrarUsuarioRequisicaoSchema,
   ConfirmarEmailRequisicaoSchema,
+  EntrarComGoogleRequisicaoSchema,
   EntrarRequisicaoSchema,
   ObterIdentidadeAtualRequisicaoSchema,
   RedefinirSenhaRequisicaoSchema,
@@ -126,6 +127,10 @@ export function cadastrarUsuario(nomeUsuario: string, emailUsuario: string, senh
 
 export function entrar(emailUsuario: string, senhaUsuario: string) {
   return autenticacaoClient.entrar(create(EntrarRequisicaoSchema, { emailUsuario, senhaUsuario }));
+}
+
+export function entrarComGoogle(idTokenGoogle: string, nonce: string) {
+  return autenticacaoClient.entrarComGoogle(create(EntrarComGoogleRequisicaoSchema, { idToken: idTokenGoogle, nonce }));
 }
 
 export function renovarToken(tokenAtualizacao: string) {
