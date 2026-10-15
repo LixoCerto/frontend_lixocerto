@@ -8,10 +8,9 @@ import {
   obterEvidenciaDescarte,
   revisarDescarte,
 } from "@/lib/api";
+import { Award, Camera, Check, CircleCheck, CircleX, Clock3, Crosshair, Info, LoaderCircle, MapPinned, Plus, Recycle, Search, ShieldCheck, Trophy, X, type LucideIcon } from "lucide-react";
+import { Aviso, BarraProgresso, Cartao, ESTILOS, EstadoVazio, Etiqueta, TONS, type TomPagina } from "@/components/pagina/Pagina";
 
-const inputClass = "w-full rounded-xl border border-[#dce8de] bg-white px-3.5 py-3 text-sm text-[#17362a] outline-none transition placeholder:text-[#9aac9f] focus:border-[#5a9a70] focus:ring-2 focus:ring-[#5a9a70]/15";
-const primary = "rounded-xl bg-[#1d7953] px-4 py-2.5 text-sm font-black text-white transition hover:bg-[#176342] disabled:cursor-wait disabled:opacity-60";
-const secondary = "rounded-xl border border-[#dce8de] bg-white px-3 py-2 text-xs font-bold text-[#386348] transition hover:bg-[#f4f8f3] disabled:opacity-50";
 const TAMANHO_MAXIMO_FOTO = 2 * 1024 * 1024;
 const TAMANHO_MAXIMO_LOTE = 2.5 * 1024 * 1024;
 const PRECISAO_MAXIMA_GPS_METROS = 10;
@@ -243,53 +242,173 @@ export default function RegistrosDescarte({
 
   if (!podeRegistrar && !podeLer && !podeRevisar) return null;
 
-  return <section className="space-y-5">
-    <header className="rounded-[24px] bg-[#e8f3df] p-5 sm:p-6">
-      <p className="text-[11px] font-black uppercase tracking-[0.15em] text-[#397649]">Check-in e evidência por categoria</p>
-      <h2 className="mt-2 text-xl font-black tracking-tight text-[#17362a]">Iniciar descarte no ponto escolhido</h2>
-      <p className="mt-2 max-w-3xl text-sm leading-6 text-[#5f7967]">1. No local, permita a localização de alta precisão e mantenha esta tela aberta enquanto o GPS busca um sinal estável (até 30 s). O servidor exige distância de até 5 m e precisão reportada de até 10 m. 2. Selecione cada categoria e anexe uma foto própria do material separado. O check-in dura 30 minutos; os pontos continuam sujeitos à revisão humana.</p>
-    </header>
+  return <section className="space-y-6" aria-label="Registros de descarte">
+    <Cartao icone={Recycle} tom="verde" titulo="Registrar descarte" descricao="Leve o material ao ponto, confirme que você está lá e envie uma foto de cada tipo. Depois da revisão, você ganha pontos.">
+      <ol className="grid gap-3 sm:grid-cols-3">
+        <PassoGuia numero={1} icone={MapPinned} tom="verde" titulo="Vá até o ponto" texto="Escolha um ponto verificado. Você precisa estar a até 5 m dele." />
+        <PassoGuia numero={2} icone={Crosshair} tom="azul" titulo="Confirme o local" texto="Permita a localização e deixe a tela aberta. O GPS leva até 30 s e precisa de precisão de até 10 m." />
+        <PassoGuia numero={3} icone={Camera} tom="amarelo" titulo="Envie as fotos" texto="Uma foto por material, em até 30 minutos. Uma pessoa revisa antes de liberar os pontos." />
+      </ol>
 
-    {erro ? <p role="alert" className="rounded-xl border border-[#f1c9c0] bg-[#fff4f0] px-4 py-3 text-sm font-semibold text-[#a85040]">{erro}</p> : null}
-    {aviso ? <p role="status" className="rounded-xl border border-[#cde5cf] bg-[#eff8ee] px-4 py-3 text-sm font-semibold text-[#28764e]">{aviso}</p> : null}
+      {erro || aviso ? <div className="mt-5 space-y-3">
+        {erro ? <Aviso tipo="erro">{erro}</Aviso> : null}
+        {aviso ? <Aviso tipo="sucesso">{aviso}</Aviso> : null}
+      </div> : null}
 
-    {podeRegistrar ? <section className="space-y-4 rounded-[22px] border border-[#e1ebe2] bg-white p-5 shadow-[0_18px_36px_-30px_rgba(23,54,42,.6)]">
-      <h3 className="font-black text-[#17362a]">Etapa 1 — selecionar o destino e confirmar presença</h3>
-      <div className="grid gap-3 md:grid-cols-[1fr_auto]">
-        <label className="block text-xs font-bold text-[#587261]">Cidade dos pontos<input required maxLength={120} className={`${inputClass} mt-1.5`} value={cidade} onChange={evento => setCidade(evento.target.value)} placeholder="Ex.: João Pessoa" disabled={Boolean(checkin)} /></label>
-        <button type="button" disabled={carregando || Boolean(checkin) || !cidade.trim()} onClick={() => void buscarPontos()} className={`${secondary} self-end min-h-11`}>{carregando ? "Buscando…" : "Buscar pontos verificados"}</button>
-      </div>
-      {pontos.length ? <label className="block text-xs font-bold text-[#587261]">Ponto de coleta verificado<select required className={`${inputClass} mt-1.5`} value={pontoSelecionado} disabled={Boolean(checkin)} onChange={evento => { setPontoSelecionado(evento.target.value); setCategoriasSelecionadas([]); setFotos({}); }}><option value="">Selecione um ponto</option>{pontos.map(ponto => <option key={ponto.idPontoColeta} value={ponto.idPontoColeta}>{ponto.nomePontoColeta} · {ponto.enderecoPontoColeta} · aceita {ponto.categoriasAceitas.join(", ") || "categorias não informadas"}</option>)}</select></label> : <p className="text-xs text-[#82978a]">Busque pontos verificados ou use “Iniciar descarte” no cartão do local escolhido.</p>}
-      {pontoAtual ? <div className="rounded-xl bg-[#f5f9f3] p-3 text-xs leading-5 text-[#5f7967]"><strong>{pontoAtual.nomePontoColeta}</strong> · {pontoAtual.enderecoPontoColeta}, {pontoAtual.cidadePontoColeta}. Categorias aceitas: {pontoAtual.categoriasAceitas.join(", ") || "não informadas"}.</div> : null}
-      {!checkin ? <button type="button" disabled={!pontoAtual || idProcessando === "checkin"} onClick={() => void iniciarCheckin()} className={primary}>{idProcessando === "checkin" ? "Aguardando GPS de até 10 m…" : "Usar minha localização e iniciar check-in"}</button> : <div className="rounded-xl border border-[#cde5cf] bg-[#eff8ee] p-3 text-sm text-[#28764e]"><strong>Check-in ativo</strong> · distância verificada: {checkin.distancia.toFixed(1)} m · precisão GPS: {checkin.precisao.toFixed(1)} m · expira {formatarData(checkin.expiraEm)}.<button type="button" className="ml-3 font-bold underline" onClick={() => { setCheckin(null); setCategoriasSelecionadas([]); setFotos({}); }}>Cancelar</button></div>}
-
-      {checkin ? <form onSubmit={enviarEvidencias} className="space-y-4 border-t border-[#e8efe7] pt-4">
-        <h3 className="font-black text-[#17362a]">Etapa 2 — separar as fotos por categoria</h3>
-        <p className="text-xs leading-5 text-[#6b8474]">Cada categoria gera um registro próprio e exige uma foto correspondente. Máximo de 5 categorias por check-in. Não inclua pessoas, documentos, placas ou outros dados pessoais na imagem.</p>
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Categorias aceitas pelo ponto">
-          {categoriasAceitas.map(categoria => <button key={categoria} type="button" aria-pressed={categoriasSelecionadas.includes(categoria)} onClick={() => alternarCategoria(categoria)} disabled={!categoriasSelecionadas.includes(categoria) && categoriasSelecionadas.length >= 5} className={`min-h-10 rounded-full px-3 py-2 text-xs font-black ${categoriasSelecionadas.includes(categoria) ? "bg-[#1d7953] text-white" : "bg-[#edf3ed] text-[#5d796a]"}`}>{categoria}</button>)}
-          {!categoriasAceitas.length ? <p className="text-sm text-[#a85040]">Este ponto não tem categorias aceitas cadastradas; não é possível continuar.</p> : null}
+      {podeRegistrar ? <div className="mt-6 space-y-6">
+        <div className="space-y-4 rounded-[22px] border border-[#e1ebe2] bg-[#fafcf9] p-4 sm:p-5">
+          <TituloEtapa numero={1} titulo="Escolha o ponto e confirme que você está lá" />
+          <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+            <label className="block min-w-0"><span className={ESTILOS.rotulo}>Cidade</span><input required maxLength={120} className={ESTILOS.campo} value={cidade} onChange={evento => setCidade(evento.target.value)} placeholder="Ex.: João Pessoa" disabled={Boolean(checkin)} /></label>
+            <button type="button" disabled={carregando || Boolean(checkin) || !cidade.trim()} onClick={() => void buscarPontos()} className={`${ESTILOS.botaoSecundario} h-12 w-full sm:w-auto`}>
+              {carregando ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Search className="h-4 w-4" aria-hidden="true" />}
+              {carregando ? "Buscando…" : "Buscar pontos verificados"}
+            </button>
+          </div>
+          {pontos.length
+            ? <label className="block min-w-0"><span className={ESTILOS.rotulo}>Ponto de coleta</span><select required className={ESTILOS.campo} value={pontoSelecionado} disabled={Boolean(checkin)} onChange={evento => { setPontoSelecionado(evento.target.value); setCategoriasSelecionadas([]); setFotos({}); }}><option value="">Selecione um ponto</option>{pontos.map(ponto => <option key={ponto.idPontoColeta} value={ponto.idPontoColeta}>{ponto.nomePontoColeta} · {ponto.enderecoPontoColeta} · aceita {ponto.categoriasAceitas.join(", ") || "categorias não informadas"}</option>)}</select></label>
+            : <p className="flex items-start gap-2 text-sm leading-6 text-[#6c8879]"><Info className="mt-1 h-4 w-4 shrink-0 text-[#1d7953]" aria-hidden="true" />Busque os pontos da sua cidade ou toque em “Iniciar descarte” no cartão de um ponto acima.</p>}
+          {pontoAtual ? <div className="flex items-start gap-3 rounded-2xl border border-[#cfe8d8] bg-white p-3.5">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl" style={{ backgroundColor: TONS.verde.fundo, color: TONS.verde.cor }}><MapPinned className="h-5 w-5" aria-hidden="true" /></span>
+            <div className="min-w-0 text-sm leading-6 text-[#5c7768]">
+              <strong className="block break-words font-black text-[#17362a]">{pontoAtual.nomePontoColeta}</strong>
+              <span className="block break-words">{pontoAtual.enderecoPontoColeta}, {pontoAtual.cidadePontoColeta}</span>
+              <span className="mt-1.5 flex flex-wrap gap-1.5">{pontoAtual.categoriasAceitas.length ? pontoAtual.categoriasAceitas.map(item => <Etiqueta key={item} tom="verde">{item}</Etiqueta>) : <span className="text-xs">Materiais aceitos não informados.</span>}</span>
+            </div>
+          </div> : null}
+          {!checkin
+            ? <button type="button" disabled={!pontoAtual || idProcessando === "checkin"} onClick={() => void iniciarCheckin()} className={`${ESTILOS.botaoPrincipal} h-12 w-full disabled:cursor-wait sm:w-auto`}>
+              {idProcessando === "checkin" ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Crosshair className="h-4 w-4" aria-hidden="true" />}
+              {idProcessando === "checkin" ? "Aguardando o GPS (até 10 m)…" : "Estou no ponto: confirmar localização"}
+            </button>
+            : <div className="flex flex-col gap-3 rounded-2xl border border-[#cfe3d1] bg-[#f1f9ef] p-4 text-sm text-[#2f6a46] sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <CircleCheck className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+                <div className="min-w-0">
+                  <strong className="block font-black">Presença confirmada!</strong>
+                  <span className="block leading-6">Distância: {checkin.distancia.toFixed(1)} m · precisão do GPS: {checkin.precisao.toFixed(1)} m · vale até {formatarData(checkin.expiraEm)}.</span>
+                </div>
+              </div>
+              <button type="button" className={`${ESTILOS.botaoSecundario} w-full sm:w-auto`} onClick={() => { setCheckin(null); setCategoriasSelecionadas([]); setFotos({}); }}><X className="h-4 w-4" aria-hidden="true" /> Cancelar</button>
+            </div>}
         </div>
-        <div className="grid gap-3 md:grid-cols-2">{categoriasSelecionadas.map(categoria => <label key={categoria} className="block rounded-xl border border-[#e2ece2] bg-[#fbfdfb] p-3 text-xs font-bold text-[#587261]">Foto — {categoria}<input required type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={evento => void selecionarFoto(categoria, evento.target.files?.[0])} className="mt-2 block w-full text-xs file:mr-3 file:rounded-lg file:border-0 file:bg-[#e8f3df] file:px-3 file:py-2 file:font-black file:text-[#286743]" />{fotos[categoria] ? <span className="mt-2 block text-[#28764e]">Foto otimizada: {fotos[categoria].nomeArquivo} · {(fotos[categoria].bytes.byteLength / 1024).toLocaleString("pt-BR", { maximumFractionDigits: 0 })} KiB</span> : <span className="mt-2 block text-[#82978a]">Use uma foto nítida do material já separado.</span>}</label>)}</div>
-        <label className="block text-xs font-bold text-[#587261]">Observação opcional<textarea maxLength={500} className={`${inputClass} mt-1.5 min-h-20 resize-y`} value={relato} onChange={evento => setRelato(evento.target.value)} placeholder="Descreva brevemente o material (não inclua dados pessoais)." /></label>
-        <p className="text-xs text-[#718579]">Tamanho total das fotos: {(totalFotosBytes / 1024).toLocaleString("pt-BR", { maximumFractionDigits: 0 })} / 2.560 KiB · Fotos normalizadas, sem EXIF, armazenadas em volume privado e eliminadas em até 90 dias após a decisão.</p>
-        <button type="submit" disabled={!categoriasSelecionadas.length || fotosPendentes.length > 0 || Boolean(idProcessando)} className={primary}>{idProcessando === "enviar" ? "Enviando evidências…" : "Concluir e enviar para revisão"}</button>
-      </form> : null}
-      <p className="text-[11px] leading-5 text-[#82978a]">A localização vem do navegador e pode ser imprecisa ou manipulada; a checagem de 5 m não é prova antifraude. A foto é analisada por pessoa revisora e não confirma automaticamente a entrega física.</p>
-    </section> : null}
 
-    {podeLer ? <section className="rounded-[22px] border border-[#e1ebe2] bg-white p-5">
-      <h3 className="font-black text-[#17362a]">Meus registros</h3>
-      <div className="mt-3 space-y-2">{meusRegistros.map(registro => <article key={registro.idRegistro} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-[#f7faf6] p-3.5"><div className="min-w-0"><strong className="text-sm text-[#244637]">{registro.categoriaMaterial} · {registro.nomePontoColeta}</strong><p className="mt-1 text-xs text-[#718579]">{registro.cidadePontoColeta} · {formatarData(registro.dataRegistro)}{registro.relato ? ` · ${registro.relato}` : ""}</p>{registro.status === "pendente" ? <p className="mt-1 text-xs text-[#96630d]">Aguardando validação; nenhum ponto foi creditado ainda.</p> : null}{registro.evidenciaDisponivel ? <FotoRegistro idRegistro={registro.idRegistro} /> : registro.temCheckin ? <p className="mt-2 text-xs text-[#82978a]">Foto já expirada conforme a política de retenção.</p> : <p className="mt-2 text-xs text-[#96630d]">Registro legado, enviado antes da exigência de check-in e foto.</p>}</div><span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase ${registro.status === "aprovado" ? "bg-[#e7f4e6] text-[#27764d]" : registro.status === "rejeitado" ? "bg-[#f9e9e5] text-[#a85040]" : "bg-[#fff3d7] text-[#96630d]"}`}>{registro.status}{registro.status === "aprovado" ? ` · +${registro.pontosConcedidos} pts` : ""}</span></article>)}
-        {!meusRegistros.length ? <p className="rounded-xl bg-[#f7faf6] p-4 text-sm text-[#718579]">Você ainda não enviou registros de descarte.</p> : null}</div>
-    </section> : null}
+        {checkin ? <form onSubmit={enviarEvidencias} className="space-y-4 rounded-[22px] border border-[#e1ebe2] bg-[#fafcf9] p-4 sm:p-5">
+          <TituloEtapa numero={2} titulo="Envie uma foto de cada material" />
+          <p className="text-sm leading-6 text-[#6c8879]">Cada material vira um registro e precisa da sua própria foto (até 5 por vez). Não mostre pessoas, documentos, placas ou outros dados pessoais.</p>
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Categorias aceitas pelo ponto">
+            {categoriasAceitas.map(categoria => {
+              const selecionada = categoriasSelecionadas.includes(categoria);
+              return <button key={categoria} type="button" aria-pressed={selecionada} onClick={() => alternarCategoria(categoria)} disabled={!selecionada && categoriasSelecionadas.length >= 5} className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border px-4 text-sm font-bold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953] disabled:cursor-not-allowed disabled:opacity-50 ${selecionada ? "border-[#1d7953] bg-[#1d7953] text-white" : "border-[#d6e2d9] bg-white text-[#45614f] hover:border-[#afd2b3] hover:bg-[#f5faf4]"}`}>{selecionada ? <Check className="h-4 w-4" aria-hidden="true" /> : <Plus className="h-4 w-4" aria-hidden="true" />}{categoria}</button>;
+            })}
+            {!categoriasAceitas.length ? <Aviso tipo="erro">Este ponto não tem categorias aceitas cadastradas; não é possível continuar.</Aviso> : null}
+          </div>
+          {categoriasSelecionadas.length ? <div className="grid gap-3 md:grid-cols-2">{categoriasSelecionadas.map(categoria => <label key={categoria} className={`block min-w-0 rounded-2xl border bg-white p-4 transition ${fotos[categoria] ? "border-[#cfe3d1]" : "border-dashed border-[#c9d9cd]"}`}>
+            <span className="flex items-center gap-2 text-sm font-black text-[#17362a]">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg" style={{ backgroundColor: fotos[categoria] ? TONS.verde.fundo : TONS.amarelo.fundo, color: fotos[categoria] ? TONS.verde.cor : TONS.amarelo.cor }}>{fotos[categoria] ? <CircleCheck className="h-4 w-4" aria-hidden="true" /> : <Camera className="h-4 w-4" aria-hidden="true" />}</span>
+              <span className="min-w-0 break-words">Foto — {categoria}</span>
+            </span>
+            <input required type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={evento => void selecionarFoto(categoria, evento.target.files?.[0])} className="mt-3 block w-full min-w-0 text-xs text-[#5c7768] file:mr-3 file:min-h-10 file:cursor-pointer file:rounded-xl file:border-0 file:bg-[#e6f5ec] file:px-3.5 file:text-sm file:font-bold file:text-[#1d6b43] hover:file:bg-[#d6eedf]" />
+            {fotos[categoria] ? <span className="mt-2 block break-words text-xs font-semibold text-[#2f6a46]">Pronta: {fotos[categoria].nomeArquivo} · {(fotos[categoria].bytes.byteLength / 1024).toLocaleString("pt-BR", { maximumFractionDigits: 0 })} KiB</span> : <span className="mt-2 block text-xs text-[#6c8879]">Tire uma foto nítida do material já separado.</span>}
+          </label>)}</div> : null}
+          <label className="block"><span className={ESTILOS.rotulo}>Observação <span className="font-semibold text-[#8aa094]">(opcional)</span></span><textarea maxLength={500} className={`${ESTILOS.areaTexto} resize-y`} value={relato} onChange={evento => setRelato(evento.target.value)} placeholder="Descreva brevemente o material (sem dados pessoais)." /></label>
+          <div className="space-y-1.5">
+            <BarraProgresso percentual={(totalFotosBytes / TAMANHO_MAXIMO_LOTE) * 100} tom={totalFotosBytes > TAMANHO_MAXIMO_LOTE ? "vermelho" : "verde"} rotulo="Espaço usado pelas fotos" />
+            <p className="text-xs leading-5 text-[#6c8879]">Fotos: {(totalFotosBytes / 1024).toLocaleString("pt-BR", { maximumFractionDigits: 0 })} de 2.560 KiB. As fotos são otimizadas, sem dados de localização (EXIF), guardadas de forma privada e apagadas em até 90 dias após a revisão.</p>
+          </div>
+          <button type="submit" disabled={!categoriasSelecionadas.length || fotosPendentes.length > 0 || Boolean(idProcessando)} className={`${ESTILOS.botaoPrincipal} h-12 w-full disabled:cursor-wait sm:w-auto`}>
+            {idProcessando === "enviar" ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Check className="h-4 w-4" aria-hidden="true" />}
+            {idProcessando === "enviar" ? "Enviando fotos…" : "Concluir e enviar para revisão"}
+          </button>
+        </form> : null}
 
-    {podeRevisar ? <section className="rounded-[22px] border border-[#e1ebe2] bg-white p-5">
-      <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-[11px] font-black uppercase tracking-[0.13em] text-[#62806c]">Fila de revisão</p><h3 className="mt-1 font-black text-[#17362a]">Registros de descarte</h3></div><select className={`${inputClass} max-w-48`} value={filtroStatus} onChange={evento => setFiltroStatus(evento.target.value)}><option value="pendente">Pendentes</option><option value="aprovado">Aprovados</option><option value="rejeitado">Rejeitados</option><option value="todos">Todos</option></select></div>
-      <div className="mt-4 space-y-3">{fila.map(registro => <article key={registro.idRegistro} className="rounded-xl border border-[#e7eee6] p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0"><strong className="text-sm text-[#244637]">{registro.categoriaMaterial} · {registro.nomePontoColeta}</strong><p className="mt-1 text-xs text-[#718579]">{registro.cidadePontoColeta} · participante {registro.identificadorParticipante} · {formatarData(registro.dataRegistro)}</p><p className="mt-2 text-sm leading-5 text-[#5d7565]">{registro.relato || "Sem relato adicional."}</p>{registro.temCheckin ? <p className="mt-1 text-xs text-[#718579]">Check-in: {registro.distanciaCheckinMetros.toFixed(1)} m do ponto · precisão informada {registro.precisaoCheckinMetros.toFixed(1)} m.</p> : <p className="mt-1 text-xs font-bold text-[#96630d]">Registro legado sem check-in.</p>}{registro.evidenciaDisponivel ? <FotoRegistro idRegistro={registro.idRegistro} /> : <p className="mt-2 text-xs text-[#96630d]">Sem foto disponível.</p>}</div><span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase ${registro.status === "aprovado" ? "bg-[#e7f4e6] text-[#27764d]" : registro.status === "rejeitado" ? "bg-[#f9e9e5] text-[#a85040]" : "bg-[#fff3d7] text-[#96630d]"}`}>{registro.status}</span></div>{registro.status === "pendente" ? <div className="mt-3 flex flex-wrap gap-2">{registro.evidenciaDisponivel && registro.temCheckin ? <button type="button" disabled={Boolean(idProcessando)} onClick={() => void decidir(registro.idRegistro, "aprovado")} className={primary}>{idProcessando === registro.idRegistro ? "Salvando…" : "Aprovar · conceder 20 pts"}</button> : <p className="self-center text-xs font-semibold text-[#96630d]">Este registro anterior não pode gerar pontos sem check-in e evidência; rejeite e oriente um novo envio pelo fluxo atual.</p>}<button type="button" disabled={Boolean(idProcessando)} onClick={() => void decidir(registro.idRegistro, "rejeitado")} className="rounded-xl border border-[#f1d4cd] px-3 py-2 text-xs font-bold text-[#a85040] hover:bg-[#fff4f0]">Rejeitar</button></div> : registro.status === "aprovado" ? <p className="mt-3 text-xs font-bold text-[#27764d]">{registro.pontosConcedidos} pontos concedidos · revisado em {formatarData(registro.dataRevisao)}</p> : null}</article>)}
-        {!fila.length ? <p className="rounded-xl bg-[#f7faf6] p-4 text-sm text-[#718579]">Nenhum registro encontrado neste filtro.</p> : null}</div>
-    </section> : null}
+        <p className="flex items-start gap-2 text-xs leading-5 text-[#6c8879]"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />A localização vem do navegador e pode ser imprecisa ou manipulada, então a checagem de 5 m não é prova contra fraude. Cada foto é analisada por uma pessoa e não confirma sozinha a entrega do material.</p>
+      </div> : null}
+    </Cartao>
+
+    {podeLer ? <Cartao icone={Trophy} tom="amarelo" titulo="Meus registros" descricao="Acompanhe seus descartes e os pontos que você já ganhou.">
+      {meusRegistros.length ? <ul className="space-y-3">{meusRegistros.map(registro => {
+        const status = estiloStatusRegistro(registro.status);
+        return <li key={registro.idRegistro} className="rounded-2xl border border-[#e7eee6] bg-[#fafcf9] p-4 transition hover:border-[#cfe8d8]">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex min-w-0 items-start gap-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl" style={{ backgroundColor: TONS.verde.fundo, color: TONS.verde.cor }}><Recycle className="h-5 w-5" aria-hidden="true" /></span>
+              <div className="min-w-0">
+                <strong className="block break-words text-sm font-black text-[#17362a]">{registro.categoriaMaterial} · {registro.nomePontoColeta}</strong>
+                <p className="mt-0.5 break-words text-xs leading-5 text-[#6c8879]">{registro.cidadePontoColeta} · {formatarData(registro.dataRegistro)}{registro.relato ? ` · ${registro.relato}` : ""}</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5 sm:shrink-0 sm:justify-end">
+              <Etiqueta tom={status.tom} icone={status.icone}>{status.rotulo}</Etiqueta>
+              {registro.status === "aprovado" ? <Etiqueta tom="amarelo" icone={Award}>+{registro.pontosConcedidos} pts</Etiqueta> : null}
+            </div>
+          </div>
+          <div className="mt-2 pl-0 sm:pl-[52px]">
+            {registro.status === "pendente" ? <p className="text-xs leading-5 text-[#8a5d06]">Aguardando revisão. Os pontos entram depois da aprovação.</p> : null}
+            {registro.evidenciaDisponivel ? <FotoRegistro idRegistro={registro.idRegistro} /> : registro.temCheckin ? <p className="mt-1 text-xs leading-5 text-[#6c8879]">A foto já foi apagada, conforme o prazo de guarda.</p> : <p className="mt-1 text-xs leading-5 text-[#8a5d06]">Registro antigo, enviado antes da exigência de check-in e foto.</p>}
+          </div>
+        </li>;
+      })}</ul> : <EstadoVazio icone={Recycle} titulo="Nenhum descarte registrado ainda" descricao="Escolha um ponto de coleta acima e faça seu primeiro registro." />}
+    </Cartao> : null}
+
+    {podeRevisar ? <Cartao
+      icone={ShieldCheck}
+      tom="azul"
+      titulo="Revisar descartes"
+      descricao="Confira a foto e o check-in antes de aprovar."
+      acoes={<select aria-label="Filtrar registros por situação" className={`${ESTILOS.campo} w-full sm:w-48`} value={filtroStatus} onChange={evento => setFiltroStatus(evento.target.value)}><option value="pendente">Pendentes</option><option value="aprovado">Aprovados</option><option value="rejeitado">Rejeitados</option><option value="todos">Todos</option></select>}
+    >
+      {fila.length ? <ul className="space-y-3">{fila.map(registro => {
+        const status = estiloStatusRegistro(registro.status);
+        return <li key={registro.idRegistro} className="rounded-2xl border border-[#e7eee6] p-4 sm:p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <strong className="block break-words text-sm font-black text-[#17362a]">{registro.categoriaMaterial} · {registro.nomePontoColeta}</strong>
+              <p className="mt-0.5 break-words text-xs leading-5 text-[#6c8879]">{registro.cidadePontoColeta} · participante {registro.identificadorParticipante} · {formatarData(registro.dataRegistro)}</p>
+            </div>
+            <div className="sm:shrink-0"><Etiqueta tom={status.tom} icone={status.icone}>{status.rotulo}</Etiqueta></div>
+          </div>
+          <p className="mt-3 break-words rounded-xl bg-[#f7faf7] px-3.5 py-2.5 text-sm leading-6 text-[#45614f]">{registro.relato || "Sem observação."}</p>
+          {registro.temCheckin ? <p className="mt-2 flex items-start gap-1.5 text-xs leading-5 text-[#6c8879]"><Crosshair className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />Check-in a {registro.distanciaCheckinMetros.toFixed(1)} m do ponto · precisão informada {registro.precisaoCheckinMetros.toFixed(1)} m.</p> : <p className="mt-2 text-xs font-bold text-[#8a5d06]">Registro antigo, sem check-in.</p>}
+          {registro.evidenciaDisponivel ? <FotoRegistro idRegistro={registro.idRegistro} /> : <p className="mt-2 text-xs text-[#8a5d06]">Sem foto disponível.</p>}
+          {registro.status === "pendente" ? <div className="mt-4 flex flex-col gap-2 border-t border-[#edf2ed] pt-4 sm:flex-row sm:flex-wrap sm:items-center">
+            {registro.evidenciaDisponivel && registro.temCheckin
+              ? <button type="button" disabled={Boolean(idProcessando)} onClick={() => void decidir(registro.idRegistro, "aprovado")} className={`${ESTILOS.botaoPrincipal} w-full disabled:cursor-wait sm:w-auto`}>{idProcessando === registro.idRegistro ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Check className="h-4 w-4" aria-hidden="true" />}{idProcessando === registro.idRegistro ? "Salvando…" : "Aprovar · conceder 20 pts"}</button>
+              : <p className="text-xs font-semibold leading-5 text-[#8a5d06] sm:flex-1">Este registro antigo não pode gerar pontos sem check-in e foto. Rejeite e oriente a pessoa a enviar de novo.</p>}
+            <button type="button" disabled={Boolean(idProcessando)} onClick={() => void decidir(registro.idRegistro, "rejeitado")} className={`${ESTILOS.botaoPerigo} w-full sm:w-auto`}><X className="h-4 w-4" aria-hidden="true" /> Rejeitar</button>
+          </div> : registro.status === "aprovado" ? <p className="mt-3 flex items-center gap-1.5 text-xs font-bold text-[#1d6b43]"><Award className="h-4 w-4" aria-hidden="true" />{registro.pontosConcedidos} pontos concedidos · revisado em {formatarData(registro.dataRevisao)}</p> : null}
+        </li>;
+      })}</ul> : <EstadoVazio icone={ShieldCheck} tom="azul" titulo="Nada por aqui" descricao="Nenhum registro encontrado com este filtro." />}
+    </Cartao> : null}
   </section>;
+}
+
+function PassoGuia({ numero, icone: Icone, tom, titulo, texto }: { numero: number; icone: LucideIcon; tom: TomPagina; titulo: string; texto: string }) {
+  const t = TONS[tom];
+  return <li className="flex items-start gap-3 rounded-2xl border bg-white p-4" style={{ borderColor: t.borda }}>
+    <span className="relative grid h-10 w-10 shrink-0 place-items-center rounded-xl" style={{ backgroundColor: t.fundo, color: t.cor }}>
+      <Icone className="h-5 w-5" aria-hidden="true" />
+      <span className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full text-[11px] font-black text-white" style={{ backgroundColor: t.cor }}>{numero}</span>
+    </span>
+    <div className="min-w-0">
+      <strong className="block text-sm font-black text-[#17362a]">{titulo}</strong>
+      <p className="mt-0.5 text-xs leading-5 text-[#6c8879]">{texto}</p>
+    </div>
+  </li>;
+}
+
+function TituloEtapa({ numero, titulo }: { numero: number; titulo: string }) {
+  return <h3 className="flex items-center gap-2.5 text-base font-black leading-tight text-[#17362a]">
+    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#1d7953] text-sm font-black text-white">{numero}</span>
+    {titulo}
+  </h3>;
+}
+
+function estiloStatusRegistro(status: string): { tom: TomPagina; icone: LucideIcon; rotulo: string } {
+  if (status === "aprovado") return { tom: "verde", icone: CircleCheck, rotulo: "Aprovado" };
+  if (status === "rejeitado") return { tom: "vermelho", icone: CircleX, rotulo: "Rejeitado" };
+  if (status === "pendente") return { tom: "amarelo", icone: Clock3, rotulo: "Em revisão" };
+  return { tom: "cinza", icone: Info, rotulo: status };
 }
 
 function FotoRegistro({ idRegistro }: { idRegistro: string }) {
@@ -312,7 +431,14 @@ function FotoRegistro({ idRegistro }: { idRegistro: string }) {
     } finally { setCarregando(false); }
   }
 
-  return <div className="mt-2"><button type="button" onClick={() => void carregarFoto()} disabled={carregando} className="text-xs font-bold text-[#1d7953] underline disabled:opacity-60">{carregando ? "Carregando foto…" : url ? "Foto da evidência" : "Ver foto da evidência"}</button>{erro ? <p role="alert" className="mt-1 text-xs text-[#a85040]">{erro}</p> : null}{url ? <img src={url} alt="Evidência fotográfica privada do material descartado" loading="lazy" className="mt-2 max-h-64 max-w-full rounded-lg border border-[#e1ebe2] object-contain" /> : null}</div>;
+  return <div className="mt-2">
+    <button type="button" onClick={() => void carregarFoto()} disabled={carregando} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl px-2 text-sm font-bold text-[#1d7953] transition hover:bg-[#eef5ed] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953] disabled:cursor-wait disabled:opacity-60 -ml-2">
+      {carregando ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Camera className="h-4 w-4" aria-hidden="true" />}
+      {carregando ? "Carregando foto…" : url ? "Foto da evidência" : "Ver foto da evidência"}
+    </button>
+    {erro ? <p role="alert" className="mt-1 text-xs text-[#a8493e]">{erro}</p> : null}
+    {url ? <img src={url} alt="Evidência fotográfica privada do material descartado" loading="lazy" className="mt-2 max-h-64 max-w-full rounded-2xl border border-[#e1ebe2] object-contain" /> : null}
+  </div>;
 }
 
 async function comprimirFoto(arquivo: File): Promise<Uint8Array> {

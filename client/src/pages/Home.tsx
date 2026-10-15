@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
+  ArrowRight,
+  UserRound,
+  MonitorSmartphone,
+  LogOut,
+  CircleCheck,
   Award,
   BookOpen,
   ChevronRight,
@@ -9,20 +14,24 @@ import {
   Flame,
   KeyRound,
   Leaf,
+  Lightbulb,
+  Lock,
   MailWarning,
+  MapPinned,
   Pencil,
   Save,
   Recycle,
   Search,
   ShieldCheck,
-  Sparkles,
   Target,
   Trophy,
   X,
 } from "lucide-react";
 import AppShell from "@/components/AppShell";
+import TelaCarregamento, { esperar, lerTransicao, limparTransicao, marcarTransicao } from "@/components/TelaCarregamento";
 import AdministracaoCrud from "@/components/AdministracaoCrud";
-import GuiaMaterialCard, { type MaterialGuia } from "@/components/GuiaMaterialCard";
+import GuiaMaterialCard, { tomDaCategoria, type MaterialGuia } from "@/components/GuiaMaterialCard";
+import { Aviso, CabecalhoPagina, Carregando, Cartao, ESTILOS, EstadoVazio, Etiqueta, TONS } from "@/components/pagina/Pagina";
 import MateriaisCrud from "@/components/MateriaisCrud";
 import QuestionariosCrud from "@/components/QuestionariosCrud";
 import DesafiosCrud from "@/components/DesafiosCrud";
@@ -67,68 +76,54 @@ type SessoesAtivasState = {
   atual: boolean;
 }[];
 
-interface Indicador {
-  titulo: string;
-  valor: string;
-  detalhe: string;
-  icone: LucideIcon;
-  tom: "verde" | "ouro" | "azul" | "rosa";
-}
-
-function IndicadorCard({ indicador }: { indicador: Indicador }) {
-  const tons = {
-    verde: "bg-[#e7f5e7] text-[#23734d]",
-    ouro: "bg-[#fff3d5] text-[#a56c08]",
-    azul: "bg-[#e7f1fb] text-[#2c6e9f]",
-    rosa: "bg-[#fbe9ef] text-[#a34467]",
-  };
-  const Icone = indicador.icone;
-  return (
-    <article className="rounded-2xl border border-[#e2ebe3] bg-white p-4 shadow-[0_16px_32px_-28px_rgba(19,62,43,.65)] sm:p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-bold text-[#7c9386]">{indicador.titulo}</p>
-          <strong className="mt-2 block text-2xl font-black tracking-tight text-[#17362a]">{indicador.valor}</strong>
-        </div>
-        <span className={`grid h-10 w-10 place-items-center rounded-xl ${tons[indicador.tom]}`}><Icone className="h-5 w-5" /></span>
-      </div>
-      <p className="mt-3 text-xs font-semibold text-[#6c8879]">{indicador.detalhe}</p>
-    </article>
-  );
-}
-
-function CabecalhoSecao({ etiqueta, titulo, descricao, acao }: { etiqueta: string; titulo: string; descricao: string; acao?: React.ReactNode }) {
-  return (
-    <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-      <div className="max-w-2xl">
-        <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#3d9664]">{etiqueta}</p>
-        <h2 className="mt-2 text-2xl font-black tracking-[-0.035em] text-[#17362a] sm:text-3xl">{titulo}</h2>
-        <p className="mt-2 text-sm leading-6 text-[#668073]">{descricao}</p>
-      </div>
-      {acao}
-    </div>
-  );
-}
-
 function normalizarBusca(valor: string): string {
   return valor.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("pt-BR");
 }
 
-function calcularProgressoNivel(pontos: number): { percentual: number; mensagem: string } {
+const SUGESTOES_BUSCA = ["Pilha", "Garrafa PET", "Óleo de cozinha", "Celular"];
+
+/** Orientações gerais de descarte, alinhadas às cores da coleta seletiva (CONAMA 275/2001). */
+const DICAS_DESCARTE = [
+  "Pilhas e baterias não vão no lixo comum. Leve a pontos de coleta específicos, como lojas e supermercados.",
+  "Óleo de cozinha usado não deve ir para a pia. Guarde em uma garrafa PET fechada e leve a um ponto de coleta.",
+  "Lave rapidamente potes e embalagens antes de separar. Restos de comida atrapalham a reciclagem.",
+  "Papel engordurado, como guardanapo e caixa de pizza suja, não é reciclável. Descarte no lixo comum.",
+  "Embrulhe vidros quebrados em jornal ou papelão para proteger quem faz a coleta.",
+  "Amasse latas e garrafas plásticas: elas ocupam menos espaço e facilitam o transporte.",
+  "Celulares e outros eletrônicos têm peças tóxicas. Procure pontos de coleta de eletroeletrônicos.",
+  "Cascas de frutas e restos de verduras podem virar adubo com a compostagem.",
+];
+
+const ORIGENS_PONTOS: Array<{ origem: string; rotulo: string; Icone: LucideIcon; cor: string }> = [
+  { origem: "descarte_validado", rotulo: "Descartes aprovados", Icone: Recycle, cor: "#2f9a5f" },
+  { origem: "quiz_correto", rotulo: "Respostas certas no quiz", Icone: CircleHelp, cor: "#c98a12" },
+  { origem: "desafio_concluido", rotulo: "Desafios concluídos", Icone: Target, cor: "#d0493e" },
+];
+
+function saudacaoDoMomento(): string {
+  const hora = new Date().getHours();
+  if (hora < 12) return "Bom dia";
+  if (hora < 18) return "Boa tarde";
+  return "Boa noite";
+}
+
+function calcularProgressoNivel(pontos: number): { percentual: number; mensagem: string; nivelAtual: string } {
   const faixas = [
     { inicio: 0, fim: 500, nome: "Explorador" },
     { inicio: 500, fim: 1000, nome: "Reciclador" },
     { inicio: 1000, fim: 2000, nome: "Agente ambiental" },
     { inicio: 2000, fim: 4000, nome: "Guerreiro ecológico" },
   ];
-  if (pontos >= 4000) return { percentual: 100, mensagem: "Você alcançou o nível máximo." };
+  if (pontos >= 4000) return { percentual: 100, mensagem: "Você alcançou o nível máximo. Parabéns!", nivelAtual: "Guerreiro ecológico" };
 
-  const faixa = faixas.find(item => pontos >= item.inicio && pontos < item.fim) ?? faixas[0];
+  const indiceFaixa = Math.max(0, faixas.findIndex(item => pontos >= item.inicio && pontos < item.fim));
+  const faixa = faixas[indiceFaixa];
   const percentual = Math.max(0, Math.min(100, Math.round(((pontos - faixa.inicio) / (faixa.fim - faixa.inicio)) * 100)));
   const faltam = Math.max(0, faixa.fim - pontos);
   return {
     percentual,
     mensagem: `Faltam ${faltam.toLocaleString("pt-BR")} pontos para o nível ${faixa.nome}.`,
+    nivelAtual: indiceFaixa === 0 ? "Iniciante" : faixas[indiceFaixa - 1].nome,
   };
 }
 
@@ -137,6 +132,9 @@ export default function Home() {
     redirectOnUnauthenticated: true,
     redirectPath: "/login",
   });
+  const [transicaoEntrada] = useState(() => lerTransicao() === "entrada");
+  const [entradaConcluida, setEntradaConcluida] = useState(() => !transicaoEntrada);
+  const [saindo, setSaindo] = useState(false);
   const [avisoVerificacao, setAvisoVerificacao] = useState<string | null>(null);
   const [perfilOficial, setPerfilOficial] = useState<{ nomeUsuario: string; emailUsuario: string; statusUsuario: string } | null>(null);
   const [editandoNome, setEditandoNome] = useState(false);
@@ -145,6 +143,21 @@ export default function Home() {
   const [avisoPerfil, setAvisoPerfil] = useState<string | null>(null);
   const [reivindicandoVerificacao, setReivindicandoVerificacao] = useState(false);
   const emailVerificado = identidade?.emailVerificadoUsuario ?? true;
+
+  useEffect(() => {
+    if (entradaConcluida) return;
+    limparTransicao();
+    const temporizador = window.setTimeout(() => setEntradaConcluida(true), 2400);
+    return () => window.clearTimeout(temporizador);
+  }, [entradaConcluida]);
+
+  async function sairComTransicao() {
+    if (saindo) return;
+    setSaindo(true);
+    marcarTransicao("saida");
+    await esperar(1900);
+    await logout();
+  }
 
   async function reenviarVerificacao() {
     if (!identidade?.emailUsuario) return;
@@ -314,14 +327,6 @@ export default function Home() {
   }, [isAuthenticated]);
 
   const progresso = useMemo(() => dashboard ? calcularProgressoNivel(dashboard.ecoPoints) : null, [dashboard]);
-  const indicadores = useMemo<Indicador[]>(() => {
-    if (!podeLerGamificacao || !dashboard) return [];
-    return [
-      { titulo: "Eco pontos", valor: String(dashboard?.ecoPoints ?? "—"), detalhe: "Seu impacto acumulado", icone: Award, tom: "ouro" },
-      { titulo: "Dias ativos", valor: String(dashboard?.currentStreak ?? "—"), detalhe: "Sequência atual com atividade registrada", icone: Flame, tom: "rosa" },
-      { titulo: "Conquistas", valor: String(dashboard?.badgesUnlocked ?? "—"), detalhe: "Selos desbloqueados", icone: Trophy, tom: "verde" },
-    ];
-  }, [dashboard, podeLerGamificacao]);
 
   const materiaisFiltrados = useMemo(() => {
     const termo = normalizarBusca(query.trim());
@@ -345,16 +350,25 @@ export default function Home() {
   }
 
   function renderizarInicio() {
+    const atalhos = [
+      { id: "materiais", titulo: "Guia de descarte", texto: "Descubra onde jogar cada material.", Icone: BookOpen, cor: "#2f6fb0", fundo: "#e8f0fa", liberado: pode("materiais:ler") },
+      { id: "pontos", titulo: "Pontos de coleta", texto: "Encontre locais que recebem seu resíduo.", Icone: MapPinned, cor: "#2f9a5f", fundo: "#e6f5ec", liberado: podeAcessarPagina("pontos", permissoes) },
+      { id: "questionarios", titulo: "Quiz", texto: "Teste o que você sabe e aprenda brincando.", Icone: CircleHelp, cor: "#c98a12", fundo: "#fdf3dc", liberado: pode("questionarios:responder") },
+      { id: "desafios", titulo: "Desafios", texto: "Complete ações e ganhe pontos.", Icone: Trophy, cor: "#d0493e", fundo: "#fbe9e7", liberado: pode("gamificacao:participar") },
+    ].filter(atalho => atalho.liberado);
+    const dicaDoDia = DICAS_DESCARTE[Math.floor(Date.now() / 86_400_000) % DICAS_DESCARTE.length];
+    const totalSelos = dashboard?.seals.length ?? 0;
+    const maiorOrigem = Math.max(1, ...(dashboard?.pointsBySource.map(item => item.points) ?? [0]));
+
     return (
-      <div className="space-y-7">
-        <section className="relative overflow-hidden rounded-[28px] bg-[#17362a] px-6 py-7 text-white shadow-[0_28px_60px_-36px_rgba(23,54,42,.8)] sm:px-8 sm:py-9">
-          <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#77be78]/25 blur-3xl" />
-          <div className="absolute -bottom-16 left-1/3 h-36 w-36 rounded-full bg-[#e6c866]/20 blur-3xl" />
-          <div className="relative grid gap-6 lg:grid-cols-[1.1fr_.9fr] lg:items-end">
+      <div className="space-y-6">
+        <section className="relative overflow-hidden rounded-[28px] bg-[radial-gradient(circle_at_12%_0%,rgba(119,190,120,.3),transparent_45%),linear-gradient(150deg,#1b4332,#12291f)] px-5 py-6 text-white shadow-[0_28px_60px_-36px_rgba(23,54,42,.8)] sm:px-8 sm:py-8">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(rgba(255,255,255,.06)_1px,transparent_1px)] [background-size:22px_22px] [mask-image:linear-gradient(90deg,#000,transparent_70%)]" aria-hidden="true" />
+          <div className="relative grid gap-6 lg:grid-cols-[1fr_minmax(0,25rem)] lg:items-center">
             <div>
-              <span className="inline-flex items-center gap-2 rounded-full border border-[#638c74] bg-white/5 px-3 py-1.5 text-xs font-bold text-[#d4ead7]"><Sparkles className="h-3.5 w-3.5 text-[#d6efad]" aria-hidden="true" /> Descarte com mais orientação</span>
-              <h2 className="mt-4 max-w-2xl text-3xl font-black tracking-[-0.04em] sm:text-4xl">Olá, {nomeCurto}. Vamos encontrar o destino certo para o seu material?</h2>
-              <p className="mt-4 max-w-xl text-sm leading-6 text-[#bfd4c4]">Consulte orientações de descarte e encontre pontos de coleta que recebem cada categoria.</p>
+              <p className="text-sm font-bold text-[#b8e07a]">{saudacaoDoMomento()}, {nomeCurto}!</p>
+              <h2 className="mt-2 max-w-xl text-[1.75rem] font-black leading-[1.1] tracking-[-0.035em] sm:text-[2.1rem]">O que você vai descartar hoje?</h2>
+              <p className="mt-3 max-w-lg text-[15px] leading-6 text-[#bfd4c4]">Pesquise um material e veja como separar e onde entregar.</p>
             </div>
             <form
               onSubmit={event => {
@@ -378,83 +392,177 @@ export default function Home() {
                 setPaginaAtiva("materiais");
               }}
               data-onboarding-action="buscar_inicio"
-              className="rounded-2xl border border-white/10 bg-white p-4 text-[#17362a] shadow-lg sm:p-5"
+              className="rounded-2xl bg-white p-4 text-[#17362a] shadow-[0_20px_40px_-20px_rgba(0,0,0,.45)] sm:p-5"
             >
-              <label htmlFor="busca-material-inicio" className="block text-sm font-black">O que você quer descartar?</label>
-              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                <input
-                  id="busca-material-inicio"
-                  required
-                  minLength={2}
-                  value={buscaInicio}
-                  onChange={event => { event.currentTarget.setCustomValidity(""); setBuscaInicio(event.target.value); }}
-                  placeholder="Ex.: celular, vidro, papel"
-                  autoComplete="off"
-                  className="min-h-11 min-w-0 flex-1 rounded-xl border border-[#d9e6db] bg-[#fbfdfb] px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[#4e9b68]"
-                />
-                <button type="submit" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#1d7953] px-4 py-2 text-sm font-black text-white transition hover:bg-[#176543] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">
-                  <Search className="h-4 w-4" aria-hidden="true" /> Buscar
+              <label htmlFor="busca-material-inicio" className="block text-sm font-black">Buscar material</label>
+              <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                <div className="relative min-w-0 flex-1">
+                  <Search className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#86a092]" aria-hidden="true" />
+                  <input
+                    id="busca-material-inicio"
+                    required
+                    minLength={2}
+                    value={buscaInicio}
+                    onChange={event => { event.currentTarget.setCustomValidity(""); setBuscaInicio(event.target.value); }}
+                    placeholder="Ex.: pilha, vidro, papel"
+                    autoComplete="off"
+                    className="h-12 w-full rounded-xl border border-[#d6e2d9] bg-white pl-10 pr-3 text-[15px] outline-none transition hover:border-[#b9cfc0] focus:border-[#1d7953] focus:ring-4 focus:ring-[#1d7953]/10"
+                  />
+                </div>
+                <button type="submit" className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#1d7953] px-5 text-[15px] font-black text-white transition hover:bg-[#17362a] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">
+                  Buscar
                 </button>
               </div>
-              <p className="mt-2 text-xs leading-5 text-[#6b8576]">A busca abre o Guia com os materiais publicados que correspondem ao termo.</p>
+              <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                <span className="text-xs font-semibold text-[#7a9485]">Sugestões:</span>
+                {SUGESTOES_BUSCA.map(sugestao => (
+                  <button
+                    key={sugestao}
+                    type="button"
+                    onClick={() => { setBuscaInicio(sugestao); document.getElementById("busca-material-inicio")?.focus(); }}
+                    className="rounded-full bg-[#eef5ec] px-2.5 py-1 text-xs font-bold text-[#2c6b4a] transition hover:bg-[#dcefd6]"
+                  >
+                    {sugestao}
+                  </button>
+                ))}
+              </div>
             </form>
           </div>
         </section>
 
-        {indicadores.length ? <section className="grid gap-4 md:grid-cols-3">{indicadores.map(indicador => <IndicadorCard key={indicador.titulo} indicador={indicador} />)}</section> : null}
+        {podeLerGamificacao ? (
+          dashboard && progresso ? (
+            <section className="grid gap-4 lg:grid-cols-[1.35fr_1fr]" aria-label="Seu progresso">
+              <article className="relative overflow-hidden rounded-[24px] bg-[#e6f1d0] p-5 sm:p-6">
+                <Leaf className="pointer-events-none absolute -bottom-6 -right-4 h-36 w-36 rotate-12 text-[#d3e6b4]" aria-hidden="true" />
+                <div className="relative flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-bold text-[#4f6b44]">Seu nível</p>
+                    <h3 className="mt-0.5 text-2xl font-black tracking-tight text-[#1d4a34]">{progresso.nivelAtual}</h3>
+                  </div>
+                  <div className="text-right">
+                    <strong className="block text-3xl font-black leading-none tracking-tight text-[#1d4a34] tabular-nums">{dashboard.ecoPoints.toLocaleString("pt-BR")}</strong>
+                    <span className="text-xs font-bold text-[#4f6b44]">pontos</span>
+                  </div>
+                </div>
+                <div className="relative mt-5 h-3.5 overflow-hidden rounded-full bg-white/70" role="progressbar" aria-label="Progresso até o próximo nível" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progresso.percentual}>
+                  <div className="h-full rounded-full bg-[linear-gradient(90deg,#3c9a5f,#1d7953)] transition-all duration-700" style={{ width: `${Math.max(progresso.percentual, 3)}%` }} />
+                </div>
+                <p className="relative mt-2 text-sm font-semibold text-[#4f6b44]">{progresso.mensagem}</p>
+              </article>
+              <div className="grid grid-cols-2 gap-4">
+                <article className="flex flex-col justify-between rounded-[24px] border border-[#f3dfe4] bg-white p-5">
+                  <span className="grid h-11 w-11 place-items-center rounded-xl bg-[#fde8e4] text-[#d0493e]"><Flame className="h-5 w-5" aria-hidden="true" /></span>
+                  <div className="mt-4">
+                    <strong className="block text-3xl font-black leading-none tracking-tight tabular-nums">{dashboard.currentStreak}</strong>
+                    <p className="mt-1 text-sm font-semibold text-[#6c8879]">{dashboard.currentStreak === 1 ? "dia seguido" : "dias seguidos"}</p>
+                  </div>
+                </article>
+                <article className="flex flex-col justify-between rounded-[24px] border border-[#f1e6c9] bg-white p-5">
+                  <span className="grid h-11 w-11 place-items-center rounded-xl bg-[#fdf3dc] text-[#c98a12]"><Award className="h-5 w-5" aria-hidden="true" /></span>
+                  <div className="mt-4">
+                    <strong className="block text-3xl font-black leading-none tracking-tight tabular-nums">{dashboard.badgesUnlocked}{totalSelos ? <span className="text-lg text-[#9aac9f]">/{totalSelos}</span> : null}</strong>
+                    <p className="mt-1 text-sm font-semibold text-[#6c8879]">selos conquistados</p>
+                  </div>
+                </article>
+              </div>
+            </section>
+          ) : (
+            <section className="rounded-[24px] border border-[#e1ebe2] bg-white p-5 text-sm font-semibold text-[#6c8879]" aria-live="polite">
+              {carregandoDashboard ? (
+                <div className="flex items-center gap-3"><span className="h-5 w-5 animate-spin rounded-full border-2 border-[#d6efad] border-t-[#1d7953]" aria-hidden="true" /> Carregando seu progresso...</div>
+              ) : erroDados ? "Não foi possível carregar seu progresso agora. Tente novamente em instantes." : "Seu progresso ainda não está disponível."}
+            </section>
+          )
+        ) : null}
 
-        {podeLerGamificacao && dashboard ? <section className="grid gap-5 xl:grid-cols-[1.4fr_.6fr]">
-          <article className="rounded-[24px] border border-[#e1ebe2] bg-white p-5 shadow-[0_18px_36px_-30px_rgba(23,54,42,.6)] sm:p-6">
-            <div className="flex items-start justify-between gap-4"><div><p className="text-[11px] font-black uppercase tracking-[0.15em] text-[#3d9664]">Coleção de conquistas</p><h3 className="mt-2 text-xl font-black tracking-tight">Selos LixoCerto</h3><p className="mt-1 text-sm text-[#698375]">Marcos desbloqueados pelo total de pontos acumulados.</p></div><Trophy className="h-6 w-6 text-[#b1842c]" /></div>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {dashboard.seals.map(selo => <div key={selo.code} className={`rounded-2xl border p-4 ${selo.earned ? "border-[#d5e8c7] bg-[#f2f8e9]" : "border-[#e5e9e4] bg-[#f8faf7] opacity-70"}`}>
-                <div className="flex items-center justify-between gap-2"><span className={`grid h-9 w-9 place-items-center rounded-xl ${selo.earned ? "bg-[#dceecb] text-[#397649]" : "bg-[#e9ece8] text-[#859187]"}`}>{selo.earned ? <Award className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}</span><span className="text-[10px] font-black uppercase tracking-[0.1em] text-[#718579]">{selo.earned ? "Conquistado" : `${selo.minimumPoints} pontos`}</span></div>
-                <strong className="mt-3 block text-sm font-black text-[#244637]">{selo.name}</strong><p className="mt-1 text-xs leading-5 text-[#718579]">{selo.description}</p>
-              </div>)}
-            </div>
-          </article>
-          <article className="rounded-[24px] border border-[#e1ebe2] bg-white p-5 shadow-[0_18px_36px_-30px_rgba(23,54,42,.6)] sm:p-6">
-            <p className="text-[11px] font-black uppercase tracking-[0.15em] text-[#3d9664]">Origem da pontuação</p><h3 className="mt-2 text-xl font-black tracking-tight">Pontos transparentes</h3>
-            <div className="mt-4 space-y-3">{[
-              ["descarte_validado", "Descartes aprovados"], ["quiz_correto", "Quizzes corretos"], ["desafio_concluido", "Desafios concluídos"],
-            ].map(([origem, rotulo]) => {
-              const item = dashboard.pointsBySource.find(resumo => resumo.source === origem);
-              return <div key={origem} className="flex items-center justify-between gap-3 rounded-xl bg-[#f6f9f5] px-3.5 py-3"><span className="text-xs font-bold text-[#587261]">{rotulo}</span><strong className="text-sm font-black text-[#1d7953]">{item?.points ?? 0} pts <span className="font-semibold text-[#809789]">· {item?.events ?? 0} eventos</span></strong></div>;
-            })}</div>
-            <p className="mt-4 text-[11px] leading-5 text-[#82978a]">O total inclui o histórico anterior à implantação do detalhamento; a divisão por origem registra novas recompensas validadas.</p>
-          </article>
-        </section> : null}
-
-        <section className="grid gap-5 xl:grid-cols-[1.25fr_.75fr]">
-          <article className="rounded-[24px] border border-[#e1ebe2] bg-white p-5 shadow-[0_18px_36px_-30px_rgba(23,54,42,.6)] sm:p-6">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div><p className="text-[11px] font-black uppercase tracking-[0.15em] text-[#3d9664]">Próximo movimento</p><h3 className="mt-2 text-xl font-black tracking-tight">Transforme informação em hábito.</h3></div>
-              <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#e9f6e8] text-[#25734d]"><Target className="h-5 w-5" /></span>
-            </div>
-            <p className="mt-3 text-sm leading-6 text-[#698375]">{dashboard?.dailyTip ?? (podeLerGamificacao ? carregandoDashboard ? "Carregando seu resumo de atividades..." : "O resumo de atividades não está disponível agora." : "Pesquise um material no Guia ou procure um ponto de coleta próximo.")}</p>
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              {(dashboard?.quickActions ?? []).filter(acao => {
-                const permissao = acao.id === "quiz"
-                  ? "questionarios:responder"
-                  : acao.id === "guide"
-                    ? "materiais:ler"
-                    : "gamificacao:participar";
-                return pode(permissao);
-              }).map(acao => (
-                <button key={acao.id} type="button" onClick={() => mudarPaginaAutorizada(acao.id === "guide" ? "materiais" : acao.id === "quiz" ? "questionarios" : "desafios")} className="group rounded-2xl border border-[#e4ece4] p-4 text-left transition hover:-translate-y-0.5 hover:border-[#a9d3b0] hover:bg-[#f5faf4]">
-                  <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#edf5ea] text-[#2b7a52]">{acao.id === "quiz" ? <CircleHelp className="h-4 w-4" /> : acao.id === "guide" ? <BookOpen className="h-4 w-4" /> : <Trophy className="h-4 w-4" />}</span>
-                  <strong className="mt-3 block text-sm">{acao.label}</strong><span className="mt-1 block text-xs leading-5 text-[#718a7b]">{acao.description}</span>
+        {atalhos.length ? (
+          <section aria-labelledby="titulo-atalhos">
+            <h3 id="titulo-atalhos" className="text-lg font-black tracking-tight">O que você quer fazer hoje?</h3>
+            <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
+              {atalhos.map(({ id, titulo, texto, Icone, cor, fundo }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => mudarPaginaAutorizada(id)}
+                  className="group relative flex flex-col rounded-[22px] border border-[#e4ece4] bg-white p-4 text-left transition duration-200 hover:-translate-y-1 hover:shadow-[0_18px_36px_-24px_rgba(23,54,42,.55)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953] sm:p-5"
+                  style={{ ["--cor-atalho" as string]: cor }}
+                >
+                  <span className="grid h-12 w-12 place-items-center rounded-2xl transition-transform duration-200 group-hover:scale-110" style={{ backgroundColor: fundo, color: cor }}><Icone className="h-6 w-6" aria-hidden="true" /></span>
+                  <strong className="mt-4 block text-[15px] font-black">{titulo}</strong>
+                  <span className="mt-1 block text-[13px] leading-5 text-[#6c8879]">{texto}</span>
+                  <span className="mt-3 inline-flex items-center gap-1 text-xs font-black" style={{ color: cor }}>Abrir <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" aria-hidden="true" /></span>
+                  <span className="absolute inset-x-5 top-0 h-1 rounded-b-full opacity-0 transition-opacity group-hover:opacity-100" style={{ backgroundColor: cor }} aria-hidden="true" />
                 </button>
               ))}
             </div>
-          </article>
-          {podeLerGamificacao ? <article className="rounded-[24px] bg-[#e6f1d0] p-5 sm:p-6">
-            <div className="flex items-center justify-between"><span className="text-[11px] font-black uppercase tracking-[0.15em] text-[#587148]">Progresso de nível</span><Leaf className="h-5 w-5 text-[#397a4e]" /></div>
-            <strong className="mt-5 block text-3xl font-black tracking-tight text-[#1d4a34]">{progresso ? `${progresso.percentual}%` : "—"}</strong>
-            <p className="mt-1 text-sm text-[#55715d]">{progresso?.mensagem ?? (carregandoDashboard ? "Consultando sua pontuação..." : "Seu progresso não está disponível agora.")}</p>
-            <div className="mt-5 h-3 overflow-hidden rounded-full bg-white/70">{progresso ? <div className="h-full rounded-full bg-[#278050] transition-all duration-500" style={{ width: `${progresso.percentual}%` }} /> : null}</div>
-            <div className="mt-6 flex items-center gap-3 border-t border-[#ccdfb4] pt-4 text-xs font-bold text-[#4c6652]"><Recycle className="h-4 w-4 text-[#278050]" /> Educação ambiental baseada em escolhas práticas.</div>
-          </article> : null}
+          </section>
+        ) : null}
+
+        <section className={`grid gap-4 ${podeLerGamificacao && dashboard ? "xl:grid-cols-[1.45fr_1fr]" : ""}`}>
+          {podeLerGamificacao && dashboard && dashboard.seals.length ? (
+            <article className="rounded-[24px] border border-[#e1ebe2] bg-white p-5 sm:p-6">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-black tracking-tight">Sua coleção de selos</h3>
+                  <p className="mt-0.5 text-sm text-[#698375]">Junte pontos para desbloquear cada selo.</p>
+                </div>
+                <Trophy className="h-6 w-6 shrink-0 text-[#c98a12]" aria-hidden="true" />
+              </div>
+              <ul className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {dashboard.seals.map(selo => {
+                  const avanco = selo.minimumPoints > 0 ? Math.min(100, Math.round((dashboard.ecoPoints / selo.minimumPoints) * 100)) : 100;
+                  const faltam = Math.max(0, selo.minimumPoints - dashboard.ecoPoints);
+                  return (
+                    <li key={selo.code} className={`rounded-2xl border p-4 transition ${selo.earned ? "border-[#f0dca6] bg-[linear-gradient(160deg,#fff9e8,#fdf1cf)]" : "border-[#e8ede7] bg-[#f8faf7]"}`}>
+                      <div className="flex items-center gap-3">
+                        <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-full ${selo.earned ? "bg-[#e9b949] text-white shadow-[0_6px_16px_-6px_rgba(201,138,18,.8)]" : "bg-[#e7ebe6] text-[#9aa79e]"}`}>
+                          {selo.earned ? <Award className="h-5 w-5" aria-hidden="true" /> : <Lock className="h-4 w-4" aria-hidden="true" />}
+                        </span>
+                        <div className="min-w-0">
+                          <strong className={`block truncate text-sm font-black ${selo.earned ? "text-[#7a5408]" : "text-[#4a6455]"}`}>{selo.name}</strong>
+                          <span className="text-xs font-semibold text-[#7d9183]">{selo.earned ? "Conquistado!" : `Faltam ${faltam.toLocaleString("pt-BR")} pontos`}</span>
+                        </div>
+                      </div>
+                      {!selo.earned ? (
+                        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#e3e9e2]" aria-hidden="true"><div className="h-full rounded-full bg-[#9fc98a]" style={{ width: `${avanco}%` }} /></div>
+                      ) : null}
+                      <p className="mt-2 text-xs leading-5 text-[#718579]">{selo.description}</p>
+                    </li>
+                  );
+                })}
+              </ul>
+            </article>
+          ) : null}
+
+          <div className="grid content-start gap-4">
+            <article className="relative overflow-hidden rounded-[24px] bg-[#fff8e6] p-5 sm:p-6">
+              <div className="flex items-center gap-2 text-sm font-black text-[#9a6a0b]"><Lightbulb className="h-5 w-5" aria-hidden="true" /> Dica do dia</div>
+              <p className="mt-2 text-[15px] font-semibold leading-6 text-[#5c4710]">{dicaDoDia}</p>
+            </article>
+
+            {podeLerGamificacao && dashboard ? (
+              <article className="rounded-[24px] border border-[#e1ebe2] bg-white p-5 sm:p-6">
+                <h3 className="text-lg font-black tracking-tight">De onde vêm seus pontos</h3>
+                <ul className="mt-4 space-y-3">
+                  {ORIGENS_PONTOS.map(({ origem, rotulo, Icone, cor }) => {
+                    const item = dashboard.pointsBySource.find(resumo => resumo.source === origem);
+                    const pontos = item?.points ?? 0;
+                    return (
+                      <li key={origem}>
+                        <div className="flex items-center justify-between gap-3 text-sm">
+                          <span className="inline-flex items-center gap-2 font-bold text-[#3f5c4c]"><Icone className="h-4 w-4" style={{ color: cor }} aria-hidden="true" />{rotulo}</span>
+                          <strong className="font-black tabular-nums text-[#17362a]">{pontos.toLocaleString("pt-BR")} pts</strong>
+                        </div>
+                        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[#edf2ec]" aria-hidden="true"><div className="h-full rounded-full transition-all duration-700" style={{ width: `${(pontos / maiorOrigem) * 100}%`, backgroundColor: cor }} /></div>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="mt-4 text-xs leading-5 text-[#82978a]">Pontos mais antigos podem não aparecer nesta divisão.</p>
+              </article>
+            ) : null}
+          </div>
         </section>
       </div>
     );
@@ -462,11 +570,11 @@ export default function Home() {
 
   function renderizarMateriais() {
     const possuiFiltro = Boolean(query.trim()) || selectedCategory !== "Todos";
+    const categorias = ["Todos", ...Array.from(new Set(materials.map(material => material.category))).sort((a, b) => a.localeCompare(b, "pt-BR"))];
 
     return (
-      <div className="space-y-6">
-        <CabecalhoSecao etiqueta="Base educativa" titulo="Guia de descarte" descricao="Pesquise materiais e encontre orientações claras para um descarte mais responsável." />
-        <div className="rounded-2xl border border-[#e0eae1] bg-white p-4 sm:p-5">
+      <div className="space-y-5">
+        <CabecalhoPagina icone={BookOpen} tom="azul" titulo="Guia de descarte" descricao="Pesquise um material e veja como separar, preparar e onde entregar.">
           <form
             data-onboarding-action="buscar_guia"
             onSubmit={event => {
@@ -498,50 +606,68 @@ export default function Home() {
             }}
           >
             <label htmlFor="busca-guia-material" className="sr-only">Buscar material pelo nome ou categoria</label>
-            <div className="flex items-center gap-3 rounded-xl border border-[#d9e6db] bg-[#fbfdfb] px-4 py-3 focus-within:border-[#4e9b68] focus-within:ring-4 focus-within:ring-[#dcefdc]/60">
-              <Search className="h-5 w-5 shrink-0 text-[#638775]" aria-hidden="true" />
-              <input id="busca-guia-material" type="search" required minLength={2} enterKeyHint="search" autoComplete="off" aria-controls="resultado-materiais" className="w-full min-w-0 bg-transparent text-sm font-semibold outline-none placeholder:text-[#9aae9f]" value={buscaGuia} onChange={event => { event.currentTarget.setCustomValidity(""); setBuscaGuia(event.currentTarget.value); setErroBuscaGuia(""); }} placeholder="Ex.: celular, vidro, papel..." />
-              {buscaGuia || query ? <button type="button" onClick={() => { setBuscaGuia(""); setQuery(""); setErroBuscaGuia(""); }} aria-label="Limpar busca do Guia" title="Limpar busca" className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[#638775] hover:bg-[#eaf3e8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]"><X className="h-4 w-4" aria-hidden="true" /></button> : null}
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <div className="relative min-w-0 flex-1">
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-[#86a092]" aria-hidden="true" />
+                <input id="busca-guia-material" type="search" required minLength={2} enterKeyHint="search" autoComplete="off" aria-controls="resultado-materiais" className={`${ESTILOS.campo} pl-11 pr-11`} value={buscaGuia} onChange={event => { event.currentTarget.setCustomValidity(""); setBuscaGuia(event.currentTarget.value); setErroBuscaGuia(""); }} placeholder="Ex.: pilha, garrafa PET, papelão" />
+                {buscaGuia || query ? <button type="button" onClick={() => { setBuscaGuia(""); setQuery(""); setErroBuscaGuia(""); }} aria-label="Limpar busca do Guia" title="Limpar busca" className="absolute right-1.5 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-lg text-[#638775] hover:bg-[#eaf3e8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]"><X className="h-4 w-4" aria-hidden="true" /></button> : null}
+              </div>
+              <button type="submit" className={`${ESTILOS.botaoPrincipal} h-12`}><Search className="h-4 w-4" aria-hidden="true" />Buscar</button>
             </div>
-            {erroBuscaGuia ? <p className="mt-2 text-xs font-semibold text-[#a8493e]" role="alert">{erroBuscaGuia}</p> : null}
-            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs leading-5 text-[#71897b]">A busca filtra as orientações publicadas pelo nome, sinônimos ou categoria.</p>
-              <button type="submit" className="inline-flex min-h-10 items-center justify-center gap-2 self-start rounded-xl bg-[#1d7953] px-4 py-2 text-sm font-black text-white hover:bg-[#176543] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953] sm:self-auto"><Search className="h-4 w-4" aria-hidden="true" />Buscar</button>
-            </div>
+            {erroBuscaGuia ? <p className="mt-2 text-sm font-semibold text-[#a8493e]" role="alert">{erroBuscaGuia}</p> : null}
           </form>
-          <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Filtrar por categoria">
-            {["Todos", ...Array.from(new Set(materials.map(material => material.category))).sort((a, b) => a.localeCompare(b, "pt-BR"))].map(categoria => <button key={categoria} type="button" aria-pressed={selectedCategory === categoria} onClick={() => setSelectedCategory(categoria)} className={`min-h-9 rounded-full px-3 py-1.5 text-xs font-black transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953] ${selectedCategory === categoria ? "bg-[#1d7953] text-white" : "bg-[#edf3ed] text-[#5d796a] hover:bg-[#dff0de]"}`}>{categoria}</button>)}
-          </div>
-        </div>
-        <p className="text-xs font-semibold text-[#6b8576]" role="status" aria-live="polite" aria-atomic="true">
-          {carregandoMateriais ? "Buscando orientações…" : erroMateriais ? "Não foi possível consultar os resultados." : `${materiaisFiltrados.length} ${materiaisFiltrados.length === 1 ? "orientação encontrada" : "orientações encontradas"}${possuiFiltro ? " com estes filtros" : ""}.`}
-        </p>
-        <div id="resultado-materiais" className="grid gap-4 md:grid-cols-2 xl:grid-cols-3" aria-busy={carregandoMateriais}>
-          {carregandoMateriais ? <p className="col-span-full rounded-2xl bg-white p-8 text-center text-sm font-semibold text-[#708a7b]" role="status" aria-live="polite">Buscando orientações…</p> : null}
-          {!carregandoMateriais && !erroMateriais ? materiaisFiltrados.map(material => <GuiaMaterialCard key={material.id} material={material} onEncontrarPonto={abrirPontosParaMaterial} />) : null}
-          {erroMateriais ? <div className="col-span-full rounded-2xl border border-[#f0c1bd] bg-white p-6 text-center" role="alert"><p className="text-sm font-semibold text-[#a8493e]">Não foi possível carregar as orientações agora. Tente novamente.</p><button type="button" onClick={() => setVersaoRecarregaGuia(versao => versao + 1)} className="mt-4 min-h-10 rounded-xl bg-[#17362a] px-4 py-2 text-sm font-black text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">Tentar novamente</button></div> : null}
-          {!carregandoMateriais && !erroMateriais && materials.length > 0 && materiaisFiltrados.length === 0 && possuiFiltro ? (
-            <div className="col-span-full rounded-2xl bg-white p-8 text-center" role="status">
-              <p className="text-sm font-semibold text-[#708a7b]">Não encontramos materiais para essa busca e categoria.</p>
-              <button type="button" onClick={() => { setQuery(""); setBuscaGuia(""); setErroBuscaGuia(""); setSelectedCategory("Todos"); }} className="mt-4 min-h-10 rounded-xl border border-[#cfe3d1] px-4 py-2 text-sm font-black text-[#1d7953] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">Limpar busca e filtros</button>
+          {categorias.length > 1 ? (
+            <div className="-mx-1 mt-4 flex gap-2 overflow-x-auto px-1 pb-1" role="group" aria-label="Filtrar por categoria">
+              {categorias.map(categoria => {
+                const ativa = selectedCategory === categoria;
+                const tom = TONS[categoria === "Todos" ? "verde" : tomDaCategoria(categoria)];
+                return (
+                  <button
+                    key={categoria}
+                    type="button"
+                    aria-pressed={ativa}
+                    onClick={() => setSelectedCategory(categoria)}
+                    className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border px-3.5 text-sm font-bold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]"
+                    style={ativa ? { backgroundColor: tom.cor, borderColor: tom.cor, color: "#fff" } : { backgroundColor: "#fff", borderColor: tom.borda, color: tom.texto }}
+                  >
+                    {categoria !== "Todos" ? <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: ativa ? "#fff" : tom.cor }} aria-hidden="true" /> : null}
+                    {categoria}
+                  </button>
+                );
+              })}
             </div>
           ) : null}
-          {!carregandoMateriais && !erroMateriais && materials.length === 0 ? (
-            <div className="col-span-full rounded-2xl bg-white p-8 text-center" role="status">
-              <p className="text-base font-black text-[#244637]">Ainda não há orientações publicadas no Guia.</p>
-              <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[#708a7b]">Enquanto o conteúdo é preparado, você pode procurar um ponto de coleta na sua cidade ou perto de você.</p>
-              <button type="button" onClick={() => mudarPaginaAutorizada("pontos")} className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#1d7953] px-4 py-3 text-sm font-black text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">Encontrar ponto de coleta</button>
+        </CabecalhoPagina>
+
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm font-bold text-[#4a6455]" role="status" aria-live="polite" aria-atomic="true">
+            {carregandoMateriais ? "Buscando orientações…" : erroMateriais ? "Não foi possível consultar os resultados." : `${materiaisFiltrados.length} ${materiaisFiltrados.length === 1 ? "material encontrado" : "materiais encontrados"}${query.trim() ? ` para “${query.trim()}”` : ""}`}
+          </p>
+          {possuiFiltro && !carregandoMateriais ? <button type="button" onClick={() => { setQuery(""); setBuscaGuia(""); setErroBuscaGuia(""); setSelectedCategory("Todos"); }} className="inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-sm font-bold text-[#1d7953] hover:bg-[#eef6ea]"><X className="h-4 w-4" aria-hidden="true" />Limpar filtros</button> : null}
+        </div>
+
+        <div id="resultado-materiais" aria-busy={carregandoMateriais}>
+          {carregandoMateriais ? <Carregando texto="Buscando orientações…" /> : null}
+          {erroMateriais ? <Aviso tipo="erro" acao={<button type="button" onClick={() => setVersaoRecarregaGuia(versao => versao + 1)} className={ESTILOS.botaoSecundario}>Tentar novamente</button>}>Não foi possível carregar as orientações agora.</Aviso> : null}
+          {!carregandoMateriais && !erroMateriais && materiaisFiltrados.length ? (
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {materiaisFiltrados.map(material => <GuiaMaterialCard key={material.id} material={material} onEncontrarPonto={abrirPontosParaMaterial} />)}
             </div>
+          ) : null}
+          {!carregandoMateriais && !erroMateriais && materials.length > 0 && materiaisFiltrados.length === 0 && possuiFiltro ? (
+            <EstadoVazio icone={Search} tom="azul" titulo="Nenhum material encontrado" descricao="Tente outra palavra, como o nome do objeto ou do que ele é feito." acao={<button type="button" onClick={() => { setQuery(""); setBuscaGuia(""); setErroBuscaGuia(""); setSelectedCategory("Todos"); }} className={ESTILOS.botaoSecundario}>Limpar busca e filtros</button>} />
+          ) : null}
+          {!carregandoMateriais && !erroMateriais && materials.length === 0 ? (
+            <EstadoVazio icone={BookOpen} tom="azul" titulo="O Guia ainda está sendo preparado" descricao="Enquanto isso, você pode procurar um ponto de coleta na sua cidade." acao={<button type="button" onClick={() => mudarPaginaAutorizada("pontos")} className={ESTILOS.botaoPrincipal}><MapPinned className="h-4 w-4" aria-hidden="true" />Encontrar ponto de coleta</button>} />
           ) : null}
         </div>
       </div>
     );
   }
-
   function renderizarPontos() {
     const permiteAlteracoes = !areaObrigatoria;
     return <div className="space-y-8">
-      {areaObrigatoria === "pontos" ? <p role="status" className="rounded-2xl border border-[#d7e8ce] bg-[#f2f8eb] px-4 py-3 text-sm font-semibold leading-6 text-[#496b4d]">Durante o passo a passo, cadastro, moderação, descarte e busca por proximidade ficam temporariamente pausados. Eles serão liberados quando você concluir as três ações iniciais.</p> : null}
+      {areaObrigatoria === "pontos" ? <Aviso tipo="info">Durante o passo a passo, cadastro, descarte e busca por proximidade ficam pausados. Eles serão liberados quando você concluir as três ações iniciais.</Aviso> : null}
       <PontosColetaCrud podeEscrever={pode("pontos_coleta:escrever") && permiteAlteracoes} podeAprovar={pode("pontos_coleta:aprovar") && permiteAlteracoes} podeRegistrar={pode("gamificacao:participar") && permiteAlteracoes} permiteLocalizacaoBusca={permiteAlteracoes} categoriaInicial={categoriaPontosInicial} onIniciarDescarte={setPontoDescarteInicial} />
       <RegistrosDescarte podeRegistrar={pode("gamificacao:participar") && permiteAlteracoes} podeLer={podeLerGamificacao} podeRevisar={pode("pontos_coleta:aprovar") && permiteAlteracoes} pontoInicial={pontoDescarteInicial} onPontoInicialAplicado={() => setPontoDescarteInicial(null)} />
     </div>;
@@ -580,7 +706,7 @@ export default function Home() {
     setErroSessoes(null);
     try {
       await revogarTodasSessoes();
-      await logout();
+      await sairComTransicao();
     } catch {
       setErroSessoes("Não foi possível encerrar as sessões agora. Tente novamente.");
       setRevogandoSessoes(false);
@@ -614,7 +740,7 @@ export default function Home() {
     if (!window.confirm(atual ? "Encerrar sua sessão atual? Será necessário entrar novamente." : "Revogar esta sessão?")) return;
     try {
       await revogarSessaoApi(idSessao);
-      if (atual) await logout();
+      if (atual) await sairComTransicao();
       else setSessoesAtivas(sessoes => sessoes.filter(sessao => sessao.id !== idSessao));
     } catch {
       setErroSessoes("Não foi possível revogar esta sessão agora. Tente novamente.");
@@ -622,61 +748,81 @@ export default function Home() {
   }
 
   function renderizarPerfil() {
+    const outrasSessoes = sessoesAtivas.filter(sessao => !sessao.atual).length;
     return (
-      <div className="space-y-6">
-        <CabecalhoSecao
-          etiqueta="Conta e segurança"
-          titulo="Perfil e sessões"
-          descricao="Consulte e encerre sessões sem expor tokens ou credenciais. A alteração de senha exige um RPC próprio que ainda não faz parte do contrato."
-        />
-        <div className="grid gap-5 lg:grid-cols-[.8fr_1.2fr]">
-          <article className="rounded-[24px] bg-[#17362a] p-6 text-white">
-            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-[#d6efad] text-lg font-black text-[#17362a]">{perfil.iniciais}</span>
-            {editandoNome ? (
-              <div className="mt-5 flex gap-2">
-                <input value={novoNome} onChange={evento => setNovoNome(evento.target.value)} className="min-w-0 flex-1 rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white outline-none placeholder:text-white/50" aria-label="Nome do perfil" />
-                <button type="button" onClick={() => void salvarNomePerfil()} disabled={salvandoNome} className="rounded-xl bg-[#d6efad] px-3 py-2 text-[#17362a] disabled:opacity-60" aria-label="Salvar nome"><Save className="h-4 w-4" /></button>
+      <div className="space-y-5">
+        <CabecalhoPagina icone={UserRound} tom="verde" titulo="Perfil e sessões" descricao="Veja seus dados e os aparelhos conectados à sua conta." />
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,.85fr)_minmax(0,1.15fr)]">
+          <section className="relative overflow-hidden rounded-[24px] bg-[radial-gradient(circle_at_12%_0%,rgba(119,190,120,.3),transparent_45%),linear-gradient(150deg,#1b4332,#12291f)] p-5 text-white sm:p-6">
+            <div className="flex items-center gap-4">
+              <span className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-[#b8e07a] text-xl font-black text-[#17362a] shadow-[0_10px_24px_-10px_rgba(184,224,122,.7)]">{perfil.iniciais}</span>
+              <div className="min-w-0 flex-1">
+                {editandoNome ? (
+                  <form className="flex gap-2" onSubmit={evento => { evento.preventDefault(); void salvarNomePerfil(); }}>
+                    <input value={novoNome} onChange={evento => setNovoNome(evento.target.value)} autoFocus className="h-11 min-w-0 flex-1 rounded-xl border border-white/25 bg-white/10 px-3 text-[15px] text-white outline-none placeholder:text-white/50 focus:border-[#b8e07a]" aria-label="Nome do perfil" />
+                    <button type="submit" disabled={salvandoNome} className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#b8e07a] text-[#17362a] disabled:opacity-60" aria-label="Salvar nome"><Save className="h-4 w-4" /></button>
+                    <button type="button" onClick={() => { setEditandoNome(false); setAvisoPerfil(null); }} className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/10 text-white" aria-label="Cancelar edição"><X className="h-4 w-4" /></button>
+                  </form>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <h3 className="truncate text-xl font-black">{perfil.nomeDemonstracao}</h3>
+                    <button type="button" onClick={() => { setNovoNome(nomeAutenticado); setEditandoNome(true); setAvisoPerfil(null); }} className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[#d6efad] hover:bg-white/10" aria-label="Editar nome"><Pencil className="h-4 w-4" /></button>
+                  </div>
+                )}
+                <p className="mt-0.5 truncate text-sm text-[#bcd2c3]">{perfilOficial?.emailUsuario || user?.email}</p>
               </div>
-            ) : (
-              <div className="mt-5 flex items-center gap-2"><h3 className="text-xl font-black">{perfil.nomeDemonstracao}</h3><button type="button" onClick={() => { setNovoNome(nomeAutenticado); setEditandoNome(true); setAvisoPerfil(null); }} className="rounded-lg p-1 text-[#d6efad]" aria-label="Editar nome"><Pencil className="h-4 w-4" /></button></div>
-            )}
-            <p className="mt-1 text-sm text-[#bcd2c3]">{perfil.rotulo} · {perfilOficial?.statusUsuario || "status não informado"}</p>
-            <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-3 text-xs leading-5 text-[#d2e5d7]">
-              A API própria protege identidade e sessões. O frontend não persiste a senha nem expõe tokens na interface.
             </div>
-            <p className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#d6efad] px-4 py-2.5 text-sm font-black text-[#17362a]"><KeyRound className="h-4 w-4" /> Sessão JWT própria ativa</p>
-            {avisoPerfil ? <p role="status" className="mt-3 text-xs font-bold text-[#d6efad]">{avisoPerfil}</p> : null}
-          </article>
-          <article className="rounded-2xl border border-[#e1ebe2] bg-white p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-black">Sessões ativas</h3>
-                <p className="mt-1 text-sm text-[#728a7c]">Dispositivos conectados à sua conta.</p>
+            <dl className="mt-6 grid grid-cols-2 gap-3">
+              <div className="rounded-2xl bg-white/[0.07] p-3.5 ring-1 ring-white/10">
+                <dt className="text-xs font-semibold text-[#a9c7b3]">Tipo de conta</dt>
+                <dd className="mt-0.5 font-black">{perfil.rotulo}</dd>
               </div>
-              <button type="button" onClick={() => void encerrarTodasSessoes()} disabled={revogandoSessoes} className="rounded-lg border border-[#ecc6c6] px-3 py-2 text-xs font-black text-[#ae4545] disabled:cursor-wait disabled:opacity-60">{revogandoSessoes ? "Encerrando..." : "Revogar todas"}</button>
-            </div>
-            {carregandoSessoes ? <p className="mt-5 text-sm font-semibold text-[#728a7c]">Consultando sessões ativas...</p> : null}
-            {erroSessoes ? <p role="alert" className="mt-5 rounded-xl bg-[#fff4f0] p-3 text-sm font-semibold text-[#a85040]">{erroSessoes}</p> : null}
-            {!carregandoSessoes && !erroSessoes && sessoesAtivas.length === 0 ? <p className="mt-5 rounded-xl bg-[#f5f8f5] p-4 text-sm font-semibold text-[#728a7c]">Nenhuma sessão ativa foi encontrada.</p> : null}
-            {sessoesAtivas.map(sessao => (
-              <div key={sessao.id} className="mt-5 flex items-center gap-3 rounded-xl bg-[#f5f8f5] p-4">
-                <span className="grid h-9 w-9 place-items-center rounded-xl bg-white text-[#497b60]"><Clock3 className="h-4 w-4" /></span>
-                <span className="min-w-0 flex-1">
-                  <strong className="block truncate text-sm">{sessao.agente}</strong>
-                  <span className="mt-1 block text-xs text-[#7f9688]">{sessao.enderecoIp} · iniciada em {formatarDataSessao(sessao.criadaEm)}</span>
-                </span>
-                <div className="flex shrink-0 flex-col items-end gap-2">
-                  <span className={`rounded-full px-2 py-1 text-[10px] font-black ${sessao.atual ? "bg-[#dff0cb] text-[#2d754d]" : "bg-[#e2f3e2] text-[#2d754d]"}`}>{sessao.atual ? "Sessão atual" : `Expira ${formatarDataSessao(sessao.expiraEm)}`}</span>
-                  <button type="button" onClick={() => void encerrarSessao(sessao.id, sessao.atual)} className="text-[10px] font-black text-[#ae4545]">Revogar sessão</button>
-                </div>
+              <div className="rounded-2xl bg-white/[0.07] p-3.5 ring-1 ring-white/10">
+                <dt className="text-xs font-semibold text-[#a9c7b3]">Situação</dt>
+                <dd className="mt-0.5 font-black capitalize">{perfilOficial?.statusUsuario || "—"}</dd>
               </div>
-            ))}
-          </article>
+              <div className="col-span-2 rounded-2xl bg-white/[0.07] p-3.5 ring-1 ring-white/10">
+                <dt className="text-xs font-semibold text-[#a9c7b3]">E-mail</dt>
+                <dd className="mt-0.5 inline-flex items-center gap-1.5 font-black">{emailVerificado ? <><CircleCheck className="h-4 w-4 text-[#b8e07a]" aria-hidden="true" />Confirmado</> : <><MailWarning className="h-4 w-4 text-[#f3c969]" aria-hidden="true" />Aguardando confirmação</>}</dd>
+              </div>
+            </dl>
+            {avisoPerfil ? <p role="status" className="mt-4 rounded-xl bg-white/10 px-3 py-2 text-sm font-bold text-[#d6efad]">{avisoPerfil}</p> : null}
+            <p className="mt-5 flex items-start gap-2 text-xs leading-5 text-[#a9c7b3]"><KeyRound className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />Sua senha nunca fica salva no navegador.</p>
+          </section>
+
+          <Cartao
+            icone={MonitorSmartphone}
+            titulo="Aparelhos conectados"
+            descricao={sessoesAtivas.length ? `${sessoesAtivas.length} ${sessoesAtivas.length === 1 ? "sessão ativa" : "sessões ativas"}${outrasSessoes ? `, ${outrasSessoes} em outros aparelhos` : ""}.` : "Onde sua conta está aberta agora."}
+            acoes={sessoesAtivas.length ? <button type="button" onClick={() => void encerrarTodasSessoes()} disabled={revogandoSessoes} className={`${ESTILOS.botaoPerigo} w-full sm:w-auto`}><LogOut className="h-4 w-4" aria-hidden="true" />{revogandoSessoes ? "Encerrando..." : "Sair de todos"}</button> : null}
+          >
+            {carregandoSessoes ? <Carregando texto="Consultando aparelhos conectados..." /> : null}
+            {erroSessoes ? <Aviso tipo="erro">{erroSessoes}</Aviso> : null}
+            {!carregandoSessoes && !erroSessoes && sessoesAtivas.length === 0 ? <EstadoVazio icone={MonitorSmartphone} titulo="Nenhuma sessão encontrada" /> : null}
+            <ul className="space-y-3">
+              {sessoesAtivas.map(sessao => (
+                <li key={sessao.id} className={`flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center ${sessao.atual ? "border-[#cfe8d8] bg-[#f3faf5]" : "border-[#e8eee9] bg-[#fafcf9]"}`}>
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${sessao.atual ? "bg-[#1d7953] text-white" : "bg-white text-[#497b60] ring-1 ring-[#e1ebe2]"}`}><MonitorSmartphone className="h-5 w-5" aria-hidden="true" /></span>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <strong className="truncate text-sm text-[#17362a]">{sessao.agente}</strong>
+                        {sessao.atual ? <Etiqueta tom="verde">Este aparelho</Etiqueta> : null}
+                      </div>
+                      <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-[#6c8879]"><Clock3 className="h-3.5 w-3.5" aria-hidden="true" />Entrou em {formatarDataSessao(sessao.criadaEm)}<span aria-hidden="true">·</span>{sessao.enderecoIp}</p>
+                      {!sessao.atual ? <p className="mt-0.5 text-xs text-[#8aa094]">Expira em {formatarDataSessao(sessao.expiraEm)}</p> : null}
+                    </div>
+                  </div>
+                  <button type="button" onClick={() => void encerrarSessao(sessao.id, sessao.atual)} className={`${ESTILOS.botaoPerigo} min-h-10 w-full sm:w-auto`}>{sessao.atual ? "Sair" : "Desconectar"}</button>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-[#6c8879]"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#2f9a5f]" aria-hidden="true" />Não reconhece algum aparelho? Desconecte-o e troque sua senha.</p>
+          </Cartao>
         </div>
       </div>
     );
   }
-
   function renderizarArea() {
     if (!podeAcessarPagina(paginaEfetiva, permissoes)) return renderizarInicio();
     if (paginaEfetiva === "materiais") return renderizarMateriais();
@@ -712,19 +858,14 @@ export default function Home() {
     );
   }
 
-  if (authLoading || !isAuthenticated || !user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f6f7f4]">
-        <div className="text-center">
-          <div className="mx-auto h-9 w-9 animate-spin rounded-full border-4 border-[#d6efad] border-t-[#1d7953]" />
-          <p className="mt-4 text-sm font-bold text-[#6c8879]">Carregando seu espaço seguro...</p>
-        </div>
-      </div>
-    );
+  if (saindo) return <TelaCarregamento modo="saida" nome={perfil.nomeDemonstracao} />;
+
+  if (authLoading || !isAuthenticated || !user || !entradaConcluida) {
+    return <TelaCarregamento modo="entrada" nome={transicaoEntrada ? nomeAutenticado : null} />;
   }
 
   return (
-    <AppShell papel={papel} permissoes={permissoes} usuarioId={user.openId} areaObrigatoria={areaObrigatoria} onAreaObrigatoriaChange={setAreaObrigatoria} nome={perfil.nomeDemonstracao} email={user.email} iniciais={perfil.iniciais} paginaAtiva={paginaEfetiva} onMudarPagina={mudarPaginaAutorizada} onAbrirAreaOnboarding={abrirAreaOnboarding} onLogout={logout}>
+    <AppShell papel={papel} permissoes={permissoes} usuarioId={user.openId} areaObrigatoria={areaObrigatoria} onAreaObrigatoriaChange={setAreaObrigatoria} nome={perfil.nomeDemonstracao} email={user.email} iniciais={perfil.iniciais} paginaAtiva={paginaEfetiva} onMudarPagina={mudarPaginaAutorizada} onAbrirAreaOnboarding={abrirAreaOnboarding} onLogout={sairComTransicao}>
       {!emailVerificado ? (
         <div className="mb-5 rounded-2xl border border-[#f0dcb4] bg-[#fff8e8] px-4 py-3 text-sm font-semibold text-[#805a16]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

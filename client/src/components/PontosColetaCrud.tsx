@@ -1,19 +1,31 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import {
+  Building2,
   Check,
+  CircleCheck,
+  CircleX,
+  Clock3,
   Crosshair,
   ExternalLink,
-  Clock3,
+  Filter,
+  Globe,
+  Info,
   LoaderCircle,
   MapPinned,
+  Navigation,
   Pencil,
+  Phone,
   Plus,
   Recycle,
   Save,
   Search,
+  ShieldCheck,
   Trash2,
   X,
+  type LucideIcon,
 } from "lucide-react";
+import type { ReactNode } from "react";
+import { Aviso, CabecalhoPagina, Carregando, ESTILOS, EstadoVazio, Estatistica, Etiqueta, TONS, type TomPagina } from "@/components/pagina/Pagina";
 import { distanciaEmKm } from "@/lib/geo";
 import { registrarAcaoOnboarding } from "@/lib/onboarding";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -361,149 +373,219 @@ export default function PontosColetaCrud({
     }
   }
 
+  const totalVerificados = pontos.filter(ponto => ponto.statusVerificacao === "verificado").length;
+  const classeLink = "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-[#d6e2d9] bg-white px-3 text-sm font-bold text-[#1d7953] transition hover:border-[#afd2b3] hover:bg-[#f5faf4] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]";
+  const classeAcao = "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-bold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]";
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#3d9664]">Território</p>
-          <h2 className="mt-2 text-2xl font-black text-[#17362a] sm:text-3xl">Pontos de coleta</h2>
-          <p className="mt-2 text-sm leading-6 text-[#668073]">Cadastre, encontre e valide locais com coordenadas obtidas pelo navegador.</p>
-        </div>
-        {podeEscrever ? (
-          <button type="button" onClick={abrirNovo} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1d7953] px-4 py-2.5 text-sm font-black text-white">
-            <Plus className="h-4 w-4" /> Novo ponto
+      <CabecalhoPagina
+        icone={MapPinned}
+        tom="verde"
+        titulo="Pontos de coleta"
+        descricao="Encontre o lugar certo para cada material, veja o horário e trace a rota até lá."
+        acoes={podeEscrever ? (
+          <button type="button" onClick={abrirNovo} className={`${ESTILOS.botaoPrincipal} w-full sm:w-auto`}>
+            <Plus className="h-4 w-4" aria-hidden="true" /> Novo ponto
           </button>
         ) : null}
-      </div>
+      >
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Estatistica icone={MapPinned} tom="verde" valor={carregando ? "…" : pontos.length} rotulo="Pontos encontrados" />
+          <Estatistica icone={ShieldCheck} tom="azul" valor={carregando ? "…" : totalVerificados} rotulo="Verificados" />
+          <Estatistica
+            icone={filtrosAplicados.localizacao ? Navigation : Building2}
+            tom="amarelo"
+            valor={<span className="block truncate">{filtrosAplicados.localizacao ? `${filtrosAplicados.raioKm} km` : filtrosAplicados.cidade || "Todas"}</span>}
+            rotulo={filtrosAplicados.localizacao ? "Perto de você" : "Cidade da busca"}
+          />
+        </div>
+      </CabecalhoPagina>
 
-      {erro ? <div role="alert" className="rounded-2xl border border-[#f0c1bd] bg-[#fff4f0] p-4 text-sm font-bold text-[#a8493e]">{erro}</div> : null}
-      {mensagem ? <div role="status" className="rounded-2xl border border-[#cfe3d1] bg-[#f2faf0] p-4 text-sm font-semibold text-[#356b4a]">{mensagem}</div> : null}
+      {erro ? <Aviso tipo="erro">{erro}</Aviso> : null}
+      {mensagem ? <Aviso tipo="sucesso">{mensagem}</Aviso> : null}
 
-      <form data-onboarding-action="pesquisar_pontos" onSubmit={event => { event.preventDefault(); aplicarFiltros(); }} className="rounded-2xl border border-[#e0eae1] bg-white p-4 sm:p-5">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block">
-            <span className="mb-1.5 block text-xs font-black text-[#5f7b6c]">Buscar por cidade</span>
-            <input
-              value={cidadeBusca}
-              onChange={event => { setCidadeBusca(event.target.value); setLocalizacaoBusca(null); }}
-              placeholder="Ex.: João Pessoa"
-              autoComplete="address-level2"
-              className="min-h-11 w-full rounded-xl border border-[#d9e6db] px-4 py-3 text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-[#4e9b68]"
-            />
+      <form data-onboarding-action="pesquisar_pontos" onSubmit={event => { event.preventDefault(); aplicarFiltros(); }} className={ESTILOS.cartao}>
+        <div className="mb-5 flex items-start gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl" style={{ backgroundColor: TONS.verde.fundo, color: TONS.verde.cor }}>
+            <Search className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <h3 className="text-lg font-black leading-tight tracking-tight text-[#17362a]">Onde você quer descartar?</h3>
+            <p className="mt-0.5 text-sm leading-6 text-[#6c8879]">Digite a cidade e escolha o material. Se preferir, use sua localização.</p>
+          </div>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="block min-w-0">
+            <span className={ESTILOS.rotulo}>Cidade</span>
+            <span className="relative block">
+              <Building2 className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8aa094]" aria-hidden="true" />
+              <input
+                value={cidadeBusca}
+                onChange={event => { setCidadeBusca(event.target.value); setLocalizacaoBusca(null); }}
+                placeholder="Ex.: João Pessoa"
+                autoComplete="address-level2"
+                className={`${ESTILOS.campo} pl-10`}
+              />
+            </span>
           </label>
-          <label className="block">
-            <span className="mb-1.5 block text-xs font-black text-[#5f7b6c]">Material aceito</span>
-            <select value={categoria} onChange={event => setCategoria(event.target.value)} className="min-h-11 w-full rounded-xl border border-[#d9e6db] px-4 py-3 text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-[#4e9b68]">
-              <option value="">Todas as categorias</option>
-              {materiais.map(item => <option key={item} value={item}>{item}</option>)}
-            </select>
+          <label className="block min-w-0">
+            <span className={ESTILOS.rotulo}>Material</span>
+            <span className="relative block">
+              <Filter className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8aa094]" aria-hidden="true" />
+              <select value={categoria} onChange={event => setCategoria(event.target.value)} className={`${ESTILOS.campo} pl-10`}>
+                <option value="">Todos os materiais</option>
+                {materiais.map(item => <option key={item} value={item}>{item}</option>)}
+              </select>
+            </span>
           </label>
         </div>
-        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-          <button type="submit" disabled={carregando} className="min-h-11 rounded-xl border border-[#cfe3d1] px-4 py-3 text-sm font-black text-[#1d7953] disabled:cursor-wait disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+          <button type="submit" disabled={carregando} className={`${ESTILOS.botaoPrincipal} w-full disabled:cursor-wait sm:w-auto`}>
+            {carregando ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Search className="h-4 w-4" aria-hidden="true" />}
             {carregando ? "Buscando…" : "Pesquisar"}
           </button>
-          {permiteLocalizacaoBusca ? <button type="button" onClick={buscarPertoDeMim} disabled={localizandoBusca} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#1d7953] px-4 py-3 text-sm font-black text-white disabled:cursor-wait disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">
+          {permiteLocalizacaoBusca ? <button type="button" onClick={buscarPertoDeMim} disabled={localizandoBusca} className={`${ESTILOS.botaoSecundario} w-full disabled:cursor-wait sm:w-auto`}>
             {localizandoBusca ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Crosshair className="h-4 w-4" aria-hidden="true" />}
             {localizandoBusca ? "Localizando…" : "Perto de mim"}
           </button> : null}
           {filtrosAplicados.localizacao ? <>
-            <label className="flex min-h-11 items-center gap-2 rounded-xl border border-[#d9e6db] px-3 text-sm font-semibold text-[#5d796a]">
-              <span>Raio</span>
-              <select aria-label="Raio da busca por proximidade" value={raioKm} onChange={event => { const novoRaio = Number(event.target.value); setRaioKm(novoRaio); setFiltrosAplicados(atual => ({ ...atual, raioKm: novoRaio })); }} className="bg-transparent py-2 outline-none focus-visible:ring-2 focus-visible:ring-[#4e9b68]">
+            <label className="flex min-h-11 items-center justify-between gap-2 rounded-xl border border-[#d6e2d9] bg-[#f5f9f5] px-3.5 text-sm font-bold text-[#2c4a3c] sm:justify-start">
+              <span className="inline-flex items-center gap-1.5"><Navigation className="h-4 w-4 text-[#1d7953]" aria-hidden="true" /> Distância</span>
+              <select aria-label="Raio da busca por proximidade" value={raioKm} onChange={event => { const novoRaio = Number(event.target.value); setRaioKm(novoRaio); setFiltrosAplicados(atual => ({ ...atual, raioKm: novoRaio })); }} className="min-h-9 rounded-lg bg-white px-2 font-black text-[#17362a] outline-none focus-visible:ring-2 focus-visible:ring-[#1d7953]">
                 {[5, 10, 25, 50].map(valor => <option key={valor} value={valor}>{valor} km</option>)}
               </select>
             </label>
-            <button type="button" onClick={() => { setLocalizacaoBusca(null); setFiltrosAplicados({ cidade: cidadeBusca.trim(), categoria, localizacao: null, raioKm }); setMensagem("Busca por localização encerrada. Pesquise por cidade ou use a localização novamente."); }} className="min-h-11 rounded-xl px-3 py-2 text-sm font-bold text-[#5d796a] underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">Limpar localização</button>
+            <button type="button" onClick={() => { setLocalizacaoBusca(null); setFiltrosAplicados({ cidade: cidadeBusca.trim(), categoria, localizacao: null, raioKm }); setMensagem("Busca por localização encerrada. Pesquise por cidade ou use a localização novamente."); }} className={`${classeAcao} w-full text-[#5f7a6b] hover:bg-[#eef4ef] hover:text-[#17362a] sm:w-auto`}>
+              <X className="h-4 w-4" aria-hidden="true" /> Limpar localização
+            </button>
           </> : null}
         </div>
-        <p className="mt-3 text-xs leading-5 text-[#71897b]" role="status" aria-live="polite">
-          {filtrosAplicados.localizacao
-            ? `Resultados da busca aplicada: até ${filtrosAplicados.raioKm} km, do mais próximo ao mais distante. A localização é usada só nesta busca e não é salva no perfil.`
-            : "Resultados da busca aplicada. Digite uma cidade ou use “Perto de mim”; a localização só é compartilhada se você autorizar."}
+        <p className="mt-4 flex items-start gap-2 rounded-xl bg-[#f5f9f5] px-3.5 py-2.5 text-xs leading-5 text-[#5c7768]" role="status" aria-live="polite">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#1d7953]" aria-hidden="true" />
+          <span>
+            {filtrosAplicados.localizacao
+              ? `Mostrando pontos a até ${filtrosAplicados.raioKm} km, do mais perto ao mais longe. Sua localização é usada só nesta busca e não fica salva.`
+              : "Digite uma cidade ou toque em “Perto de mim”. Sua localização só é usada se você autorizar."}
+          </span>
         </p>
       </form>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {pontos.map(ponto => (
-          <article key={ponto.idPontoColeta} className="rounded-2xl border border-[#e1ebe2] bg-white p-5 shadow-[0_16px_32px_-30px_rgba(23,54,42,.6)]">
-            <div className="flex items-start justify-between gap-3">
+        {pontos.map(ponto => {
+          const status = estiloStatus(ponto.statusVerificacao);
+          const verificado = ponto.statusVerificacao === "verificado";
+          const temAcoes = (podeRegistrar && verificado) || podeEscrever || (podeAprovar && !verificado);
+          return (
+            <article key={ponto.idPontoColeta} className="flex min-w-0 flex-col rounded-[24px] border border-[#e1ebe2] bg-white p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#cfe8d8] hover:shadow-[0_18px_36px_-28px_rgba(23,54,42,.55)] sm:p-6">
               <div className="flex items-start gap-3">
-                <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#e9f5e7] text-[#2a7951]"><MapPinned className="h-5 w-5" /></span>
-                <div>
-                  <h3 className="font-black text-[#17362a]">{ponto.nomePontoColeta}</h3>
-                  <p className="mt-1 text-sm text-[#698273]">
-                    {ponto.cepPontoColeta ? `CEP ${formatarCep(ponto.cepPontoColeta)} · ` : ""}
+                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl" style={{ backgroundColor: TONS.verde.fundo, color: TONS.verde.cor }}>
+                  <MapPinned className="h-6 w-6" aria-hidden="true" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h3 className="break-words text-base font-black leading-tight text-[#17362a] sm:text-lg">{ponto.nomePontoColeta}</h3>
+                  <p className="mt-1 break-words text-sm leading-6 text-[#5c7768]">
                     {ponto.enderecoPontoColeta} · {ponto.cidadePontoColeta}/{ponto.estadoPontoColeta}
+                    {ponto.cepPontoColeta ? <span className="text-[#8aa094]"> · CEP {formatarCep(ponto.cepPontoColeta)}</span> : null}
                   </p>
                 </div>
               </div>
-              <span className={`rounded-full px-2.5 py-1 text-[10px] font-black ${ponto.statusVerificacao === "verificado" ? "bg-[#e5f5e6] text-[#28744d]" : "bg-[#fff2d9] text-[#94620e]"}`}>{rotulosStatus[ponto.statusVerificacao] ?? "Status não informado"}</span>
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2" aria-label="Materiais aceitos">
-              {ponto.categoriasAceitas.length ? ponto.categoriasAceitas.map(item => <span key={item} className="rounded-lg bg-[#f0f5f0] px-2 py-1 text-xs font-bold text-[#5b7969]">{item}</span>) : <span className="text-xs text-[#71897b]">Materiais aceitos não informados</span>}
-            </div>
-            <div className="mt-3 grid gap-2 text-sm text-[#5d796a] sm:grid-cols-2">
-              {ponto.horarioFuncionamento ? <p className="flex items-start gap-2"><Clock3 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><span><strong>Atendimento:</strong> {ponto.horarioFuncionamento}</span></p> : null}
-              {ponto.telefoneContato ? <p><strong>Telefone:</strong> <a className="font-bold underline" href={`tel:${ponto.telefoneContato.replace(/[^+\d]/g, "")}`}>{ponto.telefoneContato}</a></p> : null}
-              {ponto.urlInformacoes && /^https?:\/\//i.test(ponto.urlInformacoes) ? <p><a className="inline-flex min-h-9 items-center gap-1 font-bold text-[#1d7953] underline" href={ponto.urlInformacoes} target="_blank" rel="noopener noreferrer">Informações do local <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" /></a></p> : null}
-              {ponto.dataVerificacao ? <p className="text-xs sm:col-span-2">Última validação: {Number.isNaN(Date.parse(ponto.dataVerificacao)) ? "data não informada" : new Date(ponto.dataVerificacao).toLocaleDateString("pt-BR")}</p> : null}
-            </div>
-            <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-semibold text-[#6c8879]">
-              {typeof ponto.distanciaKm === "number" ? <span className="font-black text-[#337a51]">{ponto.distanciaKm < 1 ? `${Math.round(ponto.distanciaKm * 1000)} m` : `${ponto.distanciaKm.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} km`} de você</span> : null}
-              {(podeEscrever || podeAprovar) ? <span>{ponto.latitudePontoColeta.toFixed(5)}, {ponto.longitudePontoColeta.toFixed(5)}</span> : null}
-              <a target="_blank" rel="noreferrer" aria-label={`Abrir mapa para ${ponto.nomePontoColeta} em nova aba`} href={`https://www.openstreetmap.org/?mlat=${ponto.latitudePontoColeta}&mlon=${ponto.longitudePontoColeta}#map=17/${ponto.latitudePontoColeta}/${ponto.longitudePontoColeta}`} className="inline-flex min-h-9 items-center gap-1 rounded-lg font-black text-[#1d7953] underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">
-                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" /> Abrir mapa
-              </a>
-              <a target="_blank" rel="noopener noreferrer" aria-label={`Traçar rota até ${ponto.nomePontoColeta} em nova aba`} href={`https://www.google.com/maps/dir/?api=1&destination=${ponto.latitudePontoColeta},${ponto.longitudePontoColeta}`} className="inline-flex min-h-9 items-center gap-1 rounded-lg font-black text-[#1d7953] underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">
-                Traçar rota <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-              </a>
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2 border-t border-[#edf2ed] pt-4">
-              {podeRegistrar && ponto.statusVerificacao === "verificado" ? <button type="button" onClick={() => onIniciarDescarte({ idPontoColeta: ponto.idPontoColeta, nomePontoColeta: ponto.nomePontoColeta, cidadePontoColeta: ponto.cidadePontoColeta })} className="inline-flex min-h-10 items-center gap-1 rounded-lg bg-[#1d7953] px-3 py-2 text-xs font-black text-white hover:bg-[#176342] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]"><Recycle className="h-3.5 w-3.5" aria-hidden="true" /> Iniciar descarte</button> : null}
-              {podeEscrever ? <>
-                <button type="button" onClick={() => abrirEdicao(ponto)} className="inline-flex items-center gap-1 rounded-lg bg-[#eef5ed] px-3 py-2 text-xs font-black text-[#337a51]"><Pencil className="h-3.5 w-3.5" /> Editar</button>
-                <button type="button" onClick={() => void remover(ponto.idPontoColeta)} className="inline-flex items-center gap-1 rounded-lg bg-[#fff1ef] px-3 py-2 text-xs font-black text-[#a8493e]"><Trash2 className="h-3.5 w-3.5" /> Excluir</button>
-              </> : null}
-              {podeAprovar && ponto.statusVerificacao !== "verificado" ? <>
-                <button type="button" onClick={() => void moderar(ponto.idPontoColeta, "verificado")} className="inline-flex items-center gap-1 rounded-lg bg-[#e5f5e6] px-3 py-2 text-xs font-black text-[#28744d]"><Check className="h-3.5 w-3.5" /> Aprovar</button>
-                <button type="button" onClick={() => void moderar(ponto.idPontoColeta, "rejeitado")} className="inline-flex items-center gap-1 rounded-lg bg-[#fff1ef] px-3 py-2 text-xs font-black text-[#a8493e]"><X className="h-3.5 w-3.5" /> Rejeitar</button>
-              </> : null}
-            </div>
-          </article>
-        ))}
-        {carregando ? <p className="rounded-2xl bg-white p-8 text-center text-sm font-semibold text-[#708a7b] md:col-span-2" role="status" aria-live="polite">Buscando pontos de coleta…</p> : null}
-        {!carregando && pontos.length === 0 ? <div className="rounded-2xl bg-white p-8 text-center md:col-span-2" role="status">
-          <p className="text-sm font-semibold text-[#708a7b]">{filtrosAplicados.localizacao ? `Nenhum ponto encontrado em até ${filtrosAplicados.raioKm} km.` : `Nenhum ponto encontrado${filtrosAplicados.cidade ? ` em ${filtrosAplicados.cidade}` : ""}.`}</p>
-          <p className="mt-2 text-xs text-[#819589]">{filtrosAplicados.localizacao ? "Tente ampliar o raio ou buscar por cidade." : "Confira o nome da cidade, remova o filtro de material ou use a busca por proximidade."}</p>
-          {filtrosAplicados.localizacao && filtrosAplicados.raioKm < 50 ? <button type="button" onClick={() => { const novoRaio = filtrosAplicados.raioKm === 5 ? 10 : filtrosAplicados.raioKm === 10 ? 25 : 50; setRaioKm(novoRaio); setFiltrosAplicados(atual => ({ ...atual, raioKm: novoRaio })); }} className="mt-4 min-h-10 rounded-xl border border-[#cfe3d1] px-4 py-2 text-sm font-black text-[#1d7953] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">Ampliar raio</button> : null}
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Etiqueta tom={status.tom} icone={status.icone}>{rotulosStatus[ponto.statusVerificacao] ?? "Status não informado"}</Etiqueta>
+                {typeof ponto.distanciaKm === "number" ? <Etiqueta tom="azul" icone={Navigation}>{ponto.distanciaKm < 1 ? `${Math.round(ponto.distanciaKm * 1000)} m` : `${ponto.distanciaKm.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} km`} de você</Etiqueta> : null}
+              </div>
+
+              <div className="mt-4">
+                <p className="mb-2 text-xs font-bold text-[#6c8879]">Recebe</p>
+                <div className="flex flex-wrap gap-1.5" aria-label="Materiais aceitos">
+                  {ponto.categoriasAceitas.length
+                    ? ponto.categoriasAceitas.map(item => <span key={item} className="inline-flex items-center gap-1 rounded-full border border-[#cfe8d8] bg-[#f3faf5] px-2.5 py-1 text-xs font-bold text-[#1d6b43]"><Recycle className="h-3 w-3" aria-hidden="true" />{item}</span>)
+                    : <span className="text-xs text-[#6c8879]">Materiais aceitos não informados</span>}
+                </div>
+              </div>
+
+              {ponto.horarioFuncionamento || ponto.telefoneContato || (ponto.urlInformacoes && /^https?:\/\//i.test(ponto.urlInformacoes)) || ponto.dataVerificacao || podeEscrever || podeAprovar ? (
+                <ul className="mt-4 space-y-2 rounded-2xl bg-[#f7faf7] p-3.5 text-sm text-[#45614f]">
+                  {ponto.horarioFuncionamento ? <li className="flex items-start gap-2.5"><Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-[#1d7953]" aria-hidden="true" /><span className="min-w-0 break-words"><strong className="font-bold text-[#17362a]">Atendimento:</strong> {ponto.horarioFuncionamento}</span></li> : null}
+                  {ponto.telefoneContato ? <li className="flex items-start gap-2.5"><Phone className="mt-0.5 h-4 w-4 shrink-0 text-[#1d7953]" aria-hidden="true" /><span><strong className="font-bold text-[#17362a]">Telefone:</strong> <a className="font-bold text-[#1d7953] underline" href={`tel:${ponto.telefoneContato.replace(/[^+\d]/g, "")}`}>{ponto.telefoneContato}</a></span></li> : null}
+                  {ponto.urlInformacoes && /^https?:\/\//i.test(ponto.urlInformacoes) ? <li className="flex items-start gap-2.5"><Globe className="mt-0.5 h-4 w-4 shrink-0 text-[#1d7953]" aria-hidden="true" /><a className="inline-flex items-center gap-1 font-bold text-[#1d7953] underline" href={ponto.urlInformacoes} target="_blank" rel="noopener noreferrer">Informações do local <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" /></a></li> : null}
+                  {ponto.dataVerificacao ? <li className="flex items-start gap-2.5 text-xs text-[#6c8879]"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><span>Última validação: {Number.isNaN(Date.parse(ponto.dataVerificacao)) ? "data não informada" : new Date(ponto.dataVerificacao).toLocaleDateString("pt-BR")}</span></li> : null}
+                  {(podeEscrever || podeAprovar) ? <li className="flex items-start gap-2.5 text-xs text-[#6c8879]"><Crosshair className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><span className="tabular-nums">{ponto.latitudePontoColeta.toFixed(5)}, {ponto.longitudePontoColeta.toFixed(5)}</span></li> : null}
+                </ul>
+              ) : null}
+
+              <div className="mt-auto pt-4">
+                <div className="grid grid-cols-2 gap-2">
+                  <a target="_blank" rel="noreferrer" aria-label={`Abrir mapa para ${ponto.nomePontoColeta} em nova aba`} href={`https://www.openstreetmap.org/?mlat=${ponto.latitudePontoColeta}&mlon=${ponto.longitudePontoColeta}#map=17/${ponto.latitudePontoColeta}/${ponto.longitudePontoColeta}`} className={classeLink}>
+                    <MapPinned className="h-4 w-4" aria-hidden="true" /> Ver no mapa
+                  </a>
+                  <a target="_blank" rel="noopener noreferrer" aria-label={`Traçar rota até ${ponto.nomePontoColeta} em nova aba`} href={`https://www.google.com/maps/dir/?api=1&destination=${ponto.latitudePontoColeta},${ponto.longitudePontoColeta}`} className={classeLink}>
+                    <Navigation className="h-4 w-4" aria-hidden="true" /> Como chegar
+                  </a>
+                </div>
+                {temAcoes ? (
+                  <div className="mt-3 flex flex-col gap-2 border-t border-[#edf2ed] pt-3 sm:flex-row sm:flex-wrap">
+                    {podeRegistrar && verificado ? <button type="button" onClick={() => onIniciarDescarte({ idPontoColeta: ponto.idPontoColeta, nomePontoColeta: ponto.nomePontoColeta, cidadePontoColeta: ponto.cidadePontoColeta })} className={`${ESTILOS.botaoPrincipal} w-full sm:w-auto`}><Recycle className="h-4 w-4" aria-hidden="true" /> Iniciar descarte</button> : null}
+                    {(podeEscrever || (podeAprovar && !verificado)) ? (
+                      <div className="flex flex-wrap gap-2">
+                        {podeEscrever ? <>
+                          <button type="button" onClick={() => abrirEdicao(ponto)} className={`${classeAcao} flex-1 bg-[#eef5ed] text-[#285e47] hover:bg-[#e2efe1] sm:flex-none`}><Pencil className="h-4 w-4" aria-hidden="true" /> Editar</button>
+                          <button type="button" onClick={() => void remover(ponto.idPontoColeta)} className={`${classeAcao} flex-1 bg-[#fff1ef] text-[#a8493e] hover:bg-[#fde4e0] sm:flex-none`}><Trash2 className="h-4 w-4" aria-hidden="true" /> Excluir</button>
+                        </> : null}
+                        {podeAprovar && !verificado ? <>
+                          <button type="button" onClick={() => void moderar(ponto.idPontoColeta, "verificado")} className={`${classeAcao} flex-1 bg-[#e6f5ec] text-[#1d6b43] hover:bg-[#d6eedf] sm:flex-none`}><Check className="h-4 w-4" aria-hidden="true" /> Aprovar</button>
+                          <button type="button" onClick={() => void moderar(ponto.idPontoColeta, "rejeitado")} className={`${classeAcao} flex-1 bg-[#fff1ef] text-[#a8493e] hover:bg-[#fde4e0] sm:flex-none`}><X className="h-4 w-4" aria-hidden="true" /> Rejeitar</button>
+                        </> : null}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            </article>
+          );
+        })}
+        {carregando ? <div className="md:col-span-2"><Carregando texto="Buscando pontos de coleta…" /></div> : null}
+        {!carregando && pontos.length === 0 ? <div className="md:col-span-2">
+          <EstadoVazio
+            icone={MapPinned}
+            titulo={filtrosAplicados.localizacao ? `Nenhum ponto encontrado em até ${filtrosAplicados.raioKm} km.` : `Nenhum ponto encontrado${filtrosAplicados.cidade ? ` em ${filtrosAplicados.cidade}` : ""}.`}
+            descricao={filtrosAplicados.localizacao ? "Tente aumentar a distância ou buscar pelo nome da cidade." : "Confira o nome da cidade, escolha “Todos os materiais” ou use a busca “Perto de mim”."}
+            acao={filtrosAplicados.localizacao && filtrosAplicados.raioKm < 50 ? <button type="button" onClick={() => { const novoRaio = filtrosAplicados.raioKm === 5 ? 10 : filtrosAplicados.raioKm === 10 ? 25 : 50; setRaioKm(novoRaio); setFiltrosAplicados(atual => ({ ...atual, raioKm: novoRaio })); }} className={ESTILOS.botaoSecundario}><Navigation className="h-4 w-4" aria-hidden="true" /> Ampliar distância</button> : undefined}
+          />
         </div> : null}
       </div>
 
       <Dialog open={aberto} onOpenChange={setAberto}>
         {aberto ? (
-          <DialogContent showCloseButton={false} className="max-h-[92vh] w-full max-w-[calc(100%-2rem)] overflow-y-auto rounded-[28px] border-0 bg-white p-0 shadow-2xl sm:max-w-2xl">
-          <form onSubmit={event => void salvar(event)} className="p-6 sm:p-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#3d9664]">CRUD seguro</p>
-                <DialogTitle className="mt-1 text-left text-2xl font-black text-[#17362a]">{editando ? "Editar ponto" : "Novo ponto de coleta"}</DialogTitle>
-                <DialogDescription className="sr-only">Preencha endereço, localização e materiais aceitos para cadastrar um ponto de coleta.</DialogDescription>
+          <DialogContent showCloseButton={false} className="max-h-[92vh] w-full max-w-[calc(100%-1.5rem)] overflow-y-auto rounded-[28px] border-0 bg-white p-0 shadow-2xl sm:max-w-2xl">
+          <form onSubmit={event => void salvar(event)} className="p-5 sm:p-8">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 items-start gap-3">
+                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-white" style={{ backgroundColor: TONS.verde.cor }}>
+                  {editando ? <Pencil className="h-5 w-5" aria-hidden="true" /> : <MapPinned className="h-6 w-6" aria-hidden="true" />}
+                </span>
+                <div className="min-w-0">
+                  <DialogTitle className="text-left text-xl font-black leading-tight tracking-tight text-[#17362a] sm:text-2xl">{editando ? "Editar ponto" : "Novo ponto de coleta"}</DialogTitle>
+                  <DialogDescription className="mt-1 text-left text-sm leading-6 text-[#6c8879]">Preencha endereço, localização e materiais aceitos. Campos com * são obrigatórios.</DialogDescription>
+                </div>
               </div>
-              <button type="button" onClick={() => setAberto(false)} className="rounded-xl p-2 text-[#648074] hover:bg-[#edf3ed] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#1d7953]" aria-label="Fechar formulário"><X aria-hidden="true" /></button>
+              <button type="button" onClick={() => setAberto(false)} className={ESTILOS.botaoIcone} aria-label="Fechar formulário"><X className="h-5 w-5" aria-hidden="true" /></button>
             </div>
 
-            {erro ? <div role="alert" className="mt-5 rounded-xl border border-[#f0c1bd] bg-[#fff4f0] p-3 text-sm font-bold text-[#a8493e]">{erro}</div> : null}
-            {mensagem ? <div role="status" className="mt-5 rounded-xl border border-[#cfe3d1] bg-[#f2faf0] p-3 text-sm font-semibold text-[#356b4a]">{mensagem}</div> : null}
+            {erro ? <div className="mt-5"><Aviso tipo="erro">{erro}</Aviso></div> : null}
+            {mensagem ? <div className="mt-5"><Aviso tipo="sucesso">{mensagem}</Aviso></div> : null}
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <label className="sm:col-span-2">
-                <span className="mb-1 block text-xs font-black uppercase text-[#5f7b6c]">Nome</span>
-                <input required value={dados.nomePontoColeta} onChange={event => atualizar("nomePontoColeta", event.target.value)} className="w-full rounded-xl border border-[#d9e6db] px-4 py-3 text-sm" />
+            <SecaoFormulario icone={Building2} titulo="Sobre o local">
+              <label className="block sm:col-span-2">
+                <span className={ESTILOS.rotulo}>Nome do ponto *</span>
+                <input required value={dados.nomePontoColeta} onChange={event => atualizar("nomePontoColeta", event.target.value)} placeholder="Ex.: Ecoponto do Bairro" className={ESTILOS.campo} />
               </label>
+            </SecaoFormulario>
 
+            <SecaoFormulario icone={MapPinned} titulo="Endereço">
               <div className="sm:col-span-2">
-                <label htmlFor="ponto-cep" className="mb-1 block text-xs font-black uppercase text-[#5f7b6c]">CEP</label>
+                <label htmlFor="ponto-cep" className={ESTILOS.rotulo}>CEP</label>
                 <div className="flex gap-2">
                   <input
                     id="ponto-cep"
@@ -513,78 +595,110 @@ export default function PontosColetaCrud({
                     placeholder="00000-000"
                     value={dados.cepPontoColeta}
                     onChange={event => alterarCep(event.target.value)}
-                    className="min-w-0 flex-1 rounded-xl border border-[#d9e6db] px-4 py-3 text-sm outline-none focus:border-[#4e9b68]"
+                    className={`${ESTILOS.campo} min-w-0 flex-1`}
                   />
-                  <button type="button" onClick={() => void buscarCep()} disabled={consultandoCep} className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-[#cfe3d1] px-3 py-3 text-sm font-black text-[#1d7953] disabled:opacity-60" aria-label="Buscar endereço pelo CEP">
-                    {consultandoCep ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                  <button type="button" onClick={() => void buscarCep()} disabled={consultandoCep} className={`${ESTILOS.botaoSecundario} h-12 shrink-0 px-3.5 sm:px-4`} aria-label="Buscar endereço pelo CEP">
+                    {consultandoCep ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Search className="h-4 w-4" aria-hidden="true" />}
                     <span className="hidden sm:inline">{consultandoCep ? "Buscando" : "Buscar CEP"}</span>
                   </button>
                 </div>
-                <p className="mt-1 text-xs text-[#71897b]">Ao completar oito dígitos, o endereço é consultado no ViaCEP.</p>
+                <p className="mt-1.5 text-xs leading-5 text-[#6c8879]">Ao digitar os 8 números, o endereço é preenchido sozinho (ViaCEP).</p>
               </div>
+              <label className="block sm:col-span-2">
+                <span className={ESTILOS.rotulo}>Endereço *</span>
+                <input required value={dados.enderecoPontoColeta} onChange={event => atualizar("enderecoPontoColeta", event.target.value)} placeholder="Rua, número e bairro" className={ESTILOS.campo} />
+              </label>
+              <label className="block">
+                <span className={ESTILOS.rotulo}>Cidade *</span>
+                <input required value={dados.cidadePontoColeta} onChange={event => atualizar("cidadePontoColeta", event.target.value)} className={ESTILOS.campo} />
+              </label>
+              <label className="block">
+                <span className={ESTILOS.rotulo}>Estado (UF) *</span>
+                <input required maxLength={2} value={dados.estadoPontoColeta} onChange={event => atualizar("estadoPontoColeta", event.target.value.toUpperCase())} placeholder="PB" className={`${ESTILOS.campo} uppercase`} />
+              </label>
+            </SecaoFormulario>
 
-              <label className="sm:col-span-2">
-                <span className="mb-1 block text-xs font-black uppercase text-[#5f7b6c]">Endereço</span>
-                <input required value={dados.enderecoPontoColeta} onChange={event => atualizar("enderecoPontoColeta", event.target.value)} className="w-full rounded-xl border border-[#d9e6db] px-4 py-3 text-sm" />
-              </label>
-              <label>
-                <span className="mb-1 block text-xs font-black uppercase text-[#5f7b6c]">Cidade</span>
-                <input required value={dados.cidadePontoColeta} onChange={event => atualizar("cidadePontoColeta", event.target.value)} className="w-full rounded-xl border border-[#d9e6db] px-4 py-3 text-sm" />
-              </label>
-              <label>
-                <span className="mb-1 block text-xs font-black uppercase text-[#5f7b6c]">UF</span>
-                <input required maxLength={2} value={dados.estadoPontoColeta} onChange={event => atualizar("estadoPontoColeta", event.target.value.toUpperCase())} className="w-full rounded-xl border border-[#d9e6db] px-4 py-3 text-sm uppercase" />
-              </label>
-              <label>
-                <span className="mb-1 block text-xs font-black uppercase text-[#5f7b6c]">Latitude</span>
-                <input type="number" step="any" value={dados.latitudePontoColeta || ""} onChange={event => atualizar("latitudePontoColeta", Number(event.target.value))} className="w-full rounded-xl border border-[#d9e6db] px-4 py-3 text-sm" />
-              </label>
-              <label>
-                <span className="mb-1 block text-xs font-black uppercase text-[#5f7b6c]">Longitude</span>
-                <input type="number" step="any" value={dados.longitudePontoColeta || ""} onChange={event => atualizar("longitudePontoColeta", Number(event.target.value))} className="w-full rounded-xl border border-[#d9e6db] px-4 py-3 text-sm" />
-              </label>
-              <label className="sm:col-span-2">
-                <span className="mb-1 block text-xs font-black uppercase text-[#5f7b6c]">Horário de atendimento</span>
-                <textarea maxLength={500} rows={2} value={dados.horarioFuncionamento} onChange={event => atualizar("horarioFuncionamento", event.target.value)} placeholder="Ex.: seg. a sex., 8h às 17h; confirme com o local" className="w-full rounded-xl border border-[#d9e6db] px-4 py-3 text-sm" />
-                <span className="mt-1 block text-xs text-[#71897b]">Informe somente quando confirmado; horários podem mudar.</span>
-              </label>
-              <label>
-                <span className="mb-1 block text-xs font-black uppercase text-[#5f7b6c]">Telefone de contato</span>
-                <input type="tel" maxLength={40} autoComplete="tel" value={dados.telefoneContato} onChange={event => atualizar("telefoneContato", event.target.value)} placeholder="(00) 00000-0000" className="w-full rounded-xl border border-[#d9e6db] px-4 py-3 text-sm" />
-              </label>
-              <label>
-                <span className="mb-1 block text-xs font-black uppercase text-[#5f7b6c]">Site ou informações oficiais</span>
-                <input type="url" maxLength={2048} value={dados.urlInformacoes} onChange={event => atualizar("urlInformacoes", event.target.value)} placeholder="https://..." className="w-full rounded-xl border border-[#d9e6db] px-4 py-3 text-sm" />
-              </label>
-            </div>
-
-            <button type="button" onClick={localizar} disabled={localizando} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#e6f1d0] px-4 py-3 text-sm font-black text-[#2d7a50] disabled:opacity-60">
-              {localizando ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Crosshair className="h-4 w-4" />}
-              {localizando ? "Localizando e consultando endereço…" : "Usar minha localização atual"}
-            </button>
-            <p className="mt-2 text-xs leading-5 text-[#71897b]">
-              Ao usar a localização, as coordenadas serão consultadas para sugerir endereço/CEP; a sugestão pode ser aproximada. Serviço e atribuição: <a className="font-bold text-[#1d7953] underline" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a>.
-            </p>
-
-            <div className="mt-5">
-              <p className="mb-2 text-xs font-black uppercase text-[#5f7b6c]">Materiais aceitos</p>
-              <div className="flex flex-wrap gap-2">
-                {materiais.map(item => (
-                  <button type="button" key={item} onClick={() => alternarCategoria(item)} className={`rounded-full px-3 py-2 text-xs font-black ${dados.categoriasAceitas.includes(item) ? "bg-[#1d7953] text-white" : "bg-[#edf3ed] text-[#5d796a]"}`}>
-                    {item}
-                  </button>
-                ))}
+            <SecaoFormulario icone={Crosshair} titulo="Posição no mapa *" descricao="Use sua localização quando estiver no local ou digite as coordenadas.">
+              <div className="sm:col-span-2">
+                <button type="button" onClick={localizar} disabled={localizando} className={`${ESTILOS.botaoSecundario} w-full border-[#cfe8d8] bg-[#f3faf5] text-[#1d6b43] sm:w-auto`}>
+                  {localizando ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Crosshair className="h-4 w-4" aria-hidden="true" />}
+                  {localizando ? "Localizando e buscando endereço…" : "Usar minha localização atual"}
+                </button>
+                <p className="mt-2 text-xs leading-5 text-[#6c8879]">
+                  Com sua localização, sugerimos o endereço e o CEP — confira, pois pode ser aproximado. Dados do mapa: <a className="font-bold text-[#1d7953] underline" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a>.
+                </p>
               </div>
-            </div>
+              <label className="block">
+                <span className={ESTILOS.rotulo}>Latitude</span>
+                <input type="number" step="any" value={dados.latitudePontoColeta || ""} onChange={event => atualizar("latitudePontoColeta", Number(event.target.value))} placeholder="-7.11532" className={`${ESTILOS.campo} tabular-nums`} />
+              </label>
+              <label className="block">
+                <span className={ESTILOS.rotulo}>Longitude</span>
+                <input type="number" step="any" value={dados.longitudePontoColeta || ""} onChange={event => atualizar("longitudePontoColeta", Number(event.target.value))} placeholder="-34.86100" className={`${ESTILOS.campo} tabular-nums`} />
+              </label>
+            </SecaoFormulario>
 
-            <div className="mt-7 flex justify-end gap-3">
-              <button type="button" onClick={() => setAberto(false)} className="rounded-xl border border-[#cfe3d1] px-4 py-3 text-sm font-black text-[#5d796a]">Cancelar</button>
-              <button type="submit" className="inline-flex items-center gap-2 rounded-xl bg-[#17362a] px-5 py-3 text-sm font-black text-white"><Save className="h-4 w-4" /> Salvar</button>
+            <SecaoFormulario icone={Phone} titulo="Atendimento e contato" descricao="Opcional. Informe só o que foi confirmado com o local.">
+              <label className="block sm:col-span-2">
+                <span className={ESTILOS.rotulo}>Horário de atendimento</span>
+                <textarea maxLength={500} rows={2} value={dados.horarioFuncionamento} onChange={event => atualizar("horarioFuncionamento", event.target.value)} placeholder="Ex.: seg. a sex., 8h às 17h" className={ESTILOS.areaTexto} />
+                <span className="mt-1.5 block text-xs text-[#6c8879]">Horários podem mudar; preencha apenas quando tiver certeza.</span>
+              </label>
+              <label className="block">
+                <span className={ESTILOS.rotulo}>Telefone</span>
+                <input type="tel" maxLength={40} autoComplete="tel" value={dados.telefoneContato} onChange={event => atualizar("telefoneContato", event.target.value)} placeholder="(00) 00000-0000" className={ESTILOS.campo} />
+              </label>
+              <label className="block">
+                <span className={ESTILOS.rotulo}>Site oficial</span>
+                <input type="url" maxLength={2048} value={dados.urlInformacoes} onChange={event => atualizar("urlInformacoes", event.target.value)} placeholder="https://..." className={ESTILOS.campo} />
+              </label>
+            </SecaoFormulario>
+
+            <SecaoFormulario icone={Recycle} titulo="Materiais aceitos" descricao="Toque para marcar o que este ponto recebe.">
+              <div className="flex flex-wrap gap-2 sm:col-span-2">
+                {materiais.map(item => {
+                  const selecionado = dados.categoriasAceitas.includes(item);
+                  return (
+                    <button type="button" key={item} aria-pressed={selecionado} onClick={() => alternarCategoria(item)} className={`inline-flex min-h-10 items-center gap-1.5 rounded-full border px-3.5 text-sm font-bold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953] ${selecionado ? "border-[#1d7953] bg-[#1d7953] text-white" : "border-[#d6e2d9] bg-white text-[#45614f] hover:border-[#afd2b3] hover:bg-[#f5faf4]"}`}>
+                      {selecionado ? <Check className="h-4 w-4" aria-hidden="true" /> : <Plus className="h-4 w-4" aria-hidden="true" />}
+                      {item}
+                    </button>
+                  );
+                })}
+              </div>
+            </SecaoFormulario>
+
+            <div className="mt-7 flex flex-col-reverse gap-2 border-t border-[#edf2ed] pt-5 sm:flex-row sm:justify-end sm:gap-3">
+              <button type="button" onClick={() => setAberto(false)} className={`${ESTILOS.botaoSecundario} w-full sm:w-auto`}>Cancelar</button>
+              <button type="submit" className={`${ESTILOS.botaoPrincipal} w-full sm:w-auto`}><Save className="h-4 w-4" aria-hidden="true" /> Salvar ponto</button>
             </div>
           </form>
           </DialogContent>
         ) : null}
       </Dialog>
     </div>
+  );
+}
+
+function estiloStatus(status: string): { tom: TomPagina; icone: LucideIcon } {
+  if (status === "verificado") return { tom: "verde", icone: CircleCheck };
+  if (status === "pendente") return { tom: "amarelo", icone: Clock3 };
+  if (status === "rejeitado") return { tom: "vermelho", icone: CircleX };
+  if (status === "expirado") return { tom: "amarelo", icone: Info };
+  return { tom: "cinza", icone: Info };
+}
+
+function SecaoFormulario({ icone: Icone, titulo, descricao, children }: { icone: LucideIcon; titulo: string; descricao?: string; children: ReactNode }) {
+  return (
+    <fieldset className="mt-6 min-w-0">
+      <legend className="flex items-center gap-2 text-sm font-black text-[#17362a]">
+        <span className="grid h-7 w-7 place-items-center rounded-lg" style={{ backgroundColor: TONS.verde.fundo, color: TONS.verde.cor }}>
+          <Icone className="h-4 w-4" aria-hidden="true" />
+        </span>
+        {titulo}
+      </legend>
+      {descricao ? <p className="mt-1 text-xs leading-5 text-[#6c8879]">{descricao}</p> : null}
+      <div className="mt-3 grid gap-4 sm:grid-cols-2">{children}</div>
+    </fieldset>
   );
 }

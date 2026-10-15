@@ -16,9 +16,11 @@ import {
   Save,
   Search,
   ShieldCheck,
+  UserRound,
   Users,
   X,
 } from "lucide-react";
+import { Abas, Aviso, CabecalhoPagina, ESTILOS, EstadoVazio, Etiqueta, TONS, type TomPagina } from "@/components/pagina/Pagina";
 import {
   alterarStatusUsuarioAdministrativo,
   arquivarPapelAdministrativo,
@@ -66,15 +68,77 @@ function motivoAdministrativo(acao: string): string | null {
   return motivo.trim();
 }
 
-function Indicador({ titulo, valor, detalhe, icone: Icone }: { titulo: string; valor: number | null; detalhe: string; icone: typeof Users }) {
+const ROTULO_STATUS: Record<string, { texto: string; tom: TomPagina }> = {
+  ativo: { texto: "Ativo", tom: "verde" },
+  bloqueado: { texto: "Bloqueado", tom: "vermelho" },
+  anonimizado: { texto: "Anonimizado", tom: "cinza" },
+  arquivado: { texto: "Arquivado", tom: "cinza" },
+};
+
+function StatusEtiqueta({ status }: { status: string }) {
+  const info = ROTULO_STATUS[status] ?? { texto: status, tom: "cinza" as TomPagina };
+  return <Etiqueta tom={info.tom}>{info.texto}</Etiqueta>;
+}
+
+function Indicador({ titulo, valor, detalhe, icone: Icone, tom = "verde" }: { titulo: string; valor: number | null; detalhe: string; icone: typeof Users; tom?: TomPagina }) {
+  const t = TONS[tom];
   return (
-    <article className="rounded-2xl border border-[#e1ebe2] bg-white p-5 shadow-[0_16px_32px_-28px_rgba(19,62,43,.65)]">
-      <div className="flex items-start justify-between gap-3">
-        <div><p className="text-xs font-bold text-[#7c9386]">{titulo}</p><strong className="mt-2 block text-2xl font-black text-[#17362a]">{valor === null ? "—" : valor.toLocaleString("pt-BR")}</strong></div>
-        <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#e7f5e7] text-[#23734d]"><Icone className="h-5 w-5" /></span>
+    <article className="flex min-w-0 flex-col gap-2 rounded-2xl border bg-white p-3.5 sm:p-4" style={{ borderColor: t.borda }}>
+      <div className="flex items-center gap-2.5">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl" style={{ backgroundColor: t.fundo, color: t.cor }}>
+          <Icone className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <strong className="min-w-0 truncate text-xl font-black leading-tight tabular-nums text-[#17362a] sm:text-2xl">{valor === null ? "—" : valor.toLocaleString("pt-BR")}</strong>
       </div>
-      <p className="mt-3 text-xs font-semibold text-[#6c8879]">{detalhe}</p>
+      <div className="min-w-0">
+        <p className="text-sm font-bold leading-5 text-[#244637]">{titulo}</p>
+        <p className="mt-0.5 text-xs leading-5 text-[#6c8879]">{detalhe}</p>
+      </div>
     </article>
+  );
+}
+
+function BotaoAcao({ rotulo, icone: Icone, onClick, disabled, perigo = false }: { rotulo: string; icone: typeof Users; onClick: () => void; disabled?: boolean; perigo?: boolean }) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      title={rotulo}
+      aria-label={rotulo}
+      className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl border bg-white transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953] disabled:cursor-not-allowed disabled:opacity-40 ${perigo ? "border-[#f0c6c1] text-[#a8493e] hover:bg-[#fff5f3]" : "border-[#d6e2d9] text-[#285e47] hover:border-[#afd2b3] hover:bg-[#f5faf4]"}`}
+    >
+      <Icone className="h-[18px] w-[18px]" aria-hidden="true" />
+    </button>
+  );
+}
+
+function Paginacao({ inicio, fim, total, unidade, pagina, podeVoltar, podeAvancar, onVoltar, onAvancar }: { inicio: number; fim: number; total: number; unidade: string; pagina: number; podeVoltar: boolean; podeAvancar: boolean; onVoltar: () => void; onAvancar: () => void }) {
+  return (
+    <div className="flex flex-col gap-3 border-t border-[#edf2ed] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+      <span className="text-sm font-semibold text-[#5c7768]">
+        Mostrando <strong className="text-[#17362a]">{inicio}–{fim}</strong> de <strong className="text-[#17362a]">{total.toLocaleString("pt-BR")}</strong> {unidade}
+      </span>
+      <div className="flex flex-wrap items-center gap-2">
+        <button type="button" disabled={!podeVoltar} onClick={onVoltar} className={`${ESTILOS.botaoSecundario} flex-1 sm:flex-none`}>
+          <ChevronLeft className="h-4 w-4" aria-hidden="true" /> Anterior
+        </button>
+        <span className="min-w-20 text-center text-sm font-bold text-[#17362a]">Página {pagina}</span>
+        <button type="button" disabled={!podeAvancar} onClick={onAvancar} className={`${ESTILOS.botaoSecundario} flex-1 sm:flex-none`}>
+          Próxima <ChevronRight className="h-4 w-4" aria-hidden="true" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function CampoBusca({ valor, onChange, placeholder, rotulo }: { valor: string; onChange: (valor: string) => void; placeholder: string; rotulo: string }) {
+  return (
+    <label className="relative block min-w-0 flex-1">
+      <span className="sr-only">{rotulo}</span>
+      <Search className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#6c8879]" aria-hidden="true" />
+      <input value={valor} onChange={event => onChange(event.target.value)} placeholder={placeholder} className={`${ESTILOS.campo} pl-11`} />
+    </label>
   );
 }
 
@@ -315,74 +379,235 @@ export default function AdministracaoCrud({ podeConsultarResumo, podeGerenciarAc
   if (!podeConsultarResumo && !podeGerenciarAcessos && !podeConsultarAuditoria) return null;
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div className="max-w-3xl"><p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#3d9664]">Governança</p><h2 className="mt-2 text-2xl font-black tracking-[-0.035em] text-[#17362a] sm:text-3xl">Administração da plataforma</h2><p className="mt-2 text-sm leading-6 text-[#668073]">Contas, papéis, matriz de permissões e trilha de auditoria. Mudanças de acesso são registradas e revogam sessões quando necessário.</p></div>
-        <button type="button" onClick={() => void recarregarTudo()} disabled={carregando} className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#dce8de] bg-white px-4 py-2.5 text-sm font-black text-[#315c47] disabled:opacity-50"><RefreshCw className={`h-4 w-4 ${carregando ? "animate-spin" : ""}`} /> Atualizar</button>
-      </header>
+    <div className="space-y-5 sm:space-y-6">
+      <CabecalhoPagina
+        icone={ShieldCheck}
+        tom="verde"
+        titulo="Administração"
+        descricao="Gerencie contas, papéis de acesso e acompanhe o histórico de ações. Toda mudança de acesso fica registrada."
+        acoes={<button type="button" onClick={() => void recarregarTudo()} disabled={carregando} className={ESTILOS.botaoSecundario}><RefreshCw className={`h-4 w-4 ${carregando ? "animate-spin" : ""}`} aria-hidden="true" /> Atualizar</button>}
+      >
+        {podeConsultarResumo ? <section aria-label="Resumo da plataforma" className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-3">
+          <Indicador titulo="Usuários ativos" valor={resumo?.quantidadeUsuarios ?? null} detalhe={detalheResumo("Contas com acesso liberado")} icone={Users} tom="verde" />
+          <Indicador titulo="Papéis ativos" valor={resumo?.quantidadePapeis ?? null} detalhe={detalheResumo("O papel administrador é protegido")} icone={ShieldCheck} tom="azul" />
+          <Indicador titulo="Conteúdos publicados" valor={resumo?.quantidadeMateriaisPublicados ?? null} detalhe={resumo ? `${resumo.quantidadeMateriais.toLocaleString("pt-BR")} materiais no catálogo` : detalheResumo("")} icone={Check} tom="roxo" />
+          <Indicador titulo="Pontos pendentes" valor={resumo?.quantidadePontosPendentes ?? null} detalhe={detalheResumo("Aguardam revisão")} icone={CircleAlert} tom="amarelo" />
+          <Indicador titulo="Eventos registrados" valor={resumo?.quantidadeEventosAuditoria ?? null} detalhe={detalheResumo("Disponíveis na auditoria")} icone={FileClock} tom="marrom" />
+          <Indicador titulo="Avaliações autorizadas" valor={resumo?.quantidadeAvaliacoes ?? null} detalhe={detalheResumo("Com consentimento para análise")} icone={ShieldCheck} tom="cinza" />
+        </section> : null}
+      </CabecalhoPagina>
 
-      {erro ? <div role="alert" className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800"><CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />{erro}</div> : null}
-      {mensagem ? <div role="status" className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800"><Check className="mt-0.5 h-4 w-4 shrink-0" />{mensagem}</div> : null}
+      {erro ? <Aviso tipo="erro">{erro}</Aviso> : null}
+      {mensagem ? <Aviso tipo="sucesso"><span className="flex items-start gap-2"><Check className="mt-1 h-4 w-4 shrink-0" aria-hidden="true" />{mensagem}</span></Aviso> : null}
 
-      {podeConsultarResumo ? <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <Indicador titulo="Usuários ativos" valor={resumo?.quantidadeUsuarios ?? null} detalhe={detalheResumo("Contas com acesso ativo")} icone={Users} />
-        <Indicador titulo="Papéis ativos" valor={resumo?.quantidadePapeis ?? null} detalhe={detalheResumo("Papel administrador protegido")} icone={ShieldCheck} />
-        <Indicador titulo="Conteúdos publicados" valor={resumo?.quantidadeMateriaisPublicados ?? null} detalhe={resumo ? `${resumo.quantidadeMateriais.toLocaleString("pt-BR")} materiais no catálogo` : detalheResumo("")} icone={Check} />
-        <Indicador titulo="Pontos pendentes" valor={resumo?.quantidadePontosPendentes ?? null} detalhe={detalheResumo("Aguardam revisão administrativa")} icone={CircleAlert} />
-        <Indicador titulo="Eventos auditáveis" valor={resumo?.quantidadeEventosAuditoria ?? null} detalhe={detalheResumo("Registros disponíveis para consulta")} icone={FileClock} />
-        <Indicador titulo="Avaliações consentidas" valor={resumo?.quantidadeAvaliacoes ?? null} detalhe={detalheResumo("Sessões autorizadas para análise agregada")} icone={ShieldCheck} />
-      </section> : null}
-
-      {abasDisponiveis.length ? <div className="flex flex-wrap gap-2 border-b border-[#e1ebe2] pb-3" role="tablist" aria-label="Seções administrativas">
-        {abasDisponiveis.map(({ id, titulo, icone: Icone }) => <button key={id} type="button" role="tab" aria-selected={abaAtual === id} onClick={() => { setAba(id); setErro(null); setMensagem(null); }} className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-black transition ${abaAtual === id ? "bg-[#1d7953] text-white" : "bg-white text-[#5d796a] hover:bg-[#edf3ed]"}`}><Icone className="h-4 w-4" />{titulo}</button>)}
-      </div> : null}
+      {abasDisponiveis.length ? (
+        <Abas
+          rotulo="Seções administrativas"
+          abas={abasDisponiveis.map(({ id, titulo, icone }) => ({ id, rotulo: titulo, icone }))}
+          ativa={abaAtual}
+          onChange={id => { setAba(id); setErro(null); setMensagem(null); }}
+        />
+      ) : null}
 
       {podeGerenciarAcessos && abaAtual === "usuarios" ? (
         <section className="space-y-4">
-          <div className="flex flex-col gap-3 rounded-2xl border border-[#e0eae1] bg-white p-4 sm:flex-row">
-            <label className="flex min-w-56 flex-1 items-center gap-2 rounded-xl border border-[#d9e6db] px-3 py-2.5"><Search className="h-4 w-4 text-[#638775]" /><input value={buscaUsuario} onChange={event => { setBuscaUsuario(event.target.value); setPaginaUsuarios(0); }} placeholder="Buscar nome ou e-mail" className="w-full bg-transparent text-sm outline-none" /></label>
-            <select value={statusUsuario} onChange={event => { setStatusUsuario(event.target.value); setPaginaUsuarios(0); }} className="rounded-xl border border-[#d9e6db] bg-white px-3 py-2.5 text-sm font-semibold"><option value="todos">Todos os status</option><option value="ativo">Ativo</option><option value="bloqueado">Bloqueado</option><option value="anonimizado">Anonimizado</option></select>
+          <div className="flex flex-col gap-3 rounded-[24px] border border-[#e1ebe2] bg-white p-4 sm:flex-row sm:p-5">
+            <CampoBusca rotulo="Buscar usuário" valor={buscaUsuario} onChange={valor => { setBuscaUsuario(valor); setPaginaUsuarios(0); }} placeholder="Buscar por nome ou e-mail" />
+            <label className="block sm:w-56">
+              <span className="sr-only">Filtrar por situação da conta</span>
+              <select value={statusUsuario} onChange={event => { setStatusUsuario(event.target.value); setPaginaUsuarios(0); }} className={`${ESTILOS.campo} font-semibold`}><option value="todos">Todas as situações</option><option value="ativo">Ativo</option><option value="bloqueado">Bloqueado</option><option value="anonimizado">Anonimizado</option></select>
+            </label>
           </div>
-          <div className="overflow-hidden rounded-2xl border border-[#e0eae1] bg-white">
-            <div className="overflow-x-auto"><table className="w-full min-w-[980px] text-left text-sm"><thead className="bg-[#f5faf4] text-[11px] uppercase tracking-wide text-[#688574]"><tr><th className="px-4 py-3">Conta</th><th className="px-4 py-3">Status e verificação</th><th className="px-4 py-3">Papéis</th><th className="px-4 py-3">Criada</th><th className="px-4 py-3">Último acesso</th><th className="px-4 py-3 text-right">Ações</th></tr></thead><tbody className="divide-y divide-[#edf2ed]">{usuarios.map(usuario => <tr key={usuario.idUsuario} className="align-top"><td className="px-4 py-4"><strong className="block text-[#244637]">{usuario.nomeUsuario}</strong><span className="mt-1 block text-xs text-[#71897b]">{usuario.emailUsuario}</span></td><td className="px-4 py-4"><span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase ${usuario.statusUsuario === "ativo" ? "bg-emerald-100 text-emerald-800" : usuario.statusUsuario === "bloqueado" ? "bg-red-100 text-red-800" : "bg-slate-100 text-slate-700"}`}>{usuario.statusUsuario}</span><span className="mt-2 block text-xs text-[#71897b]">{usuario.emailVerificado ? "E-mail verificado" : "E-mail pendente"}</span></td><td className="px-4 py-4"><div className="flex max-w-56 flex-wrap gap-1">{usuario.papeis.map(papel => <span key={papel.idPapel} className="rounded-lg bg-[#eef5ed] px-2 py-1 text-[10px] font-bold text-[#55715d]">{papel.nomePapel}</span>)}</div></td><td className="whitespace-nowrap px-4 py-4 text-xs text-[#71897b]">{dataLocal(usuario.dataCriacao)}</td><td className="whitespace-nowrap px-4 py-4 text-xs text-[#71897b]">{dataLocal(usuario.dataUltimoAcesso)}</td><td className="px-4 py-4"><div className="flex justify-end gap-2"><button type="button" disabled={salvando || usuario.statusUsuario === "anonimizado"} onClick={() => void alterarStatusUsuario(usuario)} title={usuario.statusUsuario === "ativo" ? "Bloquear conta" : "Reativar conta"} className="rounded-lg border border-[#e0eae1] p-2 text-[#55715d] hover:bg-[#f5faf4] disabled:opacity-40">{usuario.statusUsuario === "ativo" ? <Ban className="h-4 w-4" /> : <RotateCcw className="h-4 w-4" />}</button><button type="button" disabled={salvando || usuario.idUsuario === ""} onClick={() => editarPapeisUsuario(usuario)} title="Gerenciar papéis" className="rounded-lg border border-[#e0eae1] p-2 text-[#55715d] hover:bg-[#f5faf4] disabled:opacity-40"><KeyRound className="h-4 w-4" /></button><button type="button" disabled={salvando} onClick={() => void revogarSessoes(usuario)} title="Revogar sessões" className="rounded-lg border border-[#e0eae1] p-2 text-[#55715d] hover:bg-[#f5faf4] disabled:opacity-40"><LockKeyhole className="h-4 w-4" /></button></div></td></tr>)}
-              {!carregando && usuarios.length === 0 ? <tr><td colSpan={6} className="px-4 py-12 text-center text-sm font-semibold text-[#71897b]">Nenhuma conta corresponde aos filtros.</td></tr> : null}
-            </tbody></table></div>
-            <div className="flex flex-col gap-3 border-t border-[#edf2ed] px-4 py-3 text-xs font-semibold text-[#71897b] sm:flex-row sm:items-center sm:justify-between"><span>{inicioUsuarios}–{fimUsuarios} de {totalUsuarios.toLocaleString("pt-BR")} usuários</span><div className="flex items-center gap-2"><button type="button" disabled={paginaUsuarios === 0 || carregando} onClick={() => setPaginaUsuarios(p => Math.max(0, p - 1))} className="rounded-lg border border-[#dce8de] p-2 disabled:opacity-40"><ChevronLeft className="h-4 w-4" /></button><span>Página {paginaUsuarios + 1}</span><button type="button" disabled={fimUsuarios >= totalUsuarios || carregando} onClick={() => setPaginaUsuarios(p => p + 1)} className="rounded-lg border border-[#dce8de] p-2 disabled:opacity-40"><ChevronRight className="h-4 w-4" /></button></div></div>
+
+          <div className="overflow-hidden rounded-[24px] border border-[#e1ebe2] bg-white">
+            <ul className="divide-y divide-[#edf2ed] sm:hidden">
+              {usuarios.map(usuario => (
+                <li key={usuario.idUsuario} className="space-y-3 p-4">
+                  <div className="flex items-start gap-3">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#e6f5ec] text-[#2f9a5f]"><UserRound className="h-5 w-5" aria-hidden="true" /></span>
+                    <div className="min-w-0 flex-1">
+                      <strong className="block break-words text-[15px] font-black text-[#17362a]">{usuario.nomeUsuario}</strong>
+                      <span className="block break-all text-sm text-[#6c8879]">{usuario.emailUsuario}</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusEtiqueta status={usuario.statusUsuario} />
+                    <Etiqueta tom={usuario.emailVerificado ? "azul" : "amarelo"}>{usuario.emailVerificado ? "E-mail verificado" : "E-mail pendente"}</Etiqueta>
+                    {usuario.papeis.map(papel => <Etiqueta key={papel.idPapel} tom="cinza" icone={KeyRound}>{papel.nomePapel}</Etiqueta>)}
+                  </div>
+                  <dl className="grid grid-cols-2 gap-2 text-xs">
+                    <div><dt className="font-semibold text-[#6c8879]">Criada em</dt><dd className="font-bold text-[#244637]">{dataLocal(usuario.dataCriacao)}</dd></div>
+                    <div><dt className="font-semibold text-[#6c8879]">Último acesso</dt><dd className="font-bold text-[#244637]">{dataLocal(usuario.dataUltimoAcesso)}</dd></div>
+                  </dl>
+                  <div className="grid grid-cols-1 gap-2 min-[400px]:grid-cols-3">
+                    <button type="button" disabled={salvando || usuario.statusUsuario === "anonimizado"} onClick={() => void alterarStatusUsuario(usuario)} className={usuario.statusUsuario === "ativo" ? ESTILOS.botaoPerigo : ESTILOS.botaoSecundario}>{usuario.statusUsuario === "ativo" ? <Ban className="h-4 w-4" aria-hidden="true" /> : <RotateCcw className="h-4 w-4" aria-hidden="true" />}{usuario.statusUsuario === "ativo" ? "Bloquear" : "Reativar"}</button>
+                    <button type="button" disabled={salvando || usuario.idUsuario === ""} onClick={() => editarPapeisUsuario(usuario)} className={ESTILOS.botaoSecundario}><KeyRound className="h-4 w-4" aria-hidden="true" />Papéis</button>
+                    <button type="button" disabled={salvando} onClick={() => void revogarSessoes(usuario)} className={ESTILOS.botaoSecundario}><LockKeyhole className="h-4 w-4" aria-hidden="true" />Desconectar</button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <div className="hidden overflow-x-auto sm:block">
+              <table className="w-full min-w-[880px] text-left text-sm">
+                <thead className={ESTILOS.tabelaCabecalho}><tr><th className="px-4 py-3">Conta</th><th className="px-4 py-3">Situação</th><th className="px-4 py-3">Papéis</th><th className="px-4 py-3">Criada em</th><th className="px-4 py-3">Último acesso</th><th className="px-4 py-3 text-right">Ações</th></tr></thead>
+                <tbody className="divide-y divide-[#edf2ed]">
+                  {usuarios.map(usuario => (
+                    <tr key={usuario.idUsuario} className="align-top transition hover:bg-[#fafcf9]">
+                      <td className="px-4 py-4"><strong className="block font-black text-[#17362a]">{usuario.nomeUsuario}</strong><span className="mt-0.5 block text-xs text-[#6c8879]">{usuario.emailUsuario}</span></td>
+                      <td className="px-4 py-4"><StatusEtiqueta status={usuario.statusUsuario} /><span className="mt-2 block text-xs text-[#6c8879]">{usuario.emailVerificado ? "E-mail verificado" : "E-mail pendente"}</span></td>
+                      <td className="px-4 py-4"><div className="flex max-w-56 flex-wrap gap-1">{usuario.papeis.map(papel => <Etiqueta key={papel.idPapel} tom="cinza">{papel.nomePapel}</Etiqueta>)}</div></td>
+                      <td className="whitespace-nowrap px-4 py-4 text-xs text-[#5c7768]">{dataLocal(usuario.dataCriacao)}</td>
+                      <td className="whitespace-nowrap px-4 py-4 text-xs text-[#5c7768]">{dataLocal(usuario.dataUltimoAcesso)}</td>
+                      <td className="px-4 py-4"><div className="flex justify-end gap-2">
+                        <BotaoAcao rotulo={usuario.statusUsuario === "ativo" ? "Bloquear conta" : "Reativar conta"} icone={usuario.statusUsuario === "ativo" ? Ban : RotateCcw} perigo={usuario.statusUsuario === "ativo"} disabled={salvando || usuario.statusUsuario === "anonimizado"} onClick={() => void alterarStatusUsuario(usuario)} />
+                        <BotaoAcao rotulo="Gerenciar papéis" icone={KeyRound} disabled={salvando || usuario.idUsuario === ""} onClick={() => editarPapeisUsuario(usuario)} />
+                        <BotaoAcao rotulo="Desconectar de todos os aparelhos" icone={LockKeyhole} disabled={salvando} onClick={() => void revogarSessoes(usuario)} />
+                      </div></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {!carregando && usuarios.length === 0 ? <div className="p-4"><EstadoVazio icone={Users} titulo="Nenhuma conta encontrada" descricao="Tente outro nome, e-mail ou situação." /></div> : null}
+            <Paginacao inicio={inicioUsuarios} fim={fimUsuarios} total={totalUsuarios} unidade="usuários" pagina={paginaUsuarios + 1} podeVoltar={!(paginaUsuarios === 0 || carregando)} podeAvancar={!(fimUsuarios >= totalUsuarios || carregando)} onVoltar={() => setPaginaUsuarios(p => Math.max(0, p - 1))} onAvancar={() => setPaginaUsuarios(p => p + 1)} />
           </div>
-          {papelUsuario ? <form onSubmit={event => void salvarPapeisUsuario(event)} className="rounded-2xl border border-[#cfe3d3] bg-white p-5"><div className="flex items-start justify-between gap-3"><div><h3 className="font-black text-[#244637]">Papéis de {papelUsuario.nomeUsuario}</h3><p className="mt-1 text-xs text-[#71897b]">Salvar revoga as sessões da conta. Alterações do próprio administrador são bloqueadas pela API.</p></div><button type="button" onClick={() => setPapelUsuario(null)} className="rounded-lg p-2 text-[#71897b] hover:bg-[#f3f7f2]" aria-label="Fechar"><X className="h-4 w-4" /></button></div><div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{papeisAtivos.map(papel => <label key={papel.idPapel} className="flex items-start gap-3 rounded-xl border border-[#e4ece4] p-3 text-sm"><input type="checkbox" checked={idsPapeisUsuario.includes(papel.idPapel)} onChange={() => setIdsPapeisUsuario(ids => ids.includes(papel.idPapel) ? ids.filter(id => id !== papel.idPapel) : [...ids, papel.idPapel])} className="mt-1 accent-[#1d7953]" /><span><strong className="block text-[#315c47]">{papel.nomePapel}</strong><span className="text-xs text-[#71897b]">{papel.descricaoPapel}</span></span></label>)}</div><div className="mt-4 flex justify-end"><button type="submit" disabled={salvando || idsPapeisUsuario.length === 0} className="inline-flex items-center gap-2 rounded-xl bg-[#1d7953] px-4 py-2.5 text-sm font-black text-white disabled:opacity-50"><Save className="h-4 w-4" /> Salvar papéis</button></div></form> : null}
+
+          {papelUsuario ? (
+            <form onSubmit={event => void salvarPapeisUsuario(event)} className="rounded-[24px] border border-[#cfe8d8] bg-white p-5 sm:p-6">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#e6f5ec] text-[#2f9a5f]"><KeyRound className="h-5 w-5" aria-hidden="true" /></span>
+                  <div className="min-w-0"><h3 className="break-words text-lg font-black leading-tight text-[#17362a]">Papéis de {papelUsuario.nomeUsuario}</h3><p className="mt-1 text-sm leading-6 text-[#6c8879]">Ao salvar, a pessoa precisará entrar de novo. Você não pode alterar os seus próprios papéis.</p></div>
+                </div>
+                <button type="button" onClick={() => setPapelUsuario(null)} className={ESTILOS.botaoIcone} aria-label="Fechar"><X className="h-5 w-5" /></button>
+              </div>
+              <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {papeisAtivos.map(papel => {
+                  const marcado = idsPapeisUsuario.includes(papel.idPapel);
+                  return <label key={papel.idPapel} className={`flex min-h-11 cursor-pointer items-start gap-3 rounded-2xl border p-3.5 text-sm transition ${marcado ? "border-[#9fd0b0] bg-[#f1f9ef]" : "border-[#e1ebe2] hover:bg-[#fafcf9]"}`}><input type="checkbox" checked={marcado} onChange={() => setIdsPapeisUsuario(ids => ids.includes(papel.idPapel) ? ids.filter(id => id !== papel.idPapel) : [...ids, papel.idPapel])} className="mt-0.5 h-5 w-5 shrink-0 accent-[#1d7953]" /><span className="min-w-0"><strong className="block font-black text-[#17362a]">{papel.nomePapel}</strong><span className="text-xs leading-5 text-[#6c8879]">{papel.descricaoPapel}</span></span></label>;
+                })}
+              </div>
+              <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <button type="button" onClick={() => setPapelUsuario(null)} className={ESTILOS.botaoSecundario}>Cancelar</button>
+                <button type="submit" disabled={salvando || idsPapeisUsuario.length === 0} className={ESTILOS.botaoPrincipal}><Save className="h-4 w-4" aria-hidden="true" /> Salvar papéis</button>
+              </div>
+            </form>
+          ) : null}
         </section>
       ) : null}
 
       {podeGerenciarAcessos && abaAtual === "papeis" ? (
         <div className="grid gap-5 xl:grid-cols-[.8fr_1.2fr]">
           <section className="space-y-3">
-            <div className="flex items-center justify-between gap-3"><div><h3 className="font-black text-[#244637]">Papéis da plataforma</h3><p className="mt-1 text-xs text-[#71897b]">Papéis base não podem ser renomeados ou arquivados; apenas o papel administrador tem matriz imutável.</p></div><button type="button" onClick={() => { limparEditorPapel(); setMensagem(null); }} className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-[#1d7953] px-3 py-2 text-xs font-black text-white"><Plus className="h-4 w-4" /> Novo papel</button></div>
-            {papeis.map(papel => { const administrador = papel.nomePapel === "administrador"; return <article key={papel.idPapel} className={`rounded-2xl border bg-white p-4 ${papelSelecionado?.idPapel === papel.idPapel ? "border-[#68a87a] ring-2 ring-[#dcefdc]" : "border-[#e1ebe2]"}`}><div className="flex items-start justify-between gap-3"><div><div className="flex flex-wrap items-center gap-2"><h4 className="font-black text-[#244637]">{papel.nomePapel}</h4><span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${papel.statusPapel === "ativo" ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-700"}`}>{papel.statusPapel}</span>{papel.papelSistema ? <span className="rounded-full bg-[#edf3ed] px-2 py-0.5 text-[10px] font-black text-[#55715d]">Base</span> : null}{administrador ? <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black text-amber-900">Protegido</span> : null}</div><p className="mt-2 text-xs leading-5 text-[#71897b]">{papel.descricaoPapel}</p><p className="mt-2 text-[11px] font-bold text-[#6d8a7b]">{papel.quantidadeUsuarios} usuário(s) · {papel.codigosPermissoes.length} permissão(ões)</p></div><div className="flex shrink-0 gap-1"><button type="button" onClick={() => editarPapel(papel)} title={administrador ? "Visualizar matriz protegida" : "Editar papel e matriz"} className="rounded-lg border border-[#e0eae1] p-2 text-[#55715d] hover:bg-[#f5faf4]"><KeyRound className="h-4 w-4" /></button>{!papel.papelSistema ? <button type="button" disabled={salvando} onClick={() => void alterarEstadoPapel(papel)} title={papel.statusPapel === "ativo" ? "Arquivar papel" : "Restaurar papel"} className="rounded-lg border border-[#e0eae1] p-2 text-[#55715d] hover:bg-[#f5faf4] disabled:opacity-40">{papel.statusPapel === "ativo" ? <Archive className="h-4 w-4" /> : <RotateCcw className="h-4 w-4" />}</button> : null}</div></div></article>; })}
+            <div className="flex flex-col gap-3 rounded-[24px] border border-[#e1ebe2] bg-white p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+              <div className="min-w-0"><h3 className="text-lg font-black leading-tight text-[#17362a]">Papéis da plataforma</h3><p className="mt-1 text-sm leading-6 text-[#6c8879]">Papéis base não podem ser renomeados nem arquivados. O papel administrador não pode ser alterado.</p></div>
+              <button type="button" onClick={() => { limparEditorPapel(); setMensagem(null); }} className={`${ESTILOS.botaoPrincipal} shrink-0`}><Plus className="h-4 w-4" aria-hidden="true" /> Novo papel</button>
+            </div>
+            {papeis.map(papel => {
+              const administrador = papel.nomePapel === "administrador";
+              const selecionado = papelSelecionado?.idPapel === papel.idPapel;
+              return (
+                <article key={papel.idPapel} className={`rounded-[22px] border bg-white p-4 transition ${selecionado ? "border-[#68a87a] ring-4 ring-[#1d7953]/10" : "border-[#e1ebe2]"}`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-1.5"><h4 className="mr-1 break-words font-black text-[#17362a]">{papel.nomePapel}</h4><StatusEtiqueta status={papel.statusPapel} />{papel.papelSistema ? <Etiqueta tom="azul">Base</Etiqueta> : null}{administrador ? <Etiqueta tom="amarelo" icone={LockKeyhole}>Protegido</Etiqueta> : null}</div>
+                      <p className="mt-2 text-sm leading-6 text-[#5c7768]">{papel.descricaoPapel}</p>
+                      <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs font-bold text-[#6c8879]"><span className="inline-flex items-center gap-1"><Users className="h-3.5 w-3.5" aria-hidden="true" />{papel.quantidadeUsuarios} usuário(s)</span><span className="inline-flex items-center gap-1"><KeyRound className="h-3.5 w-3.5" aria-hidden="true" />{papel.codigosPermissoes.length} permissão(ões)</span></p>
+                    </div>
+                    <div className="flex shrink-0 flex-col gap-2 min-[400px]:flex-row">
+                      <BotaoAcao rotulo={administrador ? "Ver permissões (protegido)" : "Editar papel e permissões"} icone={KeyRound} onClick={() => editarPapel(papel)} />
+                      {!papel.papelSistema ? <BotaoAcao rotulo={papel.statusPapel === "ativo" ? "Arquivar papel" : "Restaurar papel"} icone={papel.statusPapel === "ativo" ? Archive : RotateCcw} disabled={salvando} onClick={() => void alterarEstadoPapel(papel)} /> : null}
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
           </section>
 
-          <form onSubmit={event => void salvarPapel(event)} className="rounded-2xl border border-[#e1ebe2] bg-white p-5">
-            <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#3d9664]">Matriz de acesso</p><h3 className="mt-1 text-lg font-black text-[#244637]">{papelSelecionado ? `Editar ${papelSelecionado.nomePapel}` : "Criar papel"}</h3></div>{papelSelecionado ? <button type="button" onClick={limparEditorPapel} className="rounded-lg p-2 text-[#71897b] hover:bg-[#f3f7f2]" aria-label="Limpar editor"><X className="h-4 w-4" /></button> : null}</div>
-            <label className="mt-4 block text-xs font-black text-[#55715d]">Identificador do papel<input required minLength={3} maxLength={60} pattern="[a-z][a-z0-9_]{2,59}" value={nomePapel} onChange={event => setNomePapel(event.target.value.toLowerCase())} disabled={Boolean(papelSelecionado?.papelSistema)} placeholder="ex.: moderador_local" className="mt-1.5 w-full rounded-xl border border-[#d9e6db] px-3 py-2.5 text-sm font-semibold outline-none focus:border-[#4e9b68] disabled:bg-[#f3f7f2]" /></label>
-            <label className="mt-3 block text-xs font-black text-[#55715d]">Descrição<textarea required minLength={3} maxLength={1000} rows={2} value={descricaoPapel} onChange={event => setDescricaoPapel(event.target.value)} disabled={Boolean(papelSelecionado?.papelSistema)} placeholder="Responsabilidades e escopo deste papel" className="mt-1.5 w-full rounded-xl border border-[#d9e6db] px-3 py-2.5 text-sm font-medium outline-none focus:border-[#4e9b68] disabled:bg-[#f3f7f2]" /></label>
-            {papelSelecionado?.nomePapel === "administrador" ? <div className="mt-4 flex gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900"><LockKeyhole className="mt-0.5 h-4 w-4 shrink-0" />A matriz do papel administrador é protegida e inclui a permissão exclusiva de gestão de acessos.</div> : null}
-            <div className="mt-4"><div className="flex items-center justify-between"><h4 className="text-xs font-black uppercase tracking-wide text-[#55715d]">Permissões disponíveis</h4><span className="text-[10px] font-bold text-[#7c9386]">{idsPermissoes.length} selecionada(s)</span></div><div className="mt-2 max-h-[440px] space-y-2 overflow-y-auto pr-1">{permissoesAtivas.map(permissao => { const exclusiva = permissao.codigoPermissao === PERMISSAO_EXCLUSIVA; const administrador = papelSelecionado?.nomePapel === "administrador"; const marcada = idsPermissoes.includes(permissao.idPermissao); return <label key={permissao.idPermissao} className={`flex items-start gap-3 rounded-xl border p-3 text-sm ${exclusiva ? "border-amber-100 bg-amber-50/70" : "border-[#e8eee8] bg-[#fbfdfb]"}`}><input type="checkbox" checked={marcada} disabled={administrador || exclusiva} onChange={() => alternarPermissao(permissao.idPermissao)} className="mt-1 accent-[#1d7953]" /><span className="min-w-0"><strong className="block text-[#315c47]">{permissao.nomePermissao}</strong><span className="block text-[11px] font-bold text-[#71897b]">{permissao.codigoPermissao}</span><span className="mt-1 block text-xs leading-5 text-[#7a9183]">{permissao.descricaoPermissao}</span>{exclusiva ? <span className="mt-1 block text-[10px] font-black text-amber-900">Exclusiva do papel administrador</span> : null}</span></label>; })}</div></div>
-            {papelSelecionado?.papelSistema && papelSelecionado.nomePapel !== "administrador" ? <p className="mt-3 text-[11px] leading-5 text-[#71897b]">Este papel base não pode ser renomeado nem arquivado. A matriz pode ser ajustada; a ação exige justificativa e encerra as sessões dos usuários afetados.</p> : null}
-            {!papelSelecionado?.papelSistema ? <p className="mt-3 text-[11px] leading-5 text-[#71897b]">Identificadores: 3–60 caracteres, minúsculas, números e _. A permissão administrativa exclusiva não pode ser atribuída a papéis customizados.</p> : null}
-            <div className="mt-5 flex justify-end"><button type="submit" disabled={salvando || !nomePapel.trim() || !descricaoPapel.trim() || papelSelecionado?.nomePapel === "administrador"} className="inline-flex items-center gap-2 rounded-xl bg-[#1d7953] px-4 py-2.5 text-sm font-black text-white disabled:opacity-50">{salvando ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}{papelSelecionado ? "Salvar alterações" : "Criar papel"}</button></div>
+          <form onSubmit={event => void salvarPapel(event)} className="h-fit rounded-[24px] border border-[#e1ebe2] bg-white p-5 sm:p-6">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 items-start gap-3">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#e8f0fa] text-[#2f6fb0]">{papelSelecionado ? <KeyRound className="h-5 w-5" aria-hidden="true" /> : <Plus className="h-5 w-5" aria-hidden="true" />}</span>
+                <div className="min-w-0"><h3 className="break-words text-lg font-black leading-tight text-[#17362a]">{papelSelecionado ? `Editar ${papelSelecionado.nomePapel}` : "Criar papel"}</h3><p className="mt-0.5 text-sm text-[#6c8879]">Escolha o que este papel pode fazer.</p></div>
+              </div>
+              {papelSelecionado ? <button type="button" onClick={limparEditorPapel} className={ESTILOS.botaoIcone} aria-label="Limpar editor"><X className="h-5 w-5" /></button> : null}
+            </div>
+            <label className="mt-5 block"><span className={ESTILOS.rotulo}>Nome do papel</span><input required minLength={3} maxLength={60} pattern="[a-z][a-z0-9_]{2,59}" value={nomePapel} onChange={event => setNomePapel(event.target.value.toLowerCase())} disabled={Boolean(papelSelecionado?.papelSistema)} placeholder="ex.: moderador_local" className={ESTILOS.campo} /></label>
+            <label className="mt-4 block"><span className={ESTILOS.rotulo}>Descrição</span><textarea required minLength={3} maxLength={1000} rows={2} value={descricaoPapel} onChange={event => setDescricaoPapel(event.target.value)} disabled={Boolean(papelSelecionado?.papelSistema)} placeholder="O que as pessoas com este papel fazem?" className={`${ESTILOS.areaTexto} min-h-20 disabled:cursor-not-allowed disabled:bg-[#f4f7f4] disabled:text-[#8aa094]`} /></label>
+            {papelSelecionado?.nomePapel === "administrador" ? <div className="mt-4"><Aviso tipo="atencao">O papel administrador é protegido e é o único que pode gerenciar acessos.</Aviso></div> : null}
+            <div className="mt-5">
+              <div className="flex flex-wrap items-center justify-between gap-2"><h4 className="text-sm font-black text-[#17362a]">Permissões</h4><Etiqueta tom="verde" icone={Check}>{idsPermissoes.length} selecionada(s)</Etiqueta></div>
+              <div className="mt-3 max-h-[440px] space-y-2 overflow-y-auto pr-1">
+                {permissoesAtivas.map(permissao => {
+                  const exclusiva = permissao.codigoPermissao === PERMISSAO_EXCLUSIVA;
+                  const administrador = papelSelecionado?.nomePapel === "administrador";
+                  const marcada = idsPermissoes.includes(permissao.idPermissao);
+                  return (
+                    <label key={permissao.idPermissao} className={`flex items-start gap-3 rounded-2xl border p-3.5 text-sm transition ${exclusiva ? "border-[#f3e2b4] bg-[#fff9e9]" : marcada ? "border-[#9fd0b0] bg-[#f1f9ef]" : "border-[#e1ebe2] bg-[#fbfdfb]"}`}>
+                      <input type="checkbox" checked={marcada} disabled={administrador || exclusiva} onChange={() => alternarPermissao(permissao.idPermissao)} className="mt-0.5 h-5 w-5 shrink-0 accent-[#1d7953]" />
+                      <span className="min-w-0">
+                        <strong className="block font-black text-[#17362a]">{permissao.nomePermissao}</strong>
+                        <span className="block break-all font-mono text-[11px] text-[#6c8879]">{permissao.codigoPermissao}</span>
+                        <span className="mt-1 block text-xs leading-5 text-[#5c7768]">{permissao.descricaoPermissao}</span>
+                        {exclusiva ? <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-bold text-[#8a5d06]"><LockKeyhole className="h-3.5 w-3.5" aria-hidden="true" />Só o papel administrador tem esta permissão</span> : null}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+            {papelSelecionado?.papelSistema && papelSelecionado.nomePapel !== "administrador" ? <p className="mt-4 text-xs leading-5 text-[#6c8879]">Este papel base não pode ser renomeado nem arquivado, mas as permissões podem mudar. Será pedida uma justificativa e as pessoas afetadas precisarão entrar de novo.</p> : null}
+            {!papelSelecionado?.papelSistema ? <p className="mt-4 text-xs leading-5 text-[#6c8879]">Nome: 3 a 60 caracteres, só letras minúsculas, números e _. A permissão de gerenciar acessos é exclusiva do administrador.</p> : null}
+            <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end"><button type="submit" disabled={salvando || !nomePapel.trim() || !descricaoPapel.trim() || papelSelecionado?.nomePapel === "administrador"} className={ESTILOS.botaoPrincipal}>{salvando ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}{papelSelecionado ? "Salvar alterações" : "Criar papel"}</button></div>
           </form>
         </div>
       ) : null}
 
       {podeConsultarAuditoria && abaAtual === "auditoria" ? (
         <section className="space-y-4">
-          <div className="flex flex-col gap-3 rounded-2xl border border-[#e0eae1] bg-white p-4 sm:flex-row sm:items-center"><div className="flex-1"><h3 className="font-black text-[#244637]">Trilha de auditoria</h3><p className="mt-1 text-xs text-[#71897b]">Consulta somente leitura; detalhes sensíveis são redigidos no servidor.</p></div><label className="flex min-w-64 items-center gap-2 rounded-xl border border-[#d9e6db] px-3 py-2.5"><Search className="h-4 w-4 text-[#638775]" /><input value={filtroEvento} onChange={event => { setFiltroEvento(event.target.value); setPaginaAuditoria(0); }} placeholder="Filtrar por tipo de evento" className="w-full bg-transparent text-sm outline-none" /></label></div>
-          <div className="overflow-hidden rounded-2xl border border-[#e0eae1] bg-white"><div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left text-sm"><thead className="bg-[#f5faf4] text-[11px] uppercase tracking-wide text-[#688574]"><tr><th className="px-4 py-3">Evento</th><th className="px-4 py-3">Recurso</th><th className="px-4 py-3">Ator</th><th className="px-4 py-3">Correlação</th><th className="px-4 py-3">Data</th></tr></thead><tbody className="divide-y divide-[#edf2ed]">{registros.map(registro => <tr key={registro.idRegistroAuditoria}><td className="px-4 py-4"><strong className="text-[#315c47]">{registro.tipoEvento}</strong></td><td className="px-4 py-4"><span className="block text-xs font-bold text-[#55715d]">{registro.recursoEvento || "—"}</span><span className="mt-1 block max-w-40 truncate text-[10px] text-[#82968a]">{registro.idRecurso || ""}</span></td><td className="px-4 py-4 text-xs text-[#71897b]">{registro.idUsuario || "Sistema"}</td><td className="max-w-48 truncate px-4 py-4 font-mono text-[10px] text-[#82968a]" title={registro.idCorrelacao}>{registro.idCorrelacao || "—"}</td><td className="whitespace-nowrap px-4 py-4 text-xs text-[#71897b]">{dataLocal(registro.dataCriacao)}</td></tr>)}
-            {!carregando && registros.length === 0 ? <tr><td colSpan={5} className="px-4 py-12 text-center text-sm font-semibold text-[#71897b]">Nenhum evento encontrado.</td></tr> : null}
-          </tbody></table></div><div className="flex flex-col gap-3 border-t border-[#edf2ed] px-4 py-3 text-xs font-semibold text-[#71897b] sm:flex-row sm:items-center sm:justify-between"><span>{inicioAuditoria}–{fimAuditoria} de {totalAuditoria.toLocaleString("pt-BR")} eventos</span><div className="flex items-center gap-2"><button type="button" disabled={paginaAuditoria === 0 || carregando} onClick={() => setPaginaAuditoria(p => Math.max(0, p - 1))} className="rounded-lg border border-[#dce8de] p-2 disabled:opacity-40"><ChevronLeft className="h-4 w-4" /></button><span>Página {paginaAuditoria + 1}</span><button type="button" disabled={fimAuditoria >= totalAuditoria || carregando} onClick={() => setPaginaAuditoria(p => p + 1)} className="rounded-lg border border-[#dce8de] p-2 disabled:opacity-40"><ChevronRight className="h-4 w-4" /></button></div></div></div>
+          <div className="flex flex-col gap-4 rounded-[24px] border border-[#e1ebe2] bg-white p-4 sm:p-5 lg:flex-row lg:items-center">
+            <div className="flex min-w-0 flex-1 items-start gap-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#f5ece4] text-[#8a5a34]"><FileClock className="h-5 w-5" aria-hidden="true" /></span>
+              <div className="min-w-0"><h3 className="text-lg font-black leading-tight text-[#17362a]">Histórico de ações</h3><p className="mt-0.5 text-sm leading-6 text-[#6c8879]">Somente leitura. Dados sensíveis ficam ocultos.</p></div>
+            </div>
+            <div className="lg:w-80"><CampoBusca rotulo="Filtrar eventos" valor={filtroEvento} onChange={valor => { setFiltroEvento(valor); setPaginaAuditoria(0); }} placeholder="Filtrar por tipo de evento" /></div>
+          </div>
+          <div className="overflow-hidden rounded-[24px] border border-[#e1ebe2] bg-white">
+            <ul className="divide-y divide-[#edf2ed] sm:hidden">
+              {registros.map(registro => (
+                <li key={registro.idRegistroAuditoria} className="space-y-2 p-4">
+                  <div className="flex items-start justify-between gap-3"><strong className="min-w-0 break-words font-black text-[#17362a]">{registro.tipoEvento}</strong><span className="shrink-0 text-xs font-semibold text-[#6c8879]">{dataLocal(registro.dataCriacao)}</span></div>
+                  <dl className="grid gap-1.5 text-xs">
+                    <div className="flex gap-2"><dt className="w-20 shrink-0 font-semibold text-[#6c8879]">Recurso</dt><dd className="min-w-0 break-all font-bold text-[#244637]">{registro.recursoEvento || "—"}{registro.idRecurso ? <span className="block font-normal text-[#82968a]">{registro.idRecurso}</span> : null}</dd></div>
+                    <div className="flex gap-2"><dt className="w-20 shrink-0 font-semibold text-[#6c8879]">Feito por</dt><dd className="min-w-0 break-all text-[#244637]">{registro.idUsuario || "Sistema"}</dd></div>
+                    <div className="flex gap-2"><dt className="w-20 shrink-0 font-semibold text-[#6c8879]">Correlação</dt><dd className="min-w-0 truncate font-mono text-[11px] text-[#82968a]" title={registro.idCorrelacao}>{registro.idCorrelacao || "—"}</dd></div>
+                  </dl>
+                </li>
+              ))}
+            </ul>
+            <div className="hidden overflow-x-auto sm:block">
+              <table className="w-full min-w-[760px] text-left text-sm">
+                <thead className={ESTILOS.tabelaCabecalho}><tr><th className="px-4 py-3">Evento</th><th className="px-4 py-3">Recurso</th><th className="px-4 py-3">Feito por</th><th className="px-4 py-3">Correlação</th><th className="px-4 py-3">Data</th></tr></thead>
+                <tbody className="divide-y divide-[#edf2ed]">
+                  {registros.map(registro => (
+                    <tr key={registro.idRegistroAuditoria} className="transition hover:bg-[#fafcf9]">
+                      <td className="px-4 py-4"><strong className="font-black text-[#17362a]">{registro.tipoEvento}</strong></td>
+                      <td className="px-4 py-4"><span className="block text-xs font-bold text-[#244637]">{registro.recursoEvento || "—"}</span><span className="mt-1 block max-w-40 truncate text-[11px] text-[#82968a]">{registro.idRecurso || ""}</span></td>
+                      <td className="px-4 py-4 text-xs text-[#5c7768]">{registro.idUsuario || "Sistema"}</td>
+                      <td className="max-w-48 truncate px-4 py-4 font-mono text-[11px] text-[#82968a]" title={registro.idCorrelacao}>{registro.idCorrelacao || "—"}</td>
+                      <td className="whitespace-nowrap px-4 py-4 text-xs text-[#5c7768]">{dataLocal(registro.dataCriacao)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {!carregando && registros.length === 0 ? <div className="p-4"><EstadoVazio icone={FileClock} tom="marrom" titulo="Nenhum evento encontrado" descricao="Tente outro tipo de evento." /></div> : null}
+            <Paginacao inicio={inicioAuditoria} fim={fimAuditoria} total={totalAuditoria} unidade="eventos" pagina={paginaAuditoria + 1} podeVoltar={!(paginaAuditoria === 0 || carregando)} podeAvancar={!(fimAuditoria >= totalAuditoria || carregando)} onVoltar={() => setPaginaAuditoria(p => Math.max(0, p - 1))} onAvancar={() => setPaginaAuditoria(p => p + 1)} />
+          </div>
         </section>
       ) : null}
 
-      {carregando ? <p className="flex items-center gap-2 text-xs font-semibold text-[#71897b]"><LoaderCircle className="h-4 w-4 animate-spin" />Carregando dados administrativos…</p> : null}
+      {carregando ? <p className="flex items-center justify-center gap-2 text-sm font-semibold text-[#6c8879]" role="status"><LoaderCircle className="h-4 w-4 animate-spin text-[#1d7953]" aria-hidden="true" />Carregando dados…</p> : null}
       {salvando ? <div className="sr-only" aria-live="polite">Salvando alteração administrativa.</div> : null}
     </div>
   );

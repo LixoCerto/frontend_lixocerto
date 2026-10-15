@@ -1,5 +1,40 @@
 import { useEffect, useState } from "react";
 import {
+  Archive,
+  Check,
+  CircleCheck,
+  CircleHelp,
+  CircleX,
+  Lightbulb,
+  ListChecks,
+  LoaderCircle,
+  Pencil,
+  Plus,
+  RotateCcw,
+  Search,
+  Send,
+  Sparkles,
+  Star,
+  Tag,
+  Target,
+  Trash2,
+  X,
+} from "lucide-react";
+import {
+  Abas,
+  Aviso,
+  BarraProgresso,
+  CabecalhoPagina,
+  Carregando,
+  Cartao,
+  ESTILOS,
+  Estatistica,
+  Etiqueta,
+  EstadoVazio,
+  TONS,
+  type TomPagina,
+} from "@/components/pagina/Pagina";
+import {
   alterarStatusQuestao,
   atualizarQuestao,
   criarQuestao,
@@ -26,10 +61,6 @@ const formularioVazio: FormQuestao = {
     { textoAlternativa: "", indicaCorreta: false },
   ],
 };
-
-const inputClass = "w-full rounded-xl border border-[#dce8de] bg-white px-3.5 py-3 text-sm text-[#17362a] outline-none transition placeholder:text-[#9aac9f] focus:border-[#5a9a70] focus:ring-2 focus:ring-[#5a9a70]/15";
-const buttonPrimary = "rounded-xl bg-[#1d7953] px-4 py-2.5 text-sm font-black text-white transition hover:bg-[#176342] disabled:cursor-wait disabled:opacity-60";
-const buttonSecondary = "rounded-xl border border-[#dce8de] bg-white px-3 py-2 text-xs font-bold text-[#386348] transition hover:bg-[#f4f8f3] disabled:opacity-50";
 
 export default function QuestionariosCrud({ podeAdministrar, podeResponder }: { podeAdministrar: boolean; podeResponder: boolean }) {
   const [aba, setAba] = useState<"quiz" | "gestao">(podeAdministrar ? "gestao" : "quiz");
@@ -173,76 +204,292 @@ export default function QuestionariosCrud({ podeAdministrar, podeResponder }: { 
 
   if (!podeAdministrar && !podeResponder) return null;
 
+  const respondidasAgora = Object.values(respostas).filter((item): item is Feedback => Boolean(item));
+  const acertosAgora = respondidasAgora.filter(item => item.correta).length;
+  const pontosAgora = respondidasAgora.reduce((total, item) => total + (item.correta ? item.pontos : 0), 0);
+  const totalRodada = respondidasAgora.length + questoesPublicas.length;
+  const abas = [
+    ...(podeResponder ? [{ id: "quiz" as const, rotulo: "Jogar quiz", icone: Sparkles, contador: questoesPublicas.length }] : []),
+    ...(podeAdministrar ? [{ id: "gestao" as const, rotulo: "Gerenciar perguntas", icone: ListChecks }] : []),
+  ];
+
   return (
-    <div className="space-y-6">
-      <header className="flex flex-col gap-4 rounded-[24px] bg-[#17362a] p-6 text-white sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-[#c7e5bf]">Banco de aprendizagem</p>
-          <h2 className="mt-2 text-2xl font-black">Quiz ambiental</h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#d1e0d5]">Receba uma questão por vez em horários aleatórios, com tema e pontuação sorteados. Cada questão aceita uma única resposta.</p>
-        </div>
-        {podeAdministrar || podeResponder ? (
-          <div className="flex rounded-xl bg-white/10 p-1">
-            {podeResponder ? <button type="button" onClick={() => setAba("quiz")} className={`rounded-lg px-3 py-2 text-xs font-black ${abaAtual === "quiz" ? "bg-white text-[#1d4934]" : "text-white"}`}>Responder quiz</button> : null}
-            {podeAdministrar ? <button type="button" onClick={() => setAba("gestao")} className={`rounded-lg px-3 py-2 text-xs font-black ${abaAtual === "gestao" ? "bg-white text-[#1d4934]" : "text-white"}`}>Gerenciar questões</button> : null}
+    <div className="space-y-5">
+      <CabecalhoPagina
+        icone={CircleHelp}
+        tom="amarelo"
+        titulo="Quiz e questionários"
+        descricao="Teste o que você sabe sobre descarte certo. As perguntas chegam aos poucos, cada uma vale pontos e só pode ser respondida uma vez."
+      >
+        {podeResponder ? (
+          <div className="grid gap-2.5 sm:grid-cols-3">
+            <Estatistica icone={CircleHelp} tom="amarelo" valor={questoesPublicas.length} rotulo="Perguntas para responder" />
+            <Estatistica icone={CircleCheck} tom="verde" valor={acertosAgora} rotulo="Acertos nesta visita" />
+            <Estatistica icone={Star} tom="roxo" valor={`+${pontosAgora}`} rotulo="Pontos nesta visita" />
           </div>
         ) : null}
-      </header>
+      </CabecalhoPagina>
 
-      {erro ? <p role="alert" className="rounded-xl border border-[#f1c9c0] bg-[#fff4f0] px-4 py-3 text-sm font-semibold text-[#a85040]">{erro}</p> : null}
-      {aviso ? <p role="status" className="rounded-xl border border-[#cde5cf] bg-[#eff8ee] px-4 py-3 text-sm font-semibold text-[#28764e]">{aviso}</p> : null}
-      {abaAtual === "quiz" && feedbackRecente ? <div className={`rounded-2xl px-5 py-4 ${feedbackRecente.correta ? "bg-[#e6f5e7] text-[#1e7048]" : "bg-[#fff2d9] text-[#865913]"}`}><strong className="text-sm">{feedbackRecente.correta ? `Acertou · +${feedbackRecente.pontos} pontos` : "Resposta registrada · nenhuma nova tentativa"}</strong><p className="mt-1 text-sm leading-5">{feedbackRecente.explicacao}</p></div> : null}
+      {abas.length > 1 ? <Abas rotulo="Seções do quiz" abas={abas} ativa={abaAtual} onChange={setAba} /> : null}
+
+      {erro ? <Aviso tipo="erro">{erro}</Aviso> : null}
+      {aviso ? <Aviso tipo="sucesso">{aviso}</Aviso> : null}
+
+      {abaAtual === "quiz" && feedbackRecente ? <ResultadoResposta feedback={feedbackRecente} destaque /> : null}
 
       {abaAtual === "quiz" ? (
-        <section className="grid gap-4 lg:grid-cols-2">
-          {questoesPublicas.map(questao => {
-            const feedback = respostas[questao.idQuestao];
-            return (
-              <article key={questao.idQuestao} className="rounded-[22px] border border-[#e1ebe2] bg-white p-5 shadow-[0_18px_36px_-30px_rgba(23,54,42,.6)]">
-                <div className="flex items-center justify-between gap-3"><span className="rounded-full bg-[#edf5e9] px-3 py-1 text-[10px] font-black uppercase tracking-[0.13em] text-[#3e8257]">{questao.temaQuestao.replaceAll("_", " ")}</span><span className="text-xs font-bold text-[#809789]">Até {questao.quantidadePontos} pontos</span></div>
-                <h3 className="mt-4 text-lg font-black leading-7 text-[#17362a]">{questao.enunciadoQuestao}</h3>
-                <div className="mt-4 grid gap-2.5">
-                  {questao.alternativas.map((alternativa, indice) => {
-                    const selecionada = alternativaSelecionada[questao.idQuestao] === alternativa.idAlternativa;
-                    return <button key={alternativa.idAlternativa} type="button" disabled={Boolean(feedback) || Boolean(idRespondendo)} onClick={() => void responder(questao, alternativa.idAlternativa)} className={`flex items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left text-sm font-bold transition disabled:cursor-default ${selecionada ? "border-[#52a36b] bg-[#eaf5e7] text-[#1d6f48]" : "border-[#dfe9e0] text-[#345b43] hover:border-[#9ac4a5] hover:bg-[#f7fbf6]"}`}><span>{alternativa.textoAlternativa}</span><span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-current text-xs">{String.fromCharCode(65 + indice)}</span></button>;
-                  })}
-                </div>
-                {feedback ? <div className={`mt-4 rounded-xl p-4 ${feedback.correta ? "bg-[#e6f5e7] text-[#1e7048]" : "bg-[#fff2d9] text-[#865913]"}`}><strong className="text-sm">{feedback.correta ? `Resposta correta · +${feedback.pontos} pontos` : "Continue aprendendo"}</strong><p className="mt-1 text-sm leading-5">{feedback.explicacao}</p></div> : <p className="mt-4 text-xs font-semibold text-[#84998c]">Escolha uma alternativa para receber o feedback.</p>}
-              </article>
-            );
-          })}
-          {!questoesPublicas.length ? <div className="rounded-2xl border border-dashed border-[#d9e6dc] bg-white p-8 text-center text-sm font-semibold text-[#718b7a] lg:col-span-2">Ainda não há questões publicadas. Volte mais tarde para testar seus conhecimentos.</div> : null}
+        <section className="space-y-4" aria-label="Perguntas do quiz">
+          {totalRodada > 0 && respondidasAgora.length > 0 ? (
+            <div className="rounded-[20px] border border-[#e1ebe2] bg-white px-4 py-3.5 sm:px-5">
+              <div className="mb-2 flex items-center justify-between gap-3 text-sm">
+                <span className="font-bold text-[#2c4a3c]">Seu progresso</span>
+                <span className="font-black tabular-nums text-[#8a5d06]">{respondidasAgora.length} de {totalRodada}</span>
+              </div>
+              <BarraProgresso percentual={(respondidasAgora.length / totalRodada) * 100} tom="amarelo" rotulo="Perguntas respondidas nesta visita" />
+            </div>
+          ) : null}
+
+          {questoesPublicas.length ? (
+            <div className="grid gap-4 lg:grid-cols-2">
+              {questoesPublicas.map((questao, posicao) => (
+                <CartaoPergunta
+                  key={questao.idQuestao}
+                  questao={questao}
+                  numero={posicao + 1}
+                  feedback={respostas[questao.idQuestao]}
+                  idSelecionada={alternativaSelecionada[questao.idQuestao]}
+                  bloqueado={Boolean(idRespondendo)}
+                  enviando={idRespondendo === questao.idQuestao}
+                  onResponder={idAlternativa => void responder(questao, idAlternativa)}
+                />
+              ))}
+            </div>
+          ) : (
+            <EstadoVazio
+              icone={Sparkles}
+              tom="amarelo"
+              titulo="Nenhuma pergunta no momento"
+              descricao="Novas perguntas aparecem de tempos em tempos. Volte mais tarde para testar seus conhecimentos e ganhar pontos."
+            />
+          )}
         </section>
       ) : (
-        <section className="grid items-start gap-5 xl:grid-cols-[minmax(320px,.85fr)_minmax(0,1.15fr)]">
-          <form onSubmit={salvarQuestao} className="space-y-4 rounded-[22px] border border-[#e1ebe2] bg-white p-5 shadow-[0_18px_36px_-30px_rgba(23,54,42,.6)]">
-            <div className="flex items-start justify-between gap-3"><div><p className="text-xs font-black uppercase tracking-[0.13em] text-[#62806c]">{idEdicao ? "Edição" : "Novo conteúdo"}</p><h3 className="mt-1 text-lg font-black">{idEdicao ? "Editar questão" : "Criar questão"}</h3></div>{idEdicao ? <button type="button" className={buttonSecondary} onClick={limparFormulario}>Cancelar</button> : null}</div>
-            <label className="block text-xs font-bold text-[#587261]">Enunciado<textarea required maxLength={4000} className={`${inputClass} mt-1.5 min-h-24 resize-y`} value={form.enunciado} onChange={evento => setForm(atual => ({ ...atual, enunciado: evento.target.value }))} placeholder="Escreva uma pergunta clara e objetiva" /></label>
-            <label className="block text-xs font-bold text-[#587261]">Explicação da resposta correta<textarea required maxLength={8000} className={`${inputClass} mt-1.5 min-h-20 resize-y`} value={form.explicacao} onChange={evento => setForm(atual => ({ ...atual, explicacao: evento.target.value }))} placeholder="Explique a orientação e o contexto" /></label>
-            <label className="block text-xs font-bold text-[#587261]">Tema<input required maxLength={80} className={`${inputClass} mt-1.5`} value={form.tema} onChange={evento => setForm(atual => ({ ...atual, tema: evento.target.value }))} placeholder="reciclagem, compostagem…" /></label>
-            <label className="block text-xs font-bold text-[#587261]">Limite máximo dos pontos sorteados<input required type="number" min={10} max={50} className={`${inputClass} mt-1.5`} value={form.pontos} onChange={evento => setForm(atual => ({ ...atual, pontos: Number(evento.target.value) }))} /><span className="mt-1 block font-normal text-[#82978a]">O valor recebido é sorteado de 10 até este limite, no máximo 50.</span></label>
-            <div className="space-y-2.5"><div><p className="text-xs font-bold text-[#587261]">Alternativas</p><p className="mt-1 text-[11px] text-[#82978a]">Selecione exatamente uma resposta correta. O gabarito fica oculto no quiz público.</p></div>
-              {form.alternativas.map((alternativa, indice) => <div key={alternativa.idAlternativa ?? indice} className="flex items-center gap-2"><input required maxLength={1000} className={inputClass} value={alternativa.textoAlternativa} onChange={evento => setForm(atual => ({ ...atual, alternativas: atual.alternativas.map((item, pos) => pos === indice ? { ...item, textoAlternativa: evento.target.value } : item) }))} placeholder={`Alternativa ${String.fromCharCode(65 + indice)}`} /><label title="Marcar como correta" className="flex shrink-0 items-center gap-1 text-xs font-bold text-[#3f7552]"><input type="radio" name="resposta-correta" checked={alternativa.indicaCorreta} onChange={() => setForm(atual => ({ ...atual, alternativas: atual.alternativas.map((item, pos) => ({ ...item, indicaCorreta: pos === indice })) }))} /> Correta</label>{form.alternativas.length > 2 ? <button type="button" aria-label={`Remover alternativa ${indice + 1}`} className="rounded-lg px-2 py-1 text-sm font-black text-[#a85040] hover:bg-[#fff4f0]" onClick={() => setForm(atual => { const alternativas = atual.alternativas.filter((_, pos) => pos !== indice); if (!alternativas.some(item => item.indicaCorreta)) alternativas[0] = { ...alternativas[0], indicaCorreta: true }; return { ...atual, alternativas }; })}>×</button> : null}</div>)}
-              {form.alternativas.length < 6 ? <button type="button" className={buttonSecondary} onClick={() => setForm(atual => ({ ...atual, alternativas: [...atual.alternativas, { textoAlternativa: "", indicaCorreta: false }] }))}>+ Adicionar alternativa</button> : null}
-            </div>
-            <button type="submit" disabled={salvando} className={`${buttonPrimary} w-full`}>{salvando ? "Salvando..." : idEdicao ? "Salvar e voltar para rascunho" : "Salvar como rascunho"}</button>
-            <p className="text-[11px] leading-5 text-[#82978a]">Questões com publicação ou respostas anteriores são preservadas; editar cria uma nova versão em rascunho. Excluir significa arquivar para manter o histórico.</p>
-          </form>
+        <section className="space-y-4" aria-label="Gerenciar perguntas">
+          <Aviso tipo="info">Área de gestão: aqui você cria, edita e publica as perguntas que aparecem no quiz.</Aviso>
+          <div className="grid items-start gap-5 xl:grid-cols-[minmax(320px,.85fr)_minmax(0,1.15fr)]">
+            <Cartao
+              icone={idEdicao ? Pencil : Plus}
+              tom="amarelo"
+              titulo={idEdicao ? "Editar pergunta" : "Criar pergunta"}
+              descricao={idEdicao ? "Ao salvar, a pergunta volta para rascunho." : "Ela fica como rascunho até você publicar."}
+              acoes={idEdicao ? <button type="button" className={ESTILOS.botaoSecundario} onClick={limparFormulario}><X className="h-4 w-4" aria-hidden="true" />Cancelar</button> : undefined}
+            >
+              <form onSubmit={salvarQuestao} className="space-y-4">
+                <label className="block">
+                  <span className={ESTILOS.rotulo}>Pergunta</span>
+                  <textarea required maxLength={4000} className={`${ESTILOS.areaTexto} resize-y`} value={form.enunciado} onChange={evento => setForm(atual => ({ ...atual, enunciado: evento.target.value }))} placeholder="Escreva uma pergunta clara e objetiva" />
+                </label>
+                <label className="block">
+                  <span className={ESTILOS.rotulo}>Explicação da resposta certa</span>
+                  <textarea required maxLength={8000} className={`${ESTILOS.areaTexto} min-h-24 resize-y`} value={form.explicacao} onChange={evento => setForm(atual => ({ ...atual, explicacao: evento.target.value }))} placeholder="Explique a orientação e o contexto" />
+                </label>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="block">
+                    <span className={ESTILOS.rotulo}>Tema</span>
+                    <input required maxLength={80} className={ESTILOS.campo} value={form.tema} onChange={evento => setForm(atual => ({ ...atual, tema: evento.target.value }))} placeholder="reciclagem, compostagem…" />
+                  </label>
+                  <label className="block">
+                    <span className={ESTILOS.rotulo}>Pontos (máximo)</span>
+                    <input required type="number" min={10} max={50} className={ESTILOS.campo} value={form.pontos} onChange={evento => setForm(atual => ({ ...atual, pontos: Number(evento.target.value) }))} />
+                  </label>
+                </div>
+                <p className="-mt-2 text-xs leading-5 text-[#6c8879]">Quem acertar ganha um valor sorteado entre 10 e este limite (no máximo 50).</p>
 
-          <div className="space-y-4">
-            <div className="flex flex-col gap-3 rounded-2xl border border-[#e1ebe2] bg-white p-4 sm:flex-row"><input className={inputClass} value={busca} onChange={evento => setBusca(evento.target.value)} onKeyDown={evento => { if (evento.key === "Enter") { evento.preventDefault(); setBuscaAplicada(busca); } }} placeholder="Buscar pelo enunciado" /><button type="button" className={buttonSecondary} onClick={() => setBuscaAplicada(busca)}>Buscar</button><select className={`${inputClass} sm:max-w-44`} value={statusFiltro} onChange={evento => setStatusFiltro(evento.target.value)}><option value="todos">Todos os status</option><option value="rascunho">Rascunho</option><option value="publicada">Publicada</option><option value="arquivada">Arquivada</option></select></div>
-            {carregando ? <p className="rounded-xl bg-white p-5 text-sm font-semibold text-[#718b7a]">Carregando questões…</p> : null}
-            {!carregando && !questoesGestao.length ? <div className="rounded-2xl border border-dashed border-[#d9e6dc] bg-white p-8 text-center text-sm font-semibold text-[#718b7a]">Nenhuma questão neste filtro. Crie uma questão para iniciar a base do quiz.</div> : null}
-            {questoesGestao.map(questao => <article key={questao.idQuestao} className="rounded-[20px] border border-[#e1ebe2] bg-white p-5 shadow-[0_18px_36px_-30px_rgba(23,54,42,.5)]">
-              <div className="flex flex-wrap items-center justify-between gap-2"><span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${questao.statusQuestao === "publicada" ? "bg-[#e7f4e6] text-[#27764d]" : questao.statusQuestao === "arquivada" ? "bg-[#f0eeee] text-[#77716e]" : "bg-[#fff3d7] text-[#96630d]"}`}>{questao.statusQuestao}</span><span className="text-xs font-bold text-[#7b9283]">{questao.quantidadePontos} pontos</span></div>
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-2"><span className="rounded-full bg-[#edf5e9] px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#3e8257]">{questao.temaQuestao.replaceAll("_", " ")}</span><span className="text-xs font-bold text-[#7b9283]">Limite {questao.quantidadePontos} pontos</span></div><h3 className="mt-3 font-black leading-6 text-[#17362a]">{questao.enunciadoQuestao}</h3><p className="mt-2 text-sm leading-5 text-[#647d6c]">{questao.explicacaoQuestao}</p>
-              <ul className="mt-3 space-y-1.5">{questao.alternativas.map(alternativa => <li key={alternativa.idAlternativa} className={`rounded-lg px-3 py-2 text-xs ${alternativa.indicaCorreta ? "bg-[#eaf5e7] font-bold text-[#1d6f48]" : "bg-[#f7f9f6] text-[#5b7463]"}`}>{alternativa.indicaCorreta ? "Correta · " : ""}{alternativa.textoAlternativa}</li>)}</ul>
-              <div className="mt-4 flex flex-wrap gap-2">{questao.statusQuestao !== "arquivada" ? <button type="button" className={buttonSecondary} onClick={() => iniciarEdicao(questao)}>Editar</button> : null}{questao.statusQuestao === "rascunho" ? <button type="button" className={buttonSecondary} onClick={() => void mudarStatus(questao.idQuestao, "publicada")}>Publicar</button> : null}{questao.statusQuestao === "publicada" ? <button type="button" className={buttonSecondary} onClick={() => void mudarStatus(questao.idQuestao, "rascunho")}>Voltar a rascunho</button> : null}{questao.statusQuestao === "arquivada" ? <button type="button" className={buttonSecondary} onClick={() => void mudarStatus(questao.idQuestao, "rascunho")}>Restaurar como rascunho</button> : <button type="button" className="rounded-xl border border-[#f1d4cd] px-3 py-2 text-xs font-bold text-[#a85040] hover:bg-[#fff4f0]" onClick={() => void mudarStatus(questao.idQuestao, "arquivada")}>Arquivar</button>}</div>
-            </article>)}
+                <fieldset className="space-y-2.5 rounded-2xl border border-[#e1ebe2] bg-[#fafcf9] p-3.5 sm:p-4">
+                  <legend className="px-1 text-sm font-black text-[#17362a]">Alternativas</legend>
+                  <p className="text-xs leading-5 text-[#6c8879]">Marque exatamente uma como correta. A resposta certa não aparece para quem joga.</p>
+                  {form.alternativas.map((alternativa, indice) => (
+                    <div key={alternativa.idAlternativa ?? indice} className="flex flex-col gap-2 rounded-xl border border-[#e1ebe2] bg-white p-2.5 sm:flex-row sm:items-center">
+                      <div className="flex min-w-0 flex-1 items-center gap-2">
+                        <LetraAlternativa indice={indice} />
+                        <input required maxLength={1000} className={ESTILOS.campo} value={alternativa.textoAlternativa} onChange={evento => setForm(atual => ({ ...atual, alternativas: atual.alternativas.map((item, pos) => pos === indice ? { ...item, textoAlternativa: evento.target.value } : item) }))} placeholder={`Alternativa ${String.fromCharCode(65 + indice)}`} />
+                      </div>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <label title="Marcar como correta" className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-xl border border-[#d6e2d9] px-3 text-sm font-bold text-[#5f7a6b] transition hover:bg-[#f5faf4] has-[:checked]:border-[#9fd0b0] has-[:checked]:bg-[#e6f5ec] has-[:checked]:text-[#1d6b43]">
+                          <input type="radio" name="resposta-correta" className="h-4 w-4 accent-[#1d7953]" checked={alternativa.indicaCorreta} onChange={() => setForm(atual => ({ ...atual, alternativas: atual.alternativas.map((item, pos) => ({ ...item, indicaCorreta: pos === indice })) }))} /> Correta
+                        </label>
+                        {form.alternativas.length > 2 ? (
+                          <button type="button" aria-label={`Remover alternativa ${indice + 1}`} className={`${ESTILOS.botaoIcone} text-[#a8493e] hover:bg-[#fff5f3] hover:text-[#a8493e]`} onClick={() => setForm(atual => { const alternativas = atual.alternativas.filter((_, pos) => pos !== indice); if (!alternativas.some(item => item.indicaCorreta)) alternativas[0] = { ...alternativas[0], indicaCorreta: true }; return { ...atual, alternativas }; })}>
+                            <Trash2 className="h-4 w-4" aria-hidden="true" />
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
+                  ))}
+                  {form.alternativas.length < 6 ? (
+                    <button type="button" className={`${ESTILOS.botaoSecundario} w-full sm:w-auto`} onClick={() => setForm(atual => ({ ...atual, alternativas: [...atual.alternativas, { textoAlternativa: "", indicaCorreta: false }] }))}>
+                      <Plus className="h-4 w-4" aria-hidden="true" />Adicionar alternativa
+                    </button>
+                  ) : null}
+                </fieldset>
+
+                <button type="submit" disabled={salvando} className={`${ESTILOS.botaoPrincipal} h-12 w-full`}>
+                  {salvando ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Check className="h-4 w-4" aria-hidden="true" />}
+                  {salvando ? "Salvando..." : idEdicao ? "Salvar e voltar para rascunho" : "Salvar como rascunho"}
+                </button>
+                <p className="text-xs leading-5 text-[#6c8879]">Perguntas já publicadas ou respondidas ficam guardadas: editar cria uma nova versão em rascunho, e excluir significa arquivar para manter o histórico.</p>
+              </form>
+            </Cartao>
+
+            <div className="space-y-4">
+              <div className="flex flex-col gap-2.5 rounded-[24px] border border-[#e1ebe2] bg-white p-4 sm:flex-row">
+                <input className={ESTILOS.campo} aria-label="Buscar pergunta" value={busca} onChange={evento => setBusca(evento.target.value)} onKeyDown={evento => { if (evento.key === "Enter") { evento.preventDefault(); setBuscaAplicada(busca); } }} placeholder="Buscar pela pergunta" />
+                <button type="button" className={`${ESTILOS.botaoSecundario} h-12 shrink-0`} onClick={() => setBuscaAplicada(busca)}><Search className="h-4 w-4" aria-hidden="true" />Buscar</button>
+                <select className={`${ESTILOS.campo} sm:max-w-44`} aria-label="Filtrar por situação" value={statusFiltro} onChange={evento => setStatusFiltro(evento.target.value)}>
+                  <option value="todos">Todos os status</option>
+                  <option value="rascunho">Rascunho</option>
+                  <option value="publicada">Publicada</option>
+                  <option value="arquivada">Arquivada</option>
+                </select>
+              </div>
+              {carregando ? <Carregando texto="Carregando perguntas…" /> : null}
+              {!carregando && !questoesGestao.length ? (
+                <EstadoVazio icone={ListChecks} tom="amarelo" titulo="Nenhuma pergunta por aqui" descricao="Nada encontrado neste filtro. Crie uma pergunta para começar o quiz." />
+              ) : null}
+              {questoesGestao.map(questao => (
+                <article key={questao.idQuestao} className="rounded-[24px] border border-[#e1ebe2] bg-white p-5 transition hover:border-[#cfe0d3] hover:shadow-[0_18px_36px_-28px_rgba(23,54,42,.45)]">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <EtiquetaStatusQuestao status={questao.statusQuestao} />
+                    <Etiqueta tom="verde" icone={Tag}>{questao.temaQuestao.replaceAll("_", " ")}</Etiqueta>
+                    <Etiqueta tom="amarelo" icone={Star}>Até {questao.quantidadePontos} pontos</Etiqueta>
+                  </div>
+                  <h3 className="mt-3 text-base font-black leading-6 text-[#17362a]">{questao.enunciadoQuestao}</h3>
+                  <p className="mt-2 rounded-xl bg-[#f7faf6] px-3.5 py-2.5 text-sm leading-6 text-[#5c7768]">{questao.explicacaoQuestao}</p>
+                  <ul className="mt-3 space-y-1.5">
+                    {questao.alternativas.map((alternativa, indice) => (
+                      <li key={alternativa.idAlternativa} className={`flex items-start gap-2.5 rounded-xl px-3 py-2 text-sm ${alternativa.indicaCorreta ? "bg-[#e6f5ec] font-bold text-[#1d6b43]" : "bg-[#f7f9f6] text-[#5b7463]"}`}>
+                        <span className="mt-0.5 text-xs font-black">{String.fromCharCode(65 + indice)}</span>
+                        <span className="min-w-0 flex-1 break-words">{alternativa.textoAlternativa}</span>
+                        {alternativa.indicaCorreta ? <span className="inline-flex shrink-0 items-center gap-1 text-xs"><Check className="h-3.5 w-3.5" aria-hidden="true" />Correta</span> : null}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-4 flex flex-wrap gap-2 border-t border-[#eef3ef] pt-4">
+                    {questao.statusQuestao !== "arquivada" ? <button type="button" className={ESTILOS.botaoSecundario} onClick={() => iniciarEdicao(questao)}><Pencil className="h-4 w-4" aria-hidden="true" />Editar</button> : null}
+                    {questao.statusQuestao === "rascunho" ? <button type="button" className={ESTILOS.botaoPrincipal} onClick={() => void mudarStatus(questao.idQuestao, "publicada")}><Send className="h-4 w-4" aria-hidden="true" />Publicar</button> : null}
+                    {questao.statusQuestao === "publicada" ? <button type="button" className={ESTILOS.botaoSecundario} onClick={() => void mudarStatus(questao.idQuestao, "rascunho")}><RotateCcw className="h-4 w-4" aria-hidden="true" />Voltar a rascunho</button> : null}
+                    {questao.statusQuestao === "arquivada" ? (
+                      <button type="button" className={ESTILOS.botaoSecundario} onClick={() => void mudarStatus(questao.idQuestao, "rascunho")}><RotateCcw className="h-4 w-4" aria-hidden="true" />Restaurar como rascunho</button>
+                    ) : (
+                      <button type="button" className={ESTILOS.botaoPerigo} onClick={() => void mudarStatus(questao.idQuestao, "arquivada")}><Archive className="h-4 w-4" aria-hidden="true" />Arquivar</button>
+                    )}
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
       )}
     </div>
+  );
+}
+
+const TONS_LETRAS: TomPagina[] = ["verde", "azul", "amarelo", "vermelho", "roxo", "marrom"];
+
+function LetraAlternativa({ indice, ativa = false }: { indice: number; ativa?: boolean }) {
+  const tom = TONS[TONS_LETRAS[indice % TONS_LETRAS.length]];
+  return (
+    <span
+      className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-base font-black transition"
+      style={ativa ? { backgroundColor: tom.cor, color: "#fff" } : { backgroundColor: tom.fundo, color: tom.texto }}
+      aria-hidden="true"
+    >
+      {String.fromCharCode(65 + indice)}
+    </span>
+  );
+}
+
+function EtiquetaStatusQuestao({ status }: { status: string }) {
+  if (status === "publicada") return <Etiqueta tom="verde" icone={CircleCheck}>Publicada</Etiqueta>;
+  if (status === "arquivada") return <Etiqueta tom="cinza" icone={Archive}>Arquivada</Etiqueta>;
+  if (status === "rascunho") return <Etiqueta tom="amarelo" icone={Pencil}>Rascunho</Etiqueta>;
+  return <Etiqueta tom="cinza">{status}</Etiqueta>;
+}
+
+function ResultadoResposta({ feedback, destaque = false }: { feedback: Feedback; destaque?: boolean }) {
+  const acertou = feedback.correta;
+  const Icone = acertou ? CircleCheck : CircleX;
+  return (
+    <div
+      className={`flex items-start gap-3.5 rounded-[22px] border ${destaque ? "p-5" : "mt-4 p-4"} ${acertou ? "border-[#cfe8d8] bg-[#eef9f1] text-[#1d6b43]" : "border-[#f3e2b4] bg-[#fff9e9] text-[#7f5a0b]"}`}
+      role="status"
+      aria-live="polite"
+    >
+      <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-white ${acertou ? "bg-[#2f9a5f]" : "bg-[#c98a12]"}`}>
+        <Icone className="h-6 w-6" aria-hidden="true" />
+      </span>
+      <div className="min-w-0">
+        <strong className="block text-lg font-black leading-tight">
+          {acertou ? `Mandou bem! +${feedback.pontos} pontos` : "Não foi dessa vez"}
+        </strong>
+        {!acertou ? <p className="mt-0.5 text-sm font-semibold">Sua resposta foi registrada. Cada pergunta vale uma tentativa.</p> : null}
+        {feedback.explicacao ? (
+          <p className="mt-2 flex items-start gap-2 text-sm leading-6 text-[#3f5c4c]">
+            <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-[#c98a12]" aria-hidden="true" />
+            <span>{feedback.explicacao}</span>
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+interface CartaoPerguntaProps {
+  questao: QuestaoPublica;
+  numero: number;
+  feedback: Feedback | undefined;
+  idSelecionada: string | undefined;
+  bloqueado: boolean;
+  enviando: boolean;
+  onResponder: (idAlternativa: string) => void;
+}
+
+function CartaoPergunta({ questao, numero, feedback, idSelecionada, bloqueado, enviando, onResponder }: CartaoPerguntaProps) {
+  return (
+    <article className="flex flex-col rounded-[24px] border border-[#e1ebe2] bg-white p-5 transition hover:-translate-y-0.5 hover:shadow-[0_22px_40px_-30px_rgba(23,54,42,.55)] sm:p-6">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="inline-flex items-center rounded-full bg-[#17362a] px-2.5 py-1 text-xs font-black text-white">Pergunta {numero}</span>
+        <Etiqueta tom="verde" icone={Tag}>{questao.temaQuestao.replaceAll("_", " ")}</Etiqueta>
+        <Etiqueta tom="amarelo" icone={Star}>Vale até {questao.quantidadePontos} pontos</Etiqueta>
+      </div>
+      <h3 className="mt-4 text-lg font-black leading-7 text-[#17362a] sm:text-xl">{questao.enunciadoQuestao}</h3>
+      <div className="mt-4 grid gap-2.5">
+        {questao.alternativas.map((alternativa, indice) => {
+          const selecionada = idSelecionada === alternativa.idAlternativa;
+          return (
+            <button
+              key={alternativa.idAlternativa}
+              type="button"
+              disabled={Boolean(feedback) || bloqueado}
+              onClick={() => onResponder(alternativa.idAlternativa)}
+              className={`group flex min-h-14 w-full items-center gap-3 rounded-2xl border-2 px-3 py-2.5 text-left text-[15px] font-bold transition enabled:hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953] disabled:cursor-default ${selecionada ? "border-[#2f9a5f] bg-[#eef9f1] text-[#1d6b43]" : "border-[#e1ebe2] bg-white text-[#2c4a3c] enabled:hover:border-[#9fd0b0] enabled:hover:bg-[#f7fcf8] disabled:opacity-70"}`}
+            >
+              <LetraAlternativa indice={indice} ativa={selecionada} />
+              <span className="min-w-0 flex-1 break-words">{alternativa.textoAlternativa}</span>
+              {selecionada && enviando ? <LoaderCircle className="h-5 w-5 shrink-0 animate-spin" aria-hidden="true" /> : null}
+            </button>
+          );
+        })}
+      </div>
+      {feedback ? (
+        <ResultadoResposta feedback={feedback} />
+      ) : (
+        <p className="mt-4 flex items-center gap-2 text-sm font-semibold text-[#6c8879]">
+          <Target className="h-4 w-4 shrink-0 text-[#c98a12]" aria-hidden="true" />
+          {enviando ? "Conferindo sua resposta..." : "Toque na alternativa que você acha certa."}
+        </p>
+      )}
+    </article>
   );
 }
 
