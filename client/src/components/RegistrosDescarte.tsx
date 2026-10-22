@@ -251,8 +251,8 @@ export default function RegistrosDescarte({
       </ol>
 
       {erro || aviso ? <div className="mt-5 space-y-3">
-        {erro ? <Aviso tipo="erro">{erro}</Aviso> : null}
-        {aviso ? <Aviso tipo="sucesso">{aviso}</Aviso> : null}
+        {erro ? <Aviso tipo="erro" focar>{erro}</Aviso> : null}
+        {aviso ? <Aviso tipo="sucesso" focar>{aviso}</Aviso> : null}
       </div> : null}
 
       {podeRegistrar ? <div className="mt-6 space-y-6">
@@ -314,7 +314,7 @@ export default function RegistrosDescarte({
           <label className="block"><span className={ESTILOS.rotulo}>Observação <span className="font-semibold text-[#8aa094]">(opcional)</span></span><textarea maxLength={500} className={`${ESTILOS.areaTexto} resize-y`} value={relato} onChange={evento => setRelato(evento.target.value)} placeholder="Descreva brevemente o material (sem dados pessoais)." /></label>
           <div className="space-y-1.5">
             <BarraProgresso percentual={(totalFotosBytes / TAMANHO_MAXIMO_LOTE) * 100} tom={totalFotosBytes > TAMANHO_MAXIMO_LOTE ? "vermelho" : "verde"} rotulo="Espaço usado pelas fotos" />
-            <p className="text-xs leading-5 text-[#6c8879]">Fotos: {(totalFotosBytes / 1024).toLocaleString("pt-BR", { maximumFractionDigits: 0 })} de 2.560 KiB. As fotos são otimizadas, sem dados de localização (EXIF), guardadas de forma privada e apagadas em até 90 dias após a revisão.</p>
+            <p className="text-xs leading-5 text-[#6c8879]">Fotos: {(totalFotosBytes / 1024).toLocaleString("pt-BR", { maximumFractionDigits: 0 })} de 2.560 KiB. As fotos são otimizadas, sem informações ocultas como localização e horário, guardadas de forma privada e apagadas em até 90 dias após a revisão.</p>
           </div>
           <button type="submit" disabled={!categoriasSelecionadas.length || fotosPendentes.length > 0 || Boolean(idProcessando)} className={`${ESTILOS.botaoPrincipal} h-12 w-full disabled:cursor-wait sm:w-auto`}>
             {idProcessando === "enviar" ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Check className="h-4 w-4" aria-hidden="true" />}

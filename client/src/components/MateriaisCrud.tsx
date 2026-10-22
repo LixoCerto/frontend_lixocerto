@@ -197,7 +197,7 @@ export default function MateriaisCrud({ podeEscrever, podeAprovar }: { podeEscre
       {erro ? <Aviso tipo="erro">{erro}</Aviso> : null}
       {mensagem ? <Aviso tipo="sucesso">{mensagem}</Aviso> : null}
 
-      <section className="space-y-3 rounded-[24px] border border-[#e1ebe2] bg-white p-4 sm:p-5" aria-label="Filtros da lista de materiais">
+      <section id={`painel-${filtroStatus}`} className="space-y-3 rounded-[24px] border border-[#e1ebe2] bg-white p-4 sm:p-5" aria-label="Filtros da lista de materiais">
         <div className="flex flex-col gap-3 sm:flex-row">
           <label className="relative flex-1">
             <span className="sr-only">Buscar material ou sinônimo</span>

@@ -155,7 +155,7 @@ export default function PontosColetaCrud({
 
   function buscarPertoDeMim() {
     if (!navigator.geolocation) {
-      setErro("Este navegador não oferece busca por localização. Você ainda pode pesquisar por cidade.");
+      setErro("Este navegador não oferece busca por localização. Você ainda pode buscar por cidade.");
       return;
     }
     setErro(null);
@@ -175,8 +175,8 @@ export default function PontosColetaCrud({
       },
       erroLocalizacao => {
         setErro(erroLocalizacao.code === 1
-          ? "A localização não foi autorizada. Você ainda pode pesquisar por cidade."
-          : "Não foi possível obter sua localização. Você ainda pode pesquisar por cidade.");
+          ? "A localização não foi autorizada. Você ainda pode buscar por cidade."
+          : "Não foi possível obter sua localização. Você ainda pode buscar por cidade.");
         setLocalizandoBusca(false);
       },
       { enableHighAccuracy: false, timeout: 12000, maximumAge: 300000 },
@@ -187,7 +187,7 @@ export default function PontosColetaCrud({
     const cidade = cidadeBusca.trim();
     if (!localizacaoBusca && cidade.length < 2) {
       setMensagem(null);
-      setErro("Informe uma cidade com pelo menos dois caracteres para pesquisar.");
+      setErro("Informe uma cidade com pelo menos dois caracteres para buscar.");
       return;
     }
     setErro(null);
@@ -402,8 +402,8 @@ export default function PontosColetaCrud({
         </div>
       </CabecalhoPagina>
 
-      {erro ? <Aviso tipo="erro">{erro}</Aviso> : null}
-      {mensagem ? <Aviso tipo="sucesso">{mensagem}</Aviso> : null}
+      {erro ? <Aviso tipo="erro" focar>{erro}</Aviso> : null}
+      {mensagem ? <Aviso tipo="sucesso" focar>{mensagem}</Aviso> : null}
 
       <form data-onboarding-action="pesquisar_pontos" onSubmit={event => { event.preventDefault(); aplicarFiltros(); }} className={ESTILOS.cartao}>
         <div className="mb-5 flex items-start gap-3">
@@ -443,7 +443,7 @@ export default function PontosColetaCrud({
         <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
           <button type="submit" disabled={carregando} className={`${ESTILOS.botaoPrincipal} w-full disabled:cursor-wait sm:w-auto`}>
             {carregando ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Search className="h-4 w-4" aria-hidden="true" />}
-            {carregando ? "Buscando…" : "Pesquisar"}
+            {carregando ? "Buscando…" : "Buscar"}
           </button>
           {permiteLocalizacaoBusca ? <button type="button" onClick={buscarPertoDeMim} disabled={localizandoBusca} className={`${ESTILOS.botaoSecundario} w-full disabled:cursor-wait sm:w-auto`}>
             {localizandoBusca ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Crosshair className="h-4 w-4" aria-hidden="true" />}
@@ -506,13 +506,16 @@ export default function PontosColetaCrud({
               </div>
 
               {ponto.horarioFuncionamento || ponto.telefoneContato || (ponto.urlInformacoes && /^https?:\/\//i.test(ponto.urlInformacoes)) || ponto.dataVerificacao || podeEscrever || podeAprovar ? (
-                <ul className="mt-4 space-y-2 rounded-2xl bg-[#f7faf7] p-3.5 text-sm text-[#45614f]">
+                <details className="group mt-4 rounded-2xl bg-[#f7faf7] p-3.5" open>
+                  <summary className="cursor-pointer list-none text-sm font-bold text-[#45614f] marker:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">Informações do local <span className="ml-1 text-xs font-semibold text-[#6c8879] group-open:hidden">(mostrar)</span><span className="ml-1 hidden text-xs font-semibold text-[#6c8879] group-open:inline">(ocultar)</span></summary>
+                  <ul className="mt-2 space-y-2 text-sm text-[#45614f]">
                   {ponto.horarioFuncionamento ? <li className="flex items-start gap-2.5"><Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-[#1d7953]" aria-hidden="true" /><span className="min-w-0 break-words"><strong className="font-bold text-[#17362a]">Atendimento:</strong> {ponto.horarioFuncionamento}</span></li> : null}
                   {ponto.telefoneContato ? <li className="flex items-start gap-2.5"><Phone className="mt-0.5 h-4 w-4 shrink-0 text-[#1d7953]" aria-hidden="true" /><span><strong className="font-bold text-[#17362a]">Telefone:</strong> <a className="font-bold text-[#1d7953] underline" href={`tel:${ponto.telefoneContato.replace(/[^+\d]/g, "")}`}>{ponto.telefoneContato}</a></span></li> : null}
                   {ponto.urlInformacoes && /^https?:\/\//i.test(ponto.urlInformacoes) ? <li className="flex items-start gap-2.5"><Globe className="mt-0.5 h-4 w-4 shrink-0 text-[#1d7953]" aria-hidden="true" /><a className="inline-flex items-center gap-1 font-bold text-[#1d7953] underline" href={ponto.urlInformacoes} target="_blank" rel="noopener noreferrer">Informações do local <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" /></a></li> : null}
                   {ponto.dataVerificacao ? <li className="flex items-start gap-2.5 text-xs text-[#6c8879]"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><span>Última validação: {Number.isNaN(Date.parse(ponto.dataVerificacao)) ? "data não informada" : new Date(ponto.dataVerificacao).toLocaleDateString("pt-BR")}</span></li> : null}
                   {(podeEscrever || podeAprovar) ? <li className="flex items-start gap-2.5 text-xs text-[#6c8879]"><Crosshair className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><span className="tabular-nums">{ponto.latitudePontoColeta.toFixed(5)}, {ponto.longitudePontoColeta.toFixed(5)}</span></li> : null}
-                </ul>
+                  </ul>
+                </details>
               ) : null}
 
               <div className="mt-auto pt-4">
@@ -573,8 +576,8 @@ export default function PontosColetaCrud({
               <button type="button" onClick={() => setAberto(false)} className={ESTILOS.botaoIcone} aria-label="Fechar formulário"><X className="h-5 w-5" aria-hidden="true" /></button>
             </div>
 
-            {erro ? <div className="mt-5"><Aviso tipo="erro">{erro}</Aviso></div> : null}
-            {mensagem ? <div className="mt-5"><Aviso tipo="sucesso">{mensagem}</Aviso></div> : null}
+            {erro ? <div className="mt-5"><Aviso tipo="erro" focar>{erro}</Aviso></div> : null}
+            {mensagem ? <div className="mt-5"><Aviso tipo="sucesso" focar>{mensagem}</Aviso></div> : null}
 
             <SecaoFormulario icone={Building2} titulo="Sobre o local">
               <label className="block sm:col-span-2">

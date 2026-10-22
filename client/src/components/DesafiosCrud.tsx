@@ -159,6 +159,7 @@ export default function DesafiosCrud({ podeAdministrar, podeLer, podeParticipar 
   }
 
   async function mudarStatus(id: string, status: string) {
+    if (status === "arquivado" && !window.confirm("Arquivar este desafio? Ele ficará fora da lista ativa e poderá ser restaurado como rascunho.")) return;
     setErro(""); setAviso("");
     try {
       const resultado = await alterarStatusDesafio(id, status);
@@ -216,10 +217,10 @@ export default function DesafiosCrud({ podeAdministrar, podeLer, podeParticipar 
 
     {abas.length > 1 ? <Abas rotulo="Seções de desafios" abas={abas} ativa={abaAtual} onChange={setAba} /> : null}
 
-    {erro ? <Aviso tipo="erro">{erro}</Aviso> : null}
-    {aviso ? <Aviso tipo="sucesso">{aviso}</Aviso> : null}
+    {erro ? <Aviso tipo="erro" focar>{erro}</Aviso> : null}
+    {aviso ? <Aviso tipo="sucesso" focar>{aviso}</Aviso> : null}
 
-    {abaAtual === "participar" ? <section aria-label="Desafios disponíveis">
+    {abaAtual === "participar" ? <section id={`painel-${abaAtual}`} aria-label="Desafios disponíveis">
       {desafiosPublicos.length ? <div className="grid gap-4 lg:grid-cols-2">
         {desafiosPublicos.map(desafio => {
           const participando = desafio.statusParticipacao === "participando";
@@ -288,7 +289,7 @@ export default function DesafiosCrud({ podeAdministrar, podeLer, podeParticipar 
           </article>;
         })}
       </div> : <EstadoVazio icone={Trophy} tom="vermelho" titulo="Nenhum desafio ativo agora" descricao="Novos desafios aparecem por aqui. Enquanto isso, que tal responder o quiz ou registrar um descarte?" />}
-    </section> : <section className="space-y-4" aria-label="Gerenciar desafios">
+    </section> : <section id={`painel-${abaAtual}`} className="space-y-4" aria-label="Gerenciar desafios">
       <Aviso tipo="info">Área de gestão: aqui você cria, edita e publica os desafios que as pessoas veem.</Aviso>
       <div className="grid items-start gap-5 xl:grid-cols-[minmax(320px,.85fr)_minmax(0,1.15fr)]">
         <Cartao

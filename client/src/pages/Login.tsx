@@ -79,6 +79,11 @@ export default function Login() {
     setAviso(null);
   }
 
+  function informarErro(mensagem: string, campoId: string) {
+    setErro(mensagem);
+    window.requestAnimationFrame(() => document.getElementById(campoId)?.focus());
+  }
+
   async function entrarComGoogle(credential: string) {
     setErro(null);
     setAviso(null);
@@ -101,7 +106,7 @@ export default function Login() {
     setAviso(null);
 
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
-      setErro("Informe um e-mail válido.");
+      informarErro("Informe um e-mail válido.", "login-email");
       return;
     }
 
@@ -121,15 +126,15 @@ export default function Login() {
     }
 
     if (modo === "cadastro" && nome.trim().length < 2) {
-      setErro("Informe seu nome completo.");
+      informarErro("Informe seu nome completo.", "login-nome");
       return;
     }
     if (!senhaValida(senha)) {
-      setErro("A senha deve possuir no mínimo 12 caracteres, letras e números.");
+      informarErro("A senha deve possuir no mínimo 12 caracteres, letras e números.", "login-senha");
       return;
     }
     if (modo === "cadastro" && senha !== confirmacao) {
-      setErro("A confirmação de senha não confere.");
+      informarErro("A confirmação de senha não confere.", "login-confirmacao");
       return;
     }
 
@@ -244,8 +249,11 @@ export default function Login() {
                   <button
                     key={opcao}
                     type="button"
+                    id={`login-tab-${opcao}`}
                     role="tab"
                     aria-selected={selecionada}
+                    aria-controls={`login-painel-${opcao}`}
+                    tabIndex={selecionada ? 0 : -1}
                     onClick={() => trocarModo(opcao)}
                     className={`h-10 rounded-lg text-sm font-bold transition ${selecionada ? "bg-white text-[#17362a] shadow-[0_1px_3px_rgba(23,54,42,.15)]" : "text-[#5f7a6b] hover:text-[#17362a]"}`}
                   >
@@ -256,13 +264,13 @@ export default function Login() {
             </div>
           ) : null}
 
-          <form className="mt-6 space-y-4" onSubmit={event => void submeter(event)} noValidate>
+          <form id={`login-painel-${modo}`} role="tabpanel" aria-labelledby={`login-tab-${modo}`} className="mt-6 space-y-4" onSubmit={event => void submeter(event)} noValidate>
             {cadastroAtivo ? (
               <div>
                 <label htmlFor="login-nome" className={CLASSE_ROTULO}>Nome completo</label>
                 <div className="relative">
                   <UserRound className={CLASSE_ICONE_CAMPO} aria-hidden="true" />
-                  <input id="login-nome" value={nome} onChange={event => setNome(event.target.value)} autoComplete="name" className={CLASSE_CAMPO} placeholder="Como devemos te chamar?" />
+                  <input id="login-nome" value={nome} onChange={event => setNome(event.target.value)} autoComplete="name" aria-describedby={erro ? "login-erro" : undefined} aria-invalid={Boolean(erro)} className={CLASSE_CAMPO} placeholder="Como devemos te chamar?" />
                 </div>
               </div>
             ) : null}
@@ -271,7 +279,7 @@ export default function Login() {
               <label htmlFor="login-email" className={CLASSE_ROTULO}>E-mail</label>
               <div className="relative">
                 <Mail className={CLASSE_ICONE_CAMPO} aria-hidden="true" />
-                <input id="login-email" value={email} onChange={event => setEmail(event.target.value)} type="email" autoComplete="email" inputMode="email" className={CLASSE_CAMPO} placeholder="voce@exemplo.com" />
+                <input id="login-email" value={email} onChange={event => setEmail(event.target.value)} type="email" autoComplete="email" inputMode="email" aria-describedby={erro ? "login-erro" : undefined} aria-invalid={Boolean(erro)} className={CLASSE_CAMPO} placeholder="voce@exemplo.com" />
               </div>
             </div>
 
@@ -293,6 +301,8 @@ export default function Login() {
                     onChange={event => setSenha(event.target.value)}
                     type={mostrarSenha ? "text" : "password"}
                     autoComplete={cadastroAtivo ? "new-password" : "current-password"}
+                    aria-describedby={erro ? "login-erro" : undefined}
+                    aria-invalid={Boolean(erro)}
                     className={`${CLASSE_CAMPO} pr-12`}
                     placeholder={cadastroAtivo ? "Crie uma senha forte" : "Digite sua senha"}
                   />
@@ -328,7 +338,7 @@ export default function Login() {
                 <label htmlFor="login-confirmacao" className={CLASSE_ROTULO}>Confirmar senha</label>
                 <div className="relative">
                   <LockKeyhole className={CLASSE_ICONE_CAMPO} aria-hidden="true" />
-                  <input id="login-confirmacao" value={confirmacao} onChange={event => setConfirmacao(event.target.value)} type={mostrarSenha ? "text" : "password"} autoComplete="new-password" className={CLASSE_CAMPO} placeholder="Repita a senha" />
+                  <input id="login-confirmacao" value={confirmacao} onChange={event => setConfirmacao(event.target.value)} type={mostrarSenha ? "text" : "password"} autoComplete="new-password" aria-describedby={erro ? "login-erro" : undefined} aria-invalid={Boolean(erro)} className={CLASSE_CAMPO} placeholder="Repita a senha" />
                 </div>
               </div>
             ) : null}
@@ -355,7 +365,7 @@ export default function Login() {
           ) : null}
 
           {erro ? (
-            <div role="alert" className="mt-5 rounded-xl border border-[#f0c6c1] bg-[#fff5f3] px-4 py-3 text-sm font-semibold leading-6 text-[#a8493e]">{erro}</div>
+            <div id="login-erro" role="alert" className="mt-5 rounded-xl border border-[#f0c6c1] bg-[#fff5f3] px-4 py-3 text-sm font-semibold leading-6 text-[#a8493e]">{erro}</div>
           ) : null}
           {aviso ? (
             <div role="status" className="mt-5 flex gap-3 rounded-xl border border-[#cfe3d1] bg-[#f1f9ef] px-4 py-3 text-sm font-semibold leading-6 text-[#356b4a]">

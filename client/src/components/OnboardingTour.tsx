@@ -212,6 +212,14 @@ export default function OnboardingTour({
     }
   }
 
+  function adiarOnboarding() {
+    setObrigatorio(false);
+    setAcaoPendente(null);
+    setFase("fechado");
+    setDialogAberto(false);
+    onAreaObrigatoriaChange(null);
+  }
+
   function abrirAjuda() {
     if (obrigatorio) {
       if (fase === "aguardando") setFase("instrucao");
@@ -228,9 +236,9 @@ export default function OnboardingTour({
       setDialogAberto(true);
       return;
     }
-    if (obrigatorio) return;
     setDialogAberto(false);
     setFase("fechado");
+    if (obrigatorio) adiarOnboarding();
   }
 
   function navegarAjudaParaArea() {
@@ -305,10 +313,8 @@ export default function OnboardingTour({
 
       <Dialog open={dialogAberto} onOpenChange={alterarAbertura}>
         <DialogContent
-          showCloseButton={!obrigatorio}
+          showCloseButton
           overlayClassName={obrigatorio ? "onboarding-fundo" : "bg-[#0c2118]/50 backdrop-blur-sm"}
-          onEscapeKeyDown={evento => { if (obrigatorio) evento.preventDefault(); }}
-          onPointerDownOutside={evento => { if (obrigatorio) evento.preventDefault(); }}
           className="max-h-[92dvh] gap-0 overflow-y-auto overflow-x-hidden border-0 bg-white p-0 text-[#17362a] shadow-[0_32px_90px_-30px_rgba(0,0,0,.6)] sm:max-w-[30rem] sm:rounded-[28px] max-sm:top-auto max-sm:bottom-0 max-sm:max-w-none max-sm:translate-y-0 max-sm:rounded-b-none max-sm:rounded-t-[28px] max-sm:data-[state=open]:slide-in-from-bottom-10 max-sm:data-[state=open]:zoom-in-100"
         >
           {fase === "boas-vindas" ? (
@@ -334,6 +340,7 @@ export default function OnboardingTour({
                 </ol>
                 <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-[#6f897a]"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#3c8a5b]" aria-hidden="true" />As missões usam só buscas: nada de GPS, cadastro de descarte ou respostas em seu nome.</p>
                 <button type="button" onClick={() => setFase("instrucao")} className={CLASSE_BOTAO_PRINCIPAL}>Começar missões <ArrowRight className="h-4 w-4" aria-hidden="true" /></button>
+                {obrigatorio ? <button type="button" onClick={adiarOnboarding} className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-xl px-4 text-sm font-bold text-[#5f7a6b] hover:bg-[#f5f9f5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">Pular por agora</button> : null}
               </div>
             </>
           ) : null}
@@ -365,7 +372,8 @@ export default function OnboardingTour({
                 <button type="button" onClick={acaoPendente === tarefaAtual.acao ? voltarParaAcao : iniciarAcao} className={CLASSE_BOTAO_PRINCIPAL}>
                   {acaoPendente === tarefaAtual.acao ? "Voltar para a missão" : "Ir para a missão"} <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </button>
-                <p className="mt-3 text-center text-xs font-semibold text-[#7a9485]">O restante da plataforma é liberado ao final das missões.</p>
+                <button type="button" onClick={adiarOnboarding} className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-xl px-4 text-sm font-bold text-[#5f7a6b] hover:bg-[#f5f9f5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">Pular por agora</button>
+                <p className="mt-3 text-center text-xs font-semibold text-[#7a9485]">Você pode retomar as missões pelo botão “Missões”.</p>
               </div>
             </>
           ) : null}

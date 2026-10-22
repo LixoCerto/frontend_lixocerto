@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import { Inbox, LoaderCircle, TriangleAlert } from "lucide-react";
-import type { CSSProperties, ReactNode } from "react";
+import { useEffect, useRef, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 
 /**
  * Kit visual compartilhado pelas páginas internas do Lixo Certo.
@@ -174,10 +174,14 @@ interface AvisoProps {
   tipo?: "erro" | "sucesso" | "info" | "atencao";
   children: ReactNode;
   acao?: ReactNode;
+  focar?: boolean;
 }
-
 /** Caixa de mensagem (erro, sucesso, informação ou atenção). */
-export function Aviso({ tipo = "info", children, acao }: AvisoProps) {
+export function Aviso({ tipo = "info", children, acao, focar = false }: AvisoProps) {
+  const referencia = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (focar) referencia.current?.focus({ preventScroll: true });
+  }, [focar, children]);
   const estilos = {
     erro: "border-[#f0c6c1] bg-[#fff5f3] text-[#a8493e]",
     sucesso: "border-[#cfe3d1] bg-[#f1f9ef] text-[#2f6a46]",
@@ -185,7 +189,7 @@ export function Aviso({ tipo = "info", children, acao }: AvisoProps) {
     atencao: "border-[#f3e2b4] bg-[#fff9e9] text-[#7f5a0b]",
   }[tipo];
   return (
-    <div role={tipo === "erro" ? "alert" : "status"} className={`flex flex-col gap-3 rounded-2xl border px-4 py-3 text-sm font-semibold leading-6 sm:flex-row sm:items-center sm:justify-between ${estilos}`}>
+    <div ref={referencia} tabIndex={focar ? -1 : undefined} role={tipo === "erro" ? "alert" : "status"} className={`flex flex-col gap-3 rounded-2xl border px-4 py-3 text-sm font-semibold leading-6 sm:flex-row sm:items-center sm:justify-between ${estilos}`}>
       <div className="flex items-start gap-2.5">
         {tipo === "erro" || tipo === "atencao" ? <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /> : null}
         <div className="min-w-0">{children}</div>
@@ -221,10 +225,24 @@ interface AbasProps<T extends string> {
 
 /** Abas em formato de "pílulas", roláveis horizontalmente no celular. */
 export function Abas<T extends string>({ abas, ativa, onChange, rotulo }: AbasProps<T>) {
+  const referencias = useRef<Array<HTMLButtonElement | null>>([]);
+  function navegarComTeclado(evento: KeyboardEvent<HTMLButtonElement>, indice: number) {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(evento.key)) return;
+    evento.preventDefault();
+    const proximo = evento.key === 'Home'
+      ? 0
+      : evento.key === 'End'
+        ? abas.length - 1
+        : (indice + (evento.key === 'ArrowRight' ? 1 : -1) + abas.length) % abas.length;
+    const aba = abas[proximo];
+    if (!aba) return;
+    onChange(aba.id);
+    referencias.current[proximo]?.focus();
+  }
   return (
     <div className="-mx-1 overflow-x-auto px-1 pb-1" role="tablist" aria-label={rotulo}>
       <div className="inline-flex min-w-full gap-1 rounded-2xl bg-[#e9f0eb] p-1 sm:min-w-0">
-        {abas.map(({ id, rotulo: texto, icone: Icone, contador }) => {
+        {abas.map(({ id, rotulo: texto, icone: Icone, contador }, indice) => {
           const selecionada = id === ativa;
           return (
             <button
@@ -232,7 +250,11 @@ export function Abas<T extends string>({ abas, ativa, onChange, rotulo }: AbasPr
               type="button"
               role="tab"
               aria-selected={selecionada}
+              aria-controls={`painel-${id}`}
+              tabIndex={selecionada ? 0 : -1}
+              ref={elemento => { referencias.current[indice] = elemento; }}
               onClick={() => onChange(id)}
+              onKeyDown={evento => navegarComTeclado(evento, indice)}
               className={`inline-flex min-h-10 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 text-sm font-bold transition sm:flex-none ${selecionada ? "bg-white text-[#17362a] shadow-[0_1px_3px_rgba(23,54,42,.15)]" : "text-[#5f7a6b] hover:text-[#17362a]"}`}
             >
               {Icone ? <Icone className="h-4 w-4" aria-hidden="true" /> : null}

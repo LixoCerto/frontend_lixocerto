@@ -89,7 +89,7 @@ export function obterTarefasObrigatoriasOnboarding(
       area: "pontos",
       titulo: "Pesquise pontos por cidade",
       descricao: "Consulte pontos de coleta usando uma busca simples por cidade.",
-      instrucao: "Confira a cidade exibida no campo “Buscar por cidade” — altere se quiser — e clique em “Pesquisar”. Esta etapa não solicita nem usa sua localização exata.",
+      instrucao: "Confira a cidade exibida no campo “Buscar por cidade” — altere se quiser — e clique em “Buscar”. Esta etapa não solicita nem usa sua localização exata.",
     },
   ];
 

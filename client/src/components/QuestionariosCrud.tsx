@@ -169,6 +169,7 @@ export default function QuestionariosCrud({ podeAdministrar, podeResponder }: { 
   }
 
   async function mudarStatus(id: string, status: string) {
+    if (status === "arquivada" && !window.confirm("Arquivar esta pergunta? O histórico será mantido e ela poderá ser restaurada como rascunho.")) return;
     setErro("");
     setAviso("");
     try {
@@ -232,13 +233,13 @@ export default function QuestionariosCrud({ podeAdministrar, podeResponder }: { 
 
       {abas.length > 1 ? <Abas rotulo="Seções do quiz" abas={abas} ativa={abaAtual} onChange={setAba} /> : null}
 
-      {erro ? <Aviso tipo="erro">{erro}</Aviso> : null}
-      {aviso ? <Aviso tipo="sucesso">{aviso}</Aviso> : null}
+      {erro ? <Aviso tipo="erro" focar>{erro}</Aviso> : null}
+      {aviso ? <Aviso tipo="sucesso" focar>{aviso}</Aviso> : null}
 
       {abaAtual === "quiz" && feedbackRecente ? <ResultadoResposta feedback={feedbackRecente} destaque /> : null}
 
       {abaAtual === "quiz" ? (
-        <section className="space-y-4" aria-label="Perguntas do quiz">
+        <section id={`painel-${abaAtual}`} className="space-y-4" aria-label="Perguntas do quiz">
           {totalRodada > 0 && respondidasAgora.length > 0 ? (
             <div className="rounded-[20px] border border-[#e1ebe2] bg-white px-4 py-3.5 sm:px-5">
               <div className="mb-2 flex items-center justify-between gap-3 text-sm">
@@ -274,7 +275,7 @@ export default function QuestionariosCrud({ podeAdministrar, podeResponder }: { 
           )}
         </section>
       ) : (
-        <section className="space-y-4" aria-label="Gerenciar perguntas">
+        <section id={`painel-${abaAtual}`} className="space-y-4" aria-label="Gerenciar perguntas">
           <Aviso tipo="info">Área de gestão: aqui você cria, edita e publica as perguntas que aparecem no quiz.</Aviso>
           <div className="grid items-start gap-5 xl:grid-cols-[minmax(320px,.85fr)_minmax(0,1.15fr)]">
             <Cartao
