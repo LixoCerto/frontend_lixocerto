@@ -1,23 +1,28 @@
+import { lazy, Suspense } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import ConfirmarEmail from "@/pages/ConfirmarEmail";
-import Home from "@/pages/Home";
-import Login from "@/pages/Login";
-import NotFound from "@/pages/NotFound";
-import RedefinirSenha from "@/pages/RedefinirSenha";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
+import TelaCarregamento from "./components/TelaCarregamento";
 import { ThemeProvider } from "./contexts/ThemeContext";
+
+const ConfirmarEmail = lazy(() => import("@/pages/ConfirmarEmail"));
+const Home = lazy(() => import("@/pages/Home"));
+const Login = lazy(() => import("@/pages/Login"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
+const RedefinirSenha = lazy(() => import("@/pages/RedefinirSenha"));
 
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/login" component={Login} />
-      <Route path="/confirmar-email" component={ConfirmarEmail} />
-      <Route path="/redefinir-senha" component={RedefinirSenha} />
-      <Route path="/404" component={NotFound} />
-      <Route component={NotFound} />
-    </Switch>
+    <Suspense fallback={<TelaCarregamento />}>
+      <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/login" component={Login} />
+        <Route path="/confirmar-email" component={ConfirmarEmail} />
+        <Route path="/redefinir-senha" component={RedefinirSenha} />
+        <Route path="/404" component={NotFound} />
+        <Route component={NotFound} />
+      </Switch>
+    </Suspense>
   );
 }
 

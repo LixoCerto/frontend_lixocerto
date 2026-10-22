@@ -190,7 +190,7 @@ export default function Login() {
         <div className="login-painel__textura pointer-events-none absolute inset-0" aria-hidden="true" />
 
         <div className="relative flex items-center gap-3">
-          <img src="/logo-lixo-certo.png" alt="Logo do Lixo Certo" className="h-12 w-12 rounded-xl bg-white p-0.5 object-contain shadow-sm" />
+          <img src="/logo-lixo-certo.webp" alt="Logo do Lixo Certo" className="h-12 w-12 rounded-xl bg-white p-0.5 object-contain shadow-sm" />
           <div className="leading-tight">
             <p className="text-lg font-black tracking-[-0.02em]">Lixo Certo</p>
             <p className="text-xs font-semibold text-[#a9c7b3]">Educação ambiental</p>
@@ -228,7 +228,7 @@ export default function Login() {
       <main className="flex min-h-screen flex-col px-5 py-8 sm:px-8 lg:px-12 lg:py-10">
         <div className="mx-auto flex w-full max-w-[420px] flex-1 flex-col justify-center">
           <div className="mb-8 flex flex-col items-center gap-4 lg:hidden">
-            <img src="/logo-lixo-certo.png" alt="Logo do Lixo Certo" className="h-20 w-20 object-contain" />
+            <img src="/logo-lixo-certo.webp" alt="Logo do Lixo Certo" className="h-20 w-20 object-contain" />
             <LixeirasSeletivasCompacta />
           </div>
 
@@ -239,7 +239,7 @@ export default function Login() {
           ) : null}
 
           <h2 className="text-[1.75rem] font-black leading-tight tracking-[-0.03em]">{titulo}</h2>
-          <p className="mt-2 text-[15px] leading-6 text-[#5f7a6b]">{subtitulo}</p>
+          <p className="mt-2 text-[15px] leading-6 text-[#4d6b5b]">{subtitulo}</p>
 
           {!recuperacaoAtiva ? (
             <div className="mt-6 grid grid-cols-2 rounded-xl bg-[#e9f0eb] p-1" role="tablist" aria-label="Escolha como acessar">
@@ -255,7 +255,7 @@ export default function Login() {
                     aria-controls={`login-painel-${opcao}`}
                     tabIndex={selecionada ? 0 : -1}
                     onClick={() => trocarModo(opcao)}
-                    className={`h-10 rounded-lg text-sm font-bold transition ${selecionada ? "bg-white text-[#17362a] shadow-[0_1px_3px_rgba(23,54,42,.15)]" : "text-[#5f7a6b] hover:text-[#17362a]"}`}
+                    className={`h-10 rounded-lg text-sm font-bold transition ${selecionada ? "bg-white text-[#17362a] shadow-[0_1px_3px_rgba(23,54,42,.15)]" : "text-[#4d6b5b] hover:text-[#17362a]"}`}
                   >
                     {opcao === "entrar" ? "Entrar" : "Criar conta"}
                   </button>
@@ -264,7 +264,8 @@ export default function Login() {
             </div>
           ) : null}
 
-          <form id={`login-painel-${modo}`} role="tabpanel" aria-labelledby={`login-tab-${modo}`} className="mt-6 space-y-4" onSubmit={event => void submeter(event)} noValidate>
+          <div id={`login-painel-${modo}`} role="tabpanel" aria-labelledby={`login-tab-${modo}`}>
+            <form className="mt-6 space-y-4" onSubmit={event => void submeter(event)} noValidate>
             {cadastroAtivo ? (
               <div>
                 <label htmlFor="login-nome" className={CLASSE_ROTULO}>Nome completo</label>
@@ -321,7 +322,7 @@ export default function Login() {
                       { ok: regraTamanho, texto: "12 caracteres ou mais" },
                       { ok: regraLetrasNumeros, texto: "Letras e números" },
                     ].map(regra => (
-                      <li key={regra.texto} className={`inline-flex items-center gap-1.5 transition-colors ${regra.ok ? "text-[#1d7953]" : "text-[#8aa094]"}`}>
+                      <li key={regra.texto} className={`inline-flex items-center gap-1.5 transition-colors ${regra.ok ? "text-[#1d7953]" : "text-[#4d6b5b]"}`}>
                         <span className={`flex h-4 w-4 items-center justify-center rounded-full transition-colors ${regra.ok ? "bg-[#1d7953] text-white" : "bg-[#e3ebe5] text-transparent"}`}>
                           <Check className="h-3 w-3" aria-hidden="true" />
                         </span>
@@ -352,7 +353,8 @@ export default function Login() {
               {ocupado ? "Aguarde..." : rotuloBotao}
               {ocupado ? null : <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" aria-hidden="true" />}
             </button>
-          </form>
+            </form>
+          </div>
 
           {!recuperacaoAtiva && googleClientId ? (
             <div className="mt-6">
@@ -382,7 +384,7 @@ export default function Login() {
           ) : null}
         </div>
 
-        <footer className="mx-auto mt-8 flex w-full max-w-[420px] items-center justify-between gap-3 text-xs font-semibold text-[#8aa094]">
+        <footer className="mx-auto mt-8 flex w-full max-w-[420px] items-center justify-between gap-3 text-xs font-semibold text-[#4d6b5b]">
           <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-[#3c8a5b]" aria-hidden="true" /> Conexão segura</span>
           <span>Projeto Lixo Certo · TCC II</span>
         </footer>

@@ -1,0 +1,29 @@
+{
+  "tool": "axe-core",
+  "standard": "WCAG 2.2 A/AA + best-practice",
+  "viewport": "1280x800, DPR 1",
+  "network": "loopback",
+  "results": [
+    {
+      "path": "/login",
+      "url": "http://127.0.0.1:4173/login",
+      "violations": [],
+      "passes": 15,
+      "incomplete": 0
+    },
+    {
+      "path": "/confirmar-email",
+      "url": "http://127.0.0.1:4173/confirmar-email",
+      "violations": [],
+      "passes": 11,
+      "incomplete": 0
+    },
+    {
+      "path": "/redefinir-senha",
+      "url": "http://127.0.0.1:4173/redefinir-senha",
+      "violations": [],
+      "passes": 11,
+      "incomplete": 0
+    }
+  ]
+}
