@@ -333,7 +333,7 @@ export default function OnboardingTour({
                       <li key={tarefa.acao} className="flex items-center gap-3 rounded-xl bg-[#f3f8f1] px-3.5 py-3">
                         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white text-[#1d7953] shadow-sm"><IconeTarefa className="h-[18px] w-[18px]" aria-hidden="true" /></span>
                         <span className="min-w-0 flex-1 text-sm font-bold">{tarefa.titulo}</span>
-                        <span className="text-xs font-bold text-[#7a9485]">{posicao + 1}</span>
+                        <span className="text-xs font-bold text-[#4b6657]">{posicao + 1}</span>
                       </li>
                     );
                   })}
@@ -373,7 +373,7 @@ export default function OnboardingTour({
                   {acaoPendente === tarefaAtual.acao ? "Voltar para a missão" : "Ir para a missão"} <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </button>
                 <button type="button" onClick={adiarOnboarding} className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-xl px-4 text-sm font-bold text-[#5f7a6b] hover:bg-[#f5f9f5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">Pular por agora</button>
-                <p className="mt-3 text-center text-xs font-semibold text-[#7a9485]">Você pode retomar as missões pelo botão “Missões”.</p>
+                <p className="mt-3 text-center text-xs font-semibold text-[#4b6657]">Você pode retomar as missões pelo botão “Missões”.</p>
               </div>
             </>
           ) : null}

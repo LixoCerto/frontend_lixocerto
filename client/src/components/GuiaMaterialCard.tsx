@@ -60,8 +60,8 @@ export default function GuiaMaterialCard({
           </div>
         </div>
 
-        {material.synonyms.length ? <p className="mt-3 text-xs text-[#6c8879]">Também chamado de: {material.synonyms.join(", ")}</p> : null}
-        {material.classification ? <p className="mt-1 text-xs text-[#6c8879]">{material.classification}</p> : null}
+        {material.synonyms.length ? <p className="mt-3 text-xs text-[#4b6657]">Também chamado de: {material.synonyms.join(", ")}</p> : null}
+        {material.classification ? <p className="mt-1 text-xs text-[#4b6657]">{material.classification}</p> : null}
 
         <div className="mt-4 rounded-2xl bg-[#f5faf4] p-4">
           <p className="text-sm font-black text-[#1d6b43]">Como descartar</p>
@@ -106,32 +106,33 @@ export default function GuiaMaterialCard({
                   <ul className="mt-1 list-disc space-y-1 pl-5">
                     {material.routes.map((rota, index) => <li key={`${rota}-${index}`}>{rota}</li>)}
                   </ul>
-                  <p className="mt-1 text-xs text-[#6c8879]">Confirme se o ponto da sua cidade aceita.</p>
+                  <p className="mt-1 text-xs text-[#4b6657]">Confirme se o ponto da sua cidade aceita.</p>
                 </div>
               ) : null}
               {material.sources.length ? (
-                <div className="flex flex-wrap gap-2">
+                <ul className="space-y-2">
                   {material.sources.map((source, index) => (
-                    <a
-                      key={`${source.url}-${index}`}
-                      href={source.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      title={source.supports}
-                      aria-label={`Abrir fonte: ${source.title} em nova aba`}
-                      className="inline-flex min-h-9 items-center gap-1 rounded-lg bg-[#eef5ed] px-2.5 text-xs font-bold text-[#2c6b4a] hover:bg-[#dff0d8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]"
-                    >
-                      {source.title} <ExternalLink className="h-3 w-3" aria-hidden="true" />
-                    </a>
+                    <li key={`${source.url}-${index}`} className="rounded-xl bg-[#f7faf7] p-2.5">
+                      <a
+                        href={source.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={`Abrir fonte: ${source.title} em nova aba`}
+                        className="inline-flex min-h-9 items-center gap-1 rounded-lg bg-[#eef5ed] px-2.5 text-xs font-bold text-[#2c6b4a] hover:bg-[#dff0d8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]"
+                      >
+                        {source.title} <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                      </a>
+                      {source.supports ? <p className="mt-1 text-xs leading-5 text-[#4b6657]">Sustenta: {source.supports}</p> : null}
+                    </li>
                   ))}
-                </div>
+                </ul>
               ) : null}
             </div>
           </details>
         ) : null}
 
         <div className="mt-auto pt-4">
-          <p className="mb-3 text-xs font-semibold text-[#7a9485]">
+          <p className="mb-3 text-xs font-semibold text-[#4b6657]">
             {abrangencia}{material.verifiedAt ? ` · Verificado em ${new Date(`${material.verifiedAt}T12:00:00`).toLocaleDateString("pt-BR")}` : ""}
           </p>
           <button

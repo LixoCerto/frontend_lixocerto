@@ -94,7 +94,7 @@ export function Estatistica({ icone: Icone, valor, rotulo, tom = "verde" }: Esta
       </span>
       <div className="min-w-0">
         <strong className="block text-xl font-black leading-tight tabular-nums text-[#17362a]">{valor}</strong>
-        <span className="block truncate text-xs font-semibold text-[#6c8879]">{rotulo}</span>
+        <span className="block truncate text-xs font-semibold text-[#4b6657]">{rotulo}</span>
       </div>
     </div>
   );
@@ -126,7 +126,7 @@ export function Cartao({ titulo, descricao, icone: Icone, tom = "verde", acoes, 
             ) : null}
             <div className="min-w-0">
               {titulo ? <h3 className="text-lg font-black leading-tight tracking-tight text-[#17362a]">{titulo}</h3> : null}
-              {descricao ? <p className="mt-0.5 text-sm leading-6 text-[#6c8879]">{descricao}</p> : null}
+              {descricao ? <p className="mt-0.5 text-sm leading-6 text-[#4b6657]">{descricao}</p> : null}
             </div>
           </div>
           {acoes ? <div className="flex flex-wrap gap-2 sm:shrink-0">{acoes}</div> : null}
@@ -154,7 +154,7 @@ export function EstadoVazio({ icone: Icone = Inbox, titulo, descricao, acao, tom
         <Icone className="h-7 w-7" aria-hidden="true" />
       </span>
       <p className="mt-4 text-base font-black text-[#244637]">{titulo}</p>
-      {descricao ? <p className="mx-auto mt-1.5 max-w-md text-sm leading-6 text-[#6c8879]">{descricao}</p> : null}
+      {descricao ? <p className="mx-auto mt-1.5 max-w-md text-sm leading-6 text-[#4b6657]">{descricao}</p> : null}
       {acao ? <div className="mt-5">{acao}</div> : null}
     </div>
   );
@@ -163,7 +163,7 @@ export function EstadoVazio({ icone: Icone = Inbox, titulo, descricao, acao, tom
 /** Indicador de carregamento acessível. */
 export function Carregando({ texto = "Carregando..." }: { texto?: string }) {
   return (
-    <div className="flex items-center justify-center gap-3 rounded-[22px] bg-white px-5 py-10 text-sm font-semibold text-[#6c8879]" role="status" aria-live="polite">
+    <div className="flex items-center justify-center gap-3 rounded-[22px] bg-white px-5 py-10 text-sm font-semibold text-[#4b6657]" role="status" aria-live="polite">
       <LoaderCircle className="h-5 w-5 animate-spin text-[#1d7953]" aria-hidden="true" />
       {texto}
     </div>

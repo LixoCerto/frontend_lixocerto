@@ -77,6 +77,9 @@ export default function QuestionariosCrud({ podeAdministrar, podeResponder }: { 
   const [form, setForm] = useState<FormQuestao>(formularioVazio);
   const [idEdicao, setIdEdicao] = useState("");
   const [carregando, setCarregando] = useState(false);
+  const [carregandoQuiz, setCarregandoQuiz] = useState(podeResponder);
+  const [erroCarregamentoQuiz, setErroCarregamentoQuiz] = useState("");
+  const [tentativaQuiz, setTentativaQuiz] = useState(0);
   const [salvando, setSalvando] = useState(false);
   const [aviso, setAviso] = useState("");
   const [erro, setErro] = useState("");
@@ -84,17 +87,23 @@ export default function QuestionariosCrud({ podeAdministrar, podeResponder }: { 
   useEffect(() => {
     if (!podeResponder) return;
     let ativo = true;
-    const carregarQuiz = () => {
-      void listarQuestoes(1, 100).then(resultado => {
-        if (ativo) setQuestoesPublicas(resultado.questoes);
-      }).catch(() => {
-        if (ativo) setErro("Não foi possível carregar o quiz agora.");
-      });
+    const carregarQuiz = async (mostrarCarregamento = false) => {
+      if (mostrarCarregamento) setCarregandoQuiz(true);
+      try {
+        const resultado = await listarQuestoes(1, 100);
+        if (!ativo) return;
+        setQuestoesPublicas(resultado.questoes);
+        setErroCarregamentoQuiz("");
+      } catch {
+        if (ativo) setErroCarregamentoQuiz("Não foi possível carregar o quiz agora.");
+      } finally {
+        if (ativo && mostrarCarregamento) setCarregandoQuiz(false);
+      }
     };
-    carregarQuiz();
-    const intervalo = window.setInterval(carregarQuiz, 60_000);
+    void carregarQuiz(true);
+    const intervalo = window.setInterval(() => void carregarQuiz(), 60_000);
     return () => { ativo = false; window.clearInterval(intervalo); };
-  }, [podeResponder]);
+  }, [podeResponder, tentativaQuiz]);
 
   useEffect(() => {
     if (!podeAdministrar || abaAtual !== "gestao") return;
@@ -239,7 +248,12 @@ export default function QuestionariosCrud({ podeAdministrar, podeResponder }: { 
       {abaAtual === "quiz" && feedbackRecente ? <ResultadoResposta feedback={feedbackRecente} destaque /> : null}
 
       {abaAtual === "quiz" ? (
-        <section id={`painel-${abaAtual}`} className="space-y-4" aria-label="Perguntas do quiz">
+        <section id={`painel-${abaAtual}`} className="space-y-4" aria-label="Perguntas do quiz" aria-busy={carregandoQuiz}>
+          {erroCarregamentoQuiz ? <div role="alert" className="flex flex-col gap-2 rounded-xl border border-[#f0c7c1] bg-[#fff6f4] px-4 py-3 text-sm text-[#8b3b32] sm:flex-row sm:items-center sm:justify-between">
+            <span>{erroCarregamentoQuiz}</span>
+            <button type="button" onClick={() => setTentativaQuiz(atual => atual + 1)} className={`${ESTILOS.botaoSecundario} w-full sm:w-auto`}>Tentar novamente</button>
+          </div> : null}
+          {carregandoQuiz ? <div role="status" aria-live="polite" className="flex items-center gap-2 rounded-xl border border-[#e1ebe2] bg-white px-4 py-3 text-sm font-semibold text-[#45614f]"><LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />Carregando perguntas do quiz…</div> : null}
           {totalRodada > 0 && respondidasAgora.length > 0 ? (
             <div className="rounded-[20px] border border-[#e1ebe2] bg-white px-4 py-3.5 sm:px-5">
               <div className="mb-2 flex items-center justify-between gap-3 text-sm">
@@ -250,7 +264,7 @@ export default function QuestionariosCrud({ podeAdministrar, podeResponder }: { 
             </div>
           ) : null}
 
-          {questoesPublicas.length ? (
+          {!carregandoQuiz && !erroCarregamentoQuiz && questoesPublicas.length ? (
             <div className="grid gap-4 lg:grid-cols-2">
               {questoesPublicas.map((questao, posicao) => (
                 <CartaoPergunta
@@ -265,14 +279,14 @@ export default function QuestionariosCrud({ podeAdministrar, podeResponder }: { 
                 />
               ))}
             </div>
-          ) : (
+          ) : !carregandoQuiz && !erroCarregamentoQuiz ? (
             <EstadoVazio
               icone={Sparkles}
               tom="amarelo"
               titulo="Nenhuma pergunta no momento"
               descricao="Novas perguntas aparecem de tempos em tempos. Volte mais tarde para testar seus conhecimentos e ganhar pontos."
             />
-          )}
+          ) : null}
         </section>
       ) : (
         <section id={`painel-${abaAtual}`} className="space-y-4" aria-label="Gerenciar perguntas">
@@ -304,11 +318,11 @@ export default function QuestionariosCrud({ podeAdministrar, podeResponder }: { 
                     <input required type="number" min={10} max={50} className={ESTILOS.campo} value={form.pontos} onChange={evento => setForm(atual => ({ ...atual, pontos: Number(evento.target.value) }))} />
                   </label>
                 </div>
-                <p className="-mt-2 text-xs leading-5 text-[#6c8879]">Quem acertar ganha um valor sorteado entre 10 e este limite (no máximo 50).</p>
+                <p className="-mt-2 text-xs leading-5 text-[#4b6657]">Quem acertar ganha um valor sorteado entre 10 e este limite (no máximo 50).</p>
 
                 <fieldset className="space-y-2.5 rounded-2xl border border-[#e1ebe2] bg-[#fafcf9] p-3.5 sm:p-4">
                   <legend className="px-1 text-sm font-black text-[#17362a]">Alternativas</legend>
-                  <p className="text-xs leading-5 text-[#6c8879]">Marque exatamente uma como correta. A resposta certa não aparece para quem joga.</p>
+                  <p className="text-xs leading-5 text-[#4b6657]">Marque exatamente uma como correta. A resposta certa não aparece para quem joga.</p>
                   {form.alternativas.map((alternativa, indice) => (
                     <div key={alternativa.idAlternativa ?? indice} className="flex flex-col gap-2 rounded-xl border border-[#e1ebe2] bg-white p-2.5 sm:flex-row sm:items-center">
                       <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -338,7 +352,7 @@ export default function QuestionariosCrud({ podeAdministrar, podeResponder }: { 
                   {salvando ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Check className="h-4 w-4" aria-hidden="true" />}
                   {salvando ? "Salvando..." : idEdicao ? "Salvar e voltar para rascunho" : "Salvar como rascunho"}
                 </button>
-                <p className="text-xs leading-5 text-[#6c8879]">Perguntas já publicadas ou respondidas ficam guardadas: editar cria uma nova versão em rascunho, e excluir significa arquivar para manter o histórico.</p>
+                <p className="text-xs leading-5 text-[#4b6657]">Perguntas já publicadas ou respondidas ficam guardadas: editar cria uma nova versão em rascunho, e excluir significa arquivar para manter o histórico.</p>
               </form>
             </Cartao>
 
@@ -485,7 +499,7 @@ function CartaoPergunta({ questao, numero, feedback, idSelecionada, bloqueado, e
       {feedback ? (
         <ResultadoResposta feedback={feedback} />
       ) : (
-        <p className="mt-4 flex items-center gap-2 text-sm font-semibold text-[#6c8879]">
+        <p className="mt-4 flex items-center gap-2 text-sm font-semibold text-[#4b6657]">
           <Target className="h-4 w-4 shrink-0 text-[#c98a12]" aria-hidden="true" />
           {enviando ? "Conferindo sua resposta..." : "Toque na alternativa que você acha certa."}
         </p>

@@ -31,7 +31,7 @@ import AppShell from "@/components/AppShell";
 import TelaCarregamento, { esperar, lerTransicao, limparTransicao, marcarTransicao } from "@/components/TelaCarregamento";
 import AdministracaoCrud from "@/components/AdministracaoCrud";
 import GuiaMaterialCard, { tomDaCategoria, type MaterialGuia } from "@/components/GuiaMaterialCard";
-import { Aviso, CabecalhoPagina, Carregando, Cartao, ESTILOS, EstadoVazio, Etiqueta, TONS } from "@/components/pagina/Pagina";
+import { Aviso, BarraProgresso, CabecalhoPagina, Carregando, Cartao, ESTILOS, EstadoVazio, Etiqueta, TONS } from "@/components/pagina/Pagina";
 import MateriaisCrud from "@/components/MateriaisCrud";
 import QuestionariosCrud from "@/components/QuestionariosCrud";
 import DesafiosCrud from "@/components/DesafiosCrud";
@@ -45,6 +45,7 @@ import {
   listarSessoes,
   obterPerfilAtual,
   atualizarPerfil,
+  listarDesafios,
   obterProgressoUsuario,
   revogarSessao as revogarSessaoApi,
   revogarTodasSessoes,
@@ -63,9 +64,11 @@ type DashboardState = {
   badgesUnlocked: number;
   seals: Array<{ code: string; name: string; description: string; minimumPoints: number; earned: boolean }>;
   pointsBySource: Array<{ source: string; points: number; events: number }>;
+  activeChallenges: Array<{ id: string; name: string; description: string; points: number; progress: number; target: number }>;
   dailyTip: string;
   quickActions: { id: string; label: string; description: string }[];
 };
+type DesafioDashboard = Awaited<ReturnType<typeof listarDesafios>>["desafios"][number];
 type MaterialsState = MaterialGuia[];
 type SessoesAtivasState = {
   id: string;
@@ -124,6 +127,23 @@ function calcularProgressoNivel(pontos: number): { percentual: number; mensagem:
     percentual,
     mensagem: `Faltam ${faltam.toLocaleString("pt-BR")} pontos para o nível ${faixa.nome}.`,
     nivelAtual: indiceFaixa === 0 ? "Iniciante" : faixas[indiceFaixa - 1].nome,
+  };
+}
+
+function resumirDesafioDashboard(desafio: DesafioDashboard) {
+  const totalMeta = desafio.criterios.length
+    ? desafio.criterios.reduce((total, criterio) => total + criterio.meta, 0)
+    : desafio.metaQuantidade;
+  const progresso = desafio.criterios.length
+    ? desafio.progressoCriterios.reduce((total, item) => total + Math.min(item.progresso, item.criterio?.meta ?? 0), 0)
+    : desafio.quantidadeProgresso;
+  return {
+    id: desafio.idDesafio,
+    name: desafio.nomeDesafio,
+    description: desafio.descricaoDesafio,
+    points: desafio.quantidadePontos,
+    progress: Math.min(progresso, totalMeta),
+    target: Math.max(1, totalMeta),
   };
 }
 
@@ -209,6 +229,7 @@ export default function Home() {
   const pode = (permissao: CodigoPermissao) => permissoes.includes(permissao);
   const nomeCurto = nomeAutenticado.split(/\s+/).slice(0, 2).join(" ");
   const podeLerGamificacao = pode("gamificacao:ler");
+  const podeParticiparDesafios = pode("gamificacao:participar");
   const podeLerMateriais = pode("materiais:ler");
   const podeConsultarSus = pode("avaliacao_usabilidade:consultar_agregados");
   const podeEnviarSus = pode("avaliacao_usabilidade:enviar");
@@ -223,21 +244,24 @@ export default function Home() {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || !podeLerGamificacao || paginaEfetiva !== "inicio") return;
     async function carregarDados() {
       setCarregandoDashboard(true);
       setErroDados(false);
       try {
-        const [resultadoPainel] = await Promise.allSettled([
-          podeLerGamificacao ? obterProgressoUsuario() : Promise.resolve(null),
+        const [resultadoPainel, resultadoDesafios] = await Promise.allSettled([
+          obterProgressoUsuario(),
+          podeParticiparDesafios ? listarDesafios() : Promise.resolve({ desafios: [] }),
         ]);
         const painel = resultadoPainel.status === "fulfilled" ? resultadoPainel.value : null;
+        const desafios = resultadoDesafios.status === "fulfilled" ? resultadoDesafios.value.desafios : [];
         setDashboard(painel ? {
           ecoPoints: painel.quantidadePontos,
           currentStreak: painel.sequenciaDias,
           badgesUnlocked: painel.quantidadeConquistas,
           seals: painel.selos.map(selo => ({ code: selo.codigo, name: selo.nome, description: selo.descricao, minimumPoints: selo.pontosMinimos, earned: selo.conquistado })),
           pointsBySource: painel.resumoPorOrigem.map(item => ({ source: item.origem, points: item.quantidadePontos, events: item.quantidadeEventos })),
+          activeChallenges: desafios.filter(desafio => desafio.statusParticipacao === "participando").map(resumirDesafioDashboard),
           dailyTip: "Sua pontuação reflete as atividades registradas e as recompensas concedidas na plataforma.",
           quickActions: [
             { id: "guide", label: "Consultar guia", description: "Aprenda como descartar melhor." },
@@ -254,7 +278,7 @@ export default function Home() {
       }
     }
     void carregarDados();
-  }, [isAuthenticated, podeLerGamificacao]);
+  }, [isAuthenticated, podeLerGamificacao, podeParticiparDesafios, paginaEfetiva]);
 
   useEffect(() => {
     if (!isAuthenticated || !podeLerMateriais) {
@@ -351,10 +375,10 @@ export default function Home() {
 
   function renderizarInicio() {
     const atalhos = [
-      { id: "materiais", titulo: "Guia de descarte", texto: "Descubra onde jogar cada material.", Icone: BookOpen, cor: "#2f6fb0", fundo: "#e8f0fa", liberado: pode("materiais:ler") },
-      { id: "pontos", titulo: "Pontos de coleta", texto: "Encontre locais que recebem seu resíduo.", Icone: MapPinned, cor: "#2f9a5f", fundo: "#e6f5ec", liberado: podeAcessarPagina("pontos", permissoes) },
-      { id: "questionarios", titulo: "Quiz", texto: "Teste o que você sabe e aprenda brincando.", Icone: CircleHelp, cor: "#c98a12", fundo: "#fdf3dc", liberado: pode("questionarios:responder") },
-      { id: "desafios", titulo: "Desafios", texto: "Complete ações e ganhe pontos.", Icone: Trophy, cor: "#d0493e", fundo: "#fbe9e7", liberado: pode("gamificacao:participar") },
+      { id: "materiais", titulo: "Guia de descarte", texto: "Descubra onde jogar cada material.", Icone: BookOpen, cor: "#2f6fb0", corTexto: "#2f6fb0", fundo: "#e8f0fa", liberado: pode("materiais:ler") },
+      { id: "pontos", titulo: "Pontos de coleta", texto: "Encontre locais que recebem seu resíduo.", Icone: MapPinned, cor: "#2f9a5f", corTexto: "#1d7048", fundo: "#e6f5ec", liberado: podeAcessarPagina("pontos", permissoes) },
+      { id: "questionarios", titulo: "Quiz e questionários", texto: "Teste o que você sabe e aprenda brincando.", Icone: CircleHelp, cor: "#c98a12", corTexto: "#805800", fundo: "#fdf3dc", liberado: pode("questionarios:responder") },
+      { id: "desafios", titulo: "Desafios", texto: "Complete ações e ganhe pontos.", Icone: Trophy, cor: "#d0493e", corTexto: "#a33c32", fundo: "#fbe9e7", liberado: pode("gamificacao:participar") },
     ].filter(atalho => atalho.liberado);
     const dicaDoDia = DICAS_DESCARTE[Math.floor(Date.now() / 86_400_000) % DICAS_DESCARTE.length];
     const totalSelos = dashboard?.seals.length ?? 0;
@@ -414,7 +438,7 @@ export default function Home() {
                 </button>
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                <span className="text-xs font-semibold text-[#7a9485]">Sugestões:</span>
+                <span className="text-xs font-semibold text-[#4b6657]">Sugestões:</span>
                 {SUGESTOES_BUSCA.map(sugestao => (
                   <button
                     key={sugestao}
@@ -455,20 +479,20 @@ export default function Home() {
                   <span className="grid h-11 w-11 place-items-center rounded-xl bg-[#fde8e4] text-[#d0493e]"><Flame className="h-5 w-5" aria-hidden="true" /></span>
                   <div className="mt-4">
                     <strong className="block text-3xl font-black leading-none tracking-tight tabular-nums">{dashboard.currentStreak}</strong>
-                    <p className="mt-1 text-sm font-semibold text-[#6c8879]">{dashboard.currentStreak === 1 ? "dia seguido" : "dias seguidos"}</p>
+                    <p className="mt-1 text-sm font-semibold text-[#4b6657]">{dashboard.currentStreak === 1 ? "dia seguido" : "dias seguidos"}</p>
                   </div>
                 </article>
                 <article className="flex flex-col justify-between rounded-[24px] border border-[#f1e6c9] bg-white p-5">
                   <span className="grid h-11 w-11 place-items-center rounded-xl bg-[#fdf3dc] text-[#c98a12]"><Award className="h-5 w-5" aria-hidden="true" /></span>
                   <div className="mt-4">
-                    <strong className="block text-3xl font-black leading-none tracking-tight tabular-nums">{dashboard.badgesUnlocked}{totalSelos ? <span className="text-lg text-[#9aac9f]">/{totalSelos}</span> : null}</strong>
-                    <p className="mt-1 text-sm font-semibold text-[#6c8879]">selos conquistados</p>
+                    <strong className="block text-3xl font-black leading-none tracking-tight tabular-nums">{dashboard.badgesUnlocked}{totalSelos ? <span className="text-lg text-[#4b6657]">/{totalSelos}</span> : null}</strong>
+                    <p className="mt-1 text-sm font-semibold text-[#4b6657]">selos conquistados</p>
                   </div>
                 </article>
               </div>
             </section>
           ) : (
-            <section className="rounded-[24px] border border-[#e1ebe2] bg-white p-5 text-sm font-semibold text-[#6c8879]" aria-live="polite">
+            <section className="rounded-[24px] border border-[#e1ebe2] bg-white p-5 text-sm font-semibold text-[#4b6657]" aria-live="polite">
               {carregandoDashboard ? (
                 <div className="flex items-center gap-3"><span className="h-5 w-5 animate-spin rounded-full border-2 border-[#d6efad] border-t-[#1d7953]" aria-hidden="true" /> Carregando seu progresso...</div>
               ) : erroDados ? "Não foi possível carregar seu progresso agora. Tente novamente em instantes." : "Seu progresso ainda não está disponível."}
@@ -476,11 +500,44 @@ export default function Home() {
           )
         ) : null}
 
+        {podeParticiparDesafios ? (
+          <section aria-label="Desafios ativos" className="rounded-[24px] border border-[#e1ebe2] bg-white p-5 sm:p-6">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-black tracking-tight">Desafios em andamento</h3>
+                <p className="mt-1 text-sm text-[#4b6657]">Acompanhe suas metas e o progresso atual.</p>
+              </div>
+              <button type="button" onClick={() => mudarPaginaAutorizada("desafios")} className={ESTILOS.botaoSecundario}>Explorar desafios</button>
+            </div>
+            {dashboard?.activeChallenges.length ? (
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                {dashboard.activeChallenges.slice(0, 2).map(desafio => (
+                  <article key={desafio.id} className="rounded-2xl border border-[#e1ebe2] bg-[#fafcf9] p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <h4 className="font-black leading-5 text-[#17362a]">{desafio.name}</h4>
+                      <span className="shrink-0 rounded-full bg-[#fff4dc] px-2.5 py-1 text-xs font-black text-[#805800]">{desafio.points} pontos</span>
+                    </div>
+                    <p className="mt-2 text-sm leading-5 text-[#4b6657]">{desafio.description}</p>
+                    <div className="mt-3 flex items-center justify-between text-sm font-bold text-[#3f5c4c]">
+                      <span>Seu progresso</span><span>{desafio.progress}/{desafio.target}</span>
+                    </div>
+                    <BarraProgresso percentual={Math.min(100, Math.round((desafio.progress / Math.max(1, desafio.target)) * 100))} tom="verde" rotulo={`Progresso no desafio ${desafio.name}`} />
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-4 rounded-2xl bg-[#f7faf7] p-4 text-sm leading-6 text-[#4b6657]">
+                {carregandoDashboard ? "Carregando seus desafios…" : "Você ainda não participa de um desafio ativo. Explore os desafios disponíveis para começar."}
+              </p>
+            )}
+          </section>
+        ) : null}
+
         {atalhos.length ? (
           <section aria-labelledby="titulo-atalhos">
             <h3 id="titulo-atalhos" className="text-lg font-black tracking-tight">O que você quer fazer hoje?</h3>
             <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
-              {atalhos.map(({ id, titulo, texto, Icone, cor, fundo }) => (
+              {atalhos.map(({ id, titulo, texto, Icone, cor, corTexto, fundo }) => (
                 <button
                   key={id}
                   type="button"
@@ -490,8 +547,8 @@ export default function Home() {
                 >
                   <span className="grid h-12 w-12 place-items-center rounded-2xl transition-transform duration-200 group-hover:scale-110" style={{ backgroundColor: fundo, color: cor }}><Icone className="h-6 w-6" aria-hidden="true" /></span>
                   <strong className="mt-4 block text-[15px] font-black">{titulo}</strong>
-                  <span className="mt-1 block text-[13px] leading-5 text-[#6c8879]">{texto}</span>
-                  <span className="mt-3 inline-flex items-center gap-1 text-xs font-black" style={{ color: cor }}>Abrir <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" aria-hidden="true" /></span>
+                  <span className="mt-1 block text-[13px] leading-5 text-[#4b6657]">{texto}</span>
+                  <span className="mt-3 inline-flex items-center gap-1 text-xs font-black" style={{ color: corTexto }}>Abrir <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" aria-hidden="true" /></span>
                   <span className="absolute inset-x-5 top-0 h-1 rounded-b-full opacity-0 transition-opacity group-hover:opacity-100" style={{ backgroundColor: cor }} aria-hidden="true" />
                 </button>
               ))}
@@ -505,7 +562,7 @@ export default function Home() {
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <h3 className="text-lg font-black tracking-tight">Sua coleção de selos</h3>
-                  <p className="mt-0.5 text-sm text-[#698375]">Junte pontos para desbloquear cada selo.</p>
+                  <p className="mt-0.5 text-sm text-[#4b6657]">Junte pontos para desbloquear cada selo.</p>
                 </div>
                 <Trophy className="h-6 w-6 shrink-0 text-[#c98a12]" aria-hidden="true" />
               </div>
@@ -521,13 +578,13 @@ export default function Home() {
                         </span>
                         <div className="min-w-0">
                           <strong className={`block truncate text-sm font-black ${selo.earned ? "text-[#7a5408]" : "text-[#4a6455]"}`}>{selo.name}</strong>
-                          <span className="text-xs font-semibold text-[#7d9183]">{selo.earned ? "Conquistado!" : `Faltam ${faltam.toLocaleString("pt-BR")} pontos`}</span>
+                          <span className="text-xs font-semibold text-[#4b6657]">{selo.earned ? "Conquistado!" : `Faltam ${faltam.toLocaleString("pt-BR")} pontos`}</span>
                         </div>
                       </div>
                       {!selo.earned ? (
                         <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#e3e9e2]" aria-hidden="true"><div className="h-full rounded-full bg-[#9fc98a]" style={{ width: `${avanco}%` }} /></div>
                       ) : null}
-                      <p className="mt-2 text-xs leading-5 text-[#718579]">{selo.description}</p>
+                      <p className="mt-2 text-xs leading-5 text-[#4b6657]">{selo.description}</p>
                     </li>
                   );
                 })}
@@ -537,7 +594,7 @@ export default function Home() {
 
           <div className="grid content-start gap-4">
             <article className="relative overflow-hidden rounded-[24px] bg-[#fff8e6] p-5 sm:p-6">
-              <div className="flex items-center gap-2 text-sm font-black text-[#9a6a0b]"><Lightbulb className="h-5 w-5" aria-hidden="true" /> Dica do dia</div>
+              <div className="flex items-center gap-2 text-sm font-black text-[#70500b]"><Lightbulb className="h-5 w-5" aria-hidden="true" /> Dica do dia</div>
               <p className="mt-2 text-[15px] font-semibold leading-6 text-[#5c4710]">{dicaDoDia}</p>
             </article>
 
@@ -559,7 +616,7 @@ export default function Home() {
                     );
                   })}
                 </ul>
-                <p className="mt-4 text-xs leading-5 text-[#82978a]">Pontos mais antigos podem não aparecer nesta divisão.</p>
+                <p className="mt-4 text-xs leading-5 text-[#4b6657]">Pontos mais antigos podem não aparecer nesta divisão.</p>
               </article>
             ) : null}
           </div>
@@ -628,9 +685,9 @@ export default function Home() {
                     aria-pressed={ativa}
                     onClick={() => setSelectedCategory(categoria)}
                     className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border px-3.5 text-sm font-bold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]"
-                    style={ativa ? { backgroundColor: tom.cor, borderColor: tom.cor, color: "#fff" } : { backgroundColor: "#fff", borderColor: tom.borda, color: tom.texto }}
+                    style={ativa ? { backgroundColor: tom.fundo, borderColor: tom.cor, color: tom.texto } : { backgroundColor: "#fff", borderColor: tom.borda, color: tom.texto }}
                   >
-                    {categoria !== "Todos" ? <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: ativa ? "#fff" : tom.cor }} aria-hidden="true" /> : null}
+                    {categoria !== "Todos" ? <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: tom.cor }} aria-hidden="true" /> : null}
                     {categoria}
                   </button>
                 );
@@ -809,7 +866,7 @@ export default function Home() {
                         <strong className="truncate text-sm text-[#17362a]">{sessao.agente}</strong>
                         {sessao.atual ? <Etiqueta tom="verde">Este aparelho</Etiqueta> : null}
                       </div>
-                      <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-[#6c8879]"><Clock3 className="h-3.5 w-3.5" aria-hidden="true" />Entrou em {formatarDataSessao(sessao.criadaEm)}<span aria-hidden="true">·</span>{sessao.enderecoIp}</p>
+                      <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-[#4b6657]"><Clock3 className="h-3.5 w-3.5" aria-hidden="true" />Entrou em {formatarDataSessao(sessao.criadaEm)}<span aria-hidden="true">·</span>{sessao.enderecoIp}</p>
                       {!sessao.atual ? <p className="mt-0.5 text-xs text-[#8aa094]">Expira em {formatarDataSessao(sessao.expiraEm)}</p> : null}
                     </div>
                   </div>
@@ -817,7 +874,7 @@ export default function Home() {
                 </li>
               ))}
             </ul>
-            <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-[#6c8879]"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#2f9a5f]" aria-hidden="true" />Não reconhece algum aparelho? Desconecte-o e troque sua senha.</p>
+            <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-[#4b6657]"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#2f9a5f]" aria-hidden="true" />Não reconhece algum aparelho? Desconecte-o e troque sua senha.</p>
           </Cartao>
         </div>
       </div>

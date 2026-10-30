@@ -243,7 +243,7 @@ export default function DesafiosCrud({ podeAdministrar, podeLer, podeParticipar 
               </div>
             </div>
             <p className="mt-3 text-sm leading-6 text-[#5c7768]">{desafio.descricaoDesafio}</p>
-            <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold text-[#6c8879]">
+            <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold text-[#4b6657]">
               <Clock3 className="h-3.5 w-3.5 shrink-0 text-[#d0493e]" aria-hidden="true" />
               <span>Termina em {formatarData(desafio.dataFimPeriodo)}</span>
               <span className="text-[#a3b5aa]">·</span>
@@ -266,7 +266,7 @@ export default function DesafiosCrud({ podeAdministrar, podeLer, podeParticipar 
                 return <div key={`${criterio.tipo}:${criterio.categoria}:${criterio.tema}:${indice}`} className="rounded-xl border border-[#e1ebe2] bg-white px-3.5 py-3">
                   <div className="mb-2 flex items-center justify-between gap-3">
                     <span className="inline-flex min-w-0 items-center gap-1.5 text-sm font-bold text-[#2c4a3c]">
-                      {concluido ? <CircleCheck className="h-4 w-4 shrink-0 text-[#2f9a5f]" aria-hidden="true" /> : <ListChecks className="h-4 w-4 shrink-0 text-[#6c8879]" aria-hidden="true" />}
+                      {concluido ? <CircleCheck className="h-4 w-4 shrink-0 text-[#2f9a5f]" aria-hidden="true" /> : <ListChecks className="h-4 w-4 shrink-0 text-[#4b6657]" aria-hidden="true" />}
                       <span className="break-words">{rotuloCriterio(criterio)}</span>
                     </span>
                     <strong className="shrink-0 text-sm tabular-nums text-[#1d7953]">{item.progresso}/{criterio.meta}</strong>
@@ -274,7 +274,7 @@ export default function DesafiosCrud({ podeAdministrar, podeLer, podeParticipar 
                   <BarraProgresso percentual={Math.min(100, Math.round(item.progresso / Math.max(1, criterio.meta) * 100))} tom="verde" rotulo={rotuloCriterio(criterio)} />
                 </div>;
               })}
-              <p className="flex items-start gap-1.5 text-xs leading-5 text-[#6c8879]"><Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#c98a12]" aria-hidden="true" />O progresso sobe sozinho quando seu descarte é aprovado ou quando você acerta uma pergunta do quiz.</p>
+              <p className="flex items-start gap-1.5 text-xs leading-5 text-[#4b6657]"><Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#c98a12]" aria-hidden="true" />O progresso sobe sozinho quando seu descarte é aprovado ou quando você acerta uma pergunta do quiz.</p>
             </div> : null}
 
             <div className="mt-auto pt-4">
@@ -307,7 +307,7 @@ export default function DesafiosCrud({ podeAdministrar, podeLer, podeParticipar 
               <label className="block"><span className={ESTILOS.rotulo}>Pontos ao concluir</span><input required type="number" min={0} max={100000} className={ESTILOS.campo} value={form.pontos} onChange={evento => setForm(atual => ({ ...atual, pontos: Number(evento.target.value) }))} /></label>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block"><span className={ESTILOS.rotulo}>Tipo de ação (metas manuais)</span><input required pattern="[a-z0-9_]+" maxLength={100} className={ESTILOS.campo} value={form.tipoAcao} onChange={evento => setForm(atual => ({ ...atual, tipoAcao: evento.target.value }))} placeholder="metas_compostas" /><span className="mt-1 block text-xs leading-5 text-[#6c8879]">Só usado quando não há critérios automáticos.</span></label>
+              <label className="block"><span className={ESTILOS.rotulo}>Tipo de ação (metas manuais)</span><input required pattern="[a-z0-9_]+" maxLength={100} className={ESTILOS.campo} value={form.tipoAcao} onChange={evento => setForm(atual => ({ ...atual, tipoAcao: evento.target.value }))} placeholder="metas_compostas" /><span className="mt-1 block text-xs leading-5 text-[#4b6657]">Só usado quando não há critérios automáticos.</span></label>
               {!form.criterios.length ? <label className="block"><span className={ESTILOS.rotulo}>Meta de ações</span><input required type="number" min={1} max={100000} className={ESTILOS.campo} value={form.meta} onChange={evento => setForm(atual => ({ ...atual, meta: Number(evento.target.value) }))} /></label> : <p className="self-start rounded-xl bg-[#f5f9f3] p-3 text-xs leading-5 text-[#5c7768] sm:mt-7">A meta total será a soma dos critérios automáticos abaixo.</p>}
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -317,7 +317,7 @@ export default function DesafiosCrud({ podeAdministrar, podeLer, podeParticipar 
 
             <div className="space-y-3 rounded-2xl border border-[#e1ebe2] bg-[#fafcf9] p-3.5 sm:p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div><h4 className="text-sm font-black text-[#17362a]">Critérios automáticos</h4><p className="mt-1 text-xs leading-5 text-[#6c8879]">Descartes contam depois de aprovados; quizzes contam só quando a resposta está certa.</p></div>
+                <div><h4 className="text-sm font-black text-[#17362a]">Critérios automáticos</h4><p className="mt-1 text-xs leading-5 text-[#4b6657]">Descartes contam depois de aprovados; quizzes contam só quando a resposta está certa.</p></div>
                 <button type="button" className={`${ESTILOS.botaoSecundario} shrink-0`} disabled={form.criterios.length >= 8} onClick={() => setForm(atual => ({ ...atual, criterios: [...atual.criterios, criterioVazio()] }))}><Plus className="h-4 w-4" aria-hidden="true" />Adicionar</button>
               </div>
               {form.criterios.map((criterio, indice) => <div key={indice} className="space-y-2.5 rounded-xl border border-[#e1ebe2] bg-white p-3">
@@ -338,7 +338,7 @@ export default function DesafiosCrud({ podeAdministrar, podeLer, podeParticipar 
               {salvando ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Check className="h-4 w-4" aria-hidden="true" />}
               {salvando ? "Salvando..." : idEdicao ? "Salvar e voltar para rascunho" : "Salvar como rascunho"}
             </button>
-            <p className="text-xs leading-5 text-[#6c8879]">Desafios com participantes ou ações registradas não podem ser editados. Arquive-os para guardar o histórico.</p>
+            <p className="text-xs leading-5 text-[#4b6657]">Desafios com participantes ou ações registradas não podem ser editados. Arquive-os para guardar o histórico.</p>
           </form>
         </Cartao>
 
@@ -358,8 +358,8 @@ export default function DesafiosCrud({ podeAdministrar, podeLer, podeParticipar 
             </div>
             <h3 className="mt-3 text-base font-black leading-6 text-[#17362a]">{desafio.nomeDesafio}</h3>
             <p className="mt-1.5 text-sm leading-6 text-[#5c7768]">{desafio.descricaoDesafio}</p>
-            <p className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-[#6c8879]"><CalendarDays className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />Ação: {desafio.tipoAcao} · início: {formatarData(desafio.dataInicio)}{desafio.dataFim ? ` · fim: ${formatarData(desafio.dataFim)}` : " · sem data final"}</p>
-            {desafio.criterios.length ? <div className="mt-3 flex flex-wrap gap-1.5">{desafio.criterios.map((criterio, indice) => <Etiqueta key={`${criterio.tipo}:${indice}`} tom="verde" icone={Target}>{criterioLabel(criterio.tipo, criterio.categoria, criterio.tema, criterio.meta)}</Etiqueta>)}</div> : <p className="mt-2 text-xs text-[#6c8879]">Meta: {desafio.metaQuantidade} ações manuais.</p>}
+            <p className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-[#4b6657]"><CalendarDays className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />Ação: {desafio.tipoAcao} · início: {formatarData(desafio.dataInicio)}{desafio.dataFim ? ` · fim: ${formatarData(desafio.dataFim)}` : " · sem data final"}</p>
+            {desafio.criterios.length ? <div className="mt-3 flex flex-wrap gap-1.5">{desafio.criterios.map((criterio, indice) => <Etiqueta key={`${criterio.tipo}:${indice}`} tom="verde" icone={Target}>{criterioLabel(criterio.tipo, criterio.categoria, criterio.tema, criterio.meta)}</Etiqueta>)}</div> : <p className="mt-2 text-xs text-[#4b6657]">Meta: {desafio.metaQuantidade} ações manuais.</p>}
             <div className="mt-4 flex flex-wrap gap-2 border-t border-[#eef3ef] pt-4">
               {desafio.statusDesafio !== "arquivado" ? <button type="button" className={ESTILOS.botaoSecundario} onClick={() => iniciarEdicao(desafio)}><Pencil className="h-4 w-4" aria-hidden="true" />Editar</button> : null}
               {desafio.statusDesafio === "rascunho" ? <button type="button" className={ESTILOS.botaoPrincipal} onClick={() => void mudarStatus(desafio.idDesafio, "publicado")}><Send className="h-4 w-4" aria-hidden="true" />Publicar</button> : null}

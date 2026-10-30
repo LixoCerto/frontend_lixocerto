@@ -92,7 +92,7 @@ function Indicador({ titulo, valor, detalhe, icone: Icone, tom = "verde" }: { ti
       </div>
       <div className="min-w-0">
         <p className="text-sm font-bold leading-5 text-[#244637]">{titulo}</p>
-        <p className="mt-0.5 text-xs leading-5 text-[#6c8879]">{detalhe}</p>
+        <p className="mt-0.5 text-xs leading-5 text-[#4b6657]">{detalhe}</p>
       </div>
     </article>
   );
@@ -136,7 +136,7 @@ function CampoBusca({ valor, onChange, placeholder, rotulo }: { valor: string; o
   return (
     <label className="relative block min-w-0 flex-1">
       <span className="sr-only">{rotulo}</span>
-      <Search className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#6c8879]" aria-hidden="true" />
+      <Search className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#4b6657]" aria-hidden="true" />
       <input value={valor} onChange={event => onChange(event.target.value)} placeholder={placeholder} className={`${ESTILOS.campo} pl-11`} />
     </label>
   );
@@ -427,7 +427,7 @@ export default function AdministracaoCrud({ podeConsultarResumo, podeGerenciarAc
                     <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#e6f5ec] text-[#2f9a5f]"><UserRound className="h-5 w-5" aria-hidden="true" /></span>
                     <div className="min-w-0 flex-1">
                       <strong className="block break-words text-[15px] font-black text-[#17362a]">{usuario.nomeUsuario}</strong>
-                      <span className="block break-all text-sm text-[#6c8879]">{usuario.emailUsuario}</span>
+                      <span className="block break-all text-sm text-[#4b6657]">{usuario.emailUsuario}</span>
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -436,8 +436,8 @@ export default function AdministracaoCrud({ podeConsultarResumo, podeGerenciarAc
                     {usuario.papeis.map(papel => <Etiqueta key={papel.idPapel} tom="cinza" icone={KeyRound}>{papel.nomePapel}</Etiqueta>)}
                   </div>
                   <dl className="grid grid-cols-2 gap-2 text-xs">
-                    <div><dt className="font-semibold text-[#6c8879]">Criada em</dt><dd className="font-bold text-[#244637]">{dataLocal(usuario.dataCriacao)}</dd></div>
-                    <div><dt className="font-semibold text-[#6c8879]">Último acesso</dt><dd className="font-bold text-[#244637]">{dataLocal(usuario.dataUltimoAcesso)}</dd></div>
+                    <div><dt className="font-semibold text-[#4b6657]">Criada em</dt><dd className="font-bold text-[#244637]">{dataLocal(usuario.dataCriacao)}</dd></div>
+                    <div><dt className="font-semibold text-[#4b6657]">Último acesso</dt><dd className="font-bold text-[#244637]">{dataLocal(usuario.dataUltimoAcesso)}</dd></div>
                   </dl>
                   <div className="grid grid-cols-1 gap-2 min-[400px]:grid-cols-3">
                     <button type="button" disabled={salvando || usuario.statusUsuario === "anonimizado"} onClick={() => void alterarStatusUsuario(usuario)} className={usuario.statusUsuario === "ativo" ? ESTILOS.botaoPerigo : ESTILOS.botaoSecundario}>{usuario.statusUsuario === "ativo" ? <Ban className="h-4 w-4" aria-hidden="true" /> : <RotateCcw className="h-4 w-4" aria-hidden="true" />}{usuario.statusUsuario === "ativo" ? "Bloquear" : "Reativar"}</button>
@@ -453,8 +453,8 @@ export default function AdministracaoCrud({ podeConsultarResumo, podeGerenciarAc
                 <tbody className="divide-y divide-[#edf2ed]">
                   {usuarios.map(usuario => (
                     <tr key={usuario.idUsuario} className="align-top transition hover:bg-[#fafcf9]">
-                      <td className="px-4 py-4"><strong className="block font-black text-[#17362a]">{usuario.nomeUsuario}</strong><span className="mt-0.5 block text-xs text-[#6c8879]">{usuario.emailUsuario}</span></td>
-                      <td className="px-4 py-4"><StatusEtiqueta status={usuario.statusUsuario} /><span className="mt-2 block text-xs text-[#6c8879]">{usuario.emailVerificado ? "E-mail verificado" : "E-mail pendente"}</span></td>
+                      <td className="px-4 py-4"><strong className="block font-black text-[#17362a]">{usuario.nomeUsuario}</strong><span className="mt-0.5 block text-xs text-[#4b6657]">{usuario.emailUsuario}</span></td>
+                      <td className="px-4 py-4"><StatusEtiqueta status={usuario.statusUsuario} /><span className="mt-2 block text-xs text-[#4b6657]">{usuario.emailVerificado ? "E-mail verificado" : "E-mail pendente"}</span></td>
                       <td className="px-4 py-4"><div className="flex max-w-56 flex-wrap gap-1">{usuario.papeis.map(papel => <Etiqueta key={papel.idPapel} tom="cinza">{papel.nomePapel}</Etiqueta>)}</div></td>
                       <td className="whitespace-nowrap px-4 py-4 text-xs text-[#5c7768]">{dataLocal(usuario.dataCriacao)}</td>
                       <td className="whitespace-nowrap px-4 py-4 text-xs text-[#5c7768]">{dataLocal(usuario.dataUltimoAcesso)}</td>
@@ -477,14 +477,14 @@ export default function AdministracaoCrud({ podeConsultarResumo, podeGerenciarAc
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-start gap-3">
                   <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#e6f5ec] text-[#2f9a5f]"><KeyRound className="h-5 w-5" aria-hidden="true" /></span>
-                  <div className="min-w-0"><h3 className="break-words text-lg font-black leading-tight text-[#17362a]">Papéis de {papelUsuario.nomeUsuario}</h3><p className="mt-1 text-sm leading-6 text-[#6c8879]">Ao salvar, a pessoa precisará entrar de novo. Você não pode alterar os seus próprios papéis.</p></div>
+                  <div className="min-w-0"><h3 className="break-words text-lg font-black leading-tight text-[#17362a]">Papéis de {papelUsuario.nomeUsuario}</h3><p className="mt-1 text-sm leading-6 text-[#4b6657]">Ao salvar, a pessoa precisará entrar de novo. Você não pode alterar os seus próprios papéis.</p></div>
                 </div>
                 <button type="button" onClick={() => setPapelUsuario(null)} className={ESTILOS.botaoIcone} aria-label="Fechar"><X className="h-5 w-5" /></button>
               </div>
               <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {papeisAtivos.map(papel => {
                   const marcado = idsPapeisUsuario.includes(papel.idPapel);
-                  return <label key={papel.idPapel} className={`flex min-h-11 cursor-pointer items-start gap-3 rounded-2xl border p-3.5 text-sm transition ${marcado ? "border-[#9fd0b0] bg-[#f1f9ef]" : "border-[#e1ebe2] hover:bg-[#fafcf9]"}`}><input type="checkbox" checked={marcado} onChange={() => setIdsPapeisUsuario(ids => ids.includes(papel.idPapel) ? ids.filter(id => id !== papel.idPapel) : [...ids, papel.idPapel])} className="mt-0.5 h-5 w-5 shrink-0 accent-[#1d7953]" /><span className="min-w-0"><strong className="block font-black text-[#17362a]">{papel.nomePapel}</strong><span className="text-xs leading-5 text-[#6c8879]">{papel.descricaoPapel}</span></span></label>;
+                  return <label key={papel.idPapel} className={`flex min-h-11 cursor-pointer items-start gap-3 rounded-2xl border p-3.5 text-sm transition ${marcado ? "border-[#9fd0b0] bg-[#f1f9ef]" : "border-[#e1ebe2] hover:bg-[#fafcf9]"}`}><input type="checkbox" checked={marcado} onChange={() => setIdsPapeisUsuario(ids => ids.includes(papel.idPapel) ? ids.filter(id => id !== papel.idPapel) : [...ids, papel.idPapel])} className="mt-0.5 h-5 w-5 shrink-0 accent-[#1d7953]" /><span className="min-w-0"><strong className="block font-black text-[#17362a]">{papel.nomePapel}</strong><span className="text-xs leading-5 text-[#4b6657]">{papel.descricaoPapel}</span></span></label>;
                 })}
               </div>
               <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -500,7 +500,7 @@ export default function AdministracaoCrud({ podeConsultarResumo, podeGerenciarAc
         <div id={`painel-${abaAtual}`} className="grid gap-5 xl:grid-cols-[.8fr_1.2fr]">
           <section className="space-y-3">
             <div className="flex flex-col gap-3 rounded-[24px] border border-[#e1ebe2] bg-white p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-              <div className="min-w-0"><h3 className="text-lg font-black leading-tight text-[#17362a]">Papéis da plataforma</h3><p className="mt-1 text-sm leading-6 text-[#6c8879]">Papéis base não podem ser renomeados nem arquivados. O papel administrador não pode ser alterado.</p></div>
+              <div className="min-w-0"><h3 className="text-lg font-black leading-tight text-[#17362a]">Papéis da plataforma</h3><p className="mt-1 text-sm leading-6 text-[#4b6657]">Papéis base não podem ser renomeados nem arquivados. O papel administrador não pode ser alterado.</p></div>
               <button type="button" onClick={() => { limparEditorPapel(); setMensagem(null); }} className={`${ESTILOS.botaoPrincipal} shrink-0`}><Plus className="h-4 w-4" aria-hidden="true" /> Novo papel</button>
             </div>
             {papeis.map(papel => {
@@ -512,7 +512,7 @@ export default function AdministracaoCrud({ podeConsultarResumo, podeGerenciarAc
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-1.5"><h4 className="mr-1 break-words font-black text-[#17362a]">{papel.nomePapel}</h4><StatusEtiqueta status={papel.statusPapel} />{papel.papelSistema ? <Etiqueta tom="azul">Base</Etiqueta> : null}{administrador ? <Etiqueta tom="amarelo" icone={LockKeyhole}>Protegido</Etiqueta> : null}</div>
                       <p className="mt-2 text-sm leading-6 text-[#5c7768]">{papel.descricaoPapel}</p>
-                      <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs font-bold text-[#6c8879]"><span className="inline-flex items-center gap-1"><Users className="h-3.5 w-3.5" aria-hidden="true" />{papel.quantidadeUsuarios} usuário(s)</span><span className="inline-flex items-center gap-1"><KeyRound className="h-3.5 w-3.5" aria-hidden="true" />{papel.codigosPermissoes.length} permissão(ões)</span></p>
+                      <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs font-bold text-[#4b6657]"><span className="inline-flex items-center gap-1"><Users className="h-3.5 w-3.5" aria-hidden="true" />{papel.quantidadeUsuarios} usuário(s)</span><span className="inline-flex items-center gap-1"><KeyRound className="h-3.5 w-3.5" aria-hidden="true" />{papel.codigosPermissoes.length} permissão(ões)</span></p>
                     </div>
                     <div className="flex shrink-0 flex-col gap-2 min-[400px]:flex-row">
                       <BotaoAcao rotulo={administrador ? "Ver permissões (protegido)" : "Editar papel e permissões"} icone={KeyRound} onClick={() => editarPapel(papel)} />
@@ -528,7 +528,7 @@ export default function AdministracaoCrud({ podeConsultarResumo, podeGerenciarAc
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-start gap-3">
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#e8f0fa] text-[#2f6fb0]">{papelSelecionado ? <KeyRound className="h-5 w-5" aria-hidden="true" /> : <Plus className="h-5 w-5" aria-hidden="true" />}</span>
-                <div className="min-w-0"><h3 className="break-words text-lg font-black leading-tight text-[#17362a]">{papelSelecionado ? `Editar ${papelSelecionado.nomePapel}` : "Criar papel"}</h3><p className="mt-0.5 text-sm text-[#6c8879]">Escolha o que este papel pode fazer.</p></div>
+                <div className="min-w-0"><h3 className="break-words text-lg font-black leading-tight text-[#17362a]">{papelSelecionado ? `Editar ${papelSelecionado.nomePapel}` : "Criar papel"}</h3><p className="mt-0.5 text-sm text-[#4b6657]">Escolha o que este papel pode fazer.</p></div>
               </div>
               {papelSelecionado ? <button type="button" onClick={limparEditorPapel} className={ESTILOS.botaoIcone} aria-label="Limpar editor"><X className="h-5 w-5" /></button> : null}
             </div>
@@ -547,7 +547,7 @@ export default function AdministracaoCrud({ podeConsultarResumo, podeGerenciarAc
                       <input type="checkbox" checked={marcada} disabled={administrador || exclusiva} onChange={() => alternarPermissao(permissao.idPermissao)} className="mt-0.5 h-5 w-5 shrink-0 accent-[#1d7953]" />
                       <span className="min-w-0">
                         <strong className="block font-black text-[#17362a]">{permissao.nomePermissao}</strong>
-                        <span className="block break-all font-mono text-[11px] text-[#6c8879]">{permissao.codigoPermissao}</span>
+                        <span className="block break-all font-mono text-[11px] text-[#4b6657]">{permissao.codigoPermissao}</span>
                         <span className="mt-1 block text-xs leading-5 text-[#5c7768]">{permissao.descricaoPermissao}</span>
                         {exclusiva ? <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-bold text-[#8a5d06]"><LockKeyhole className="h-3.5 w-3.5" aria-hidden="true" />Só o papel administrador tem esta permissão</span> : null}
                       </span>
@@ -556,8 +556,8 @@ export default function AdministracaoCrud({ podeConsultarResumo, podeGerenciarAc
                 })}
               </div>
             </div>
-            {papelSelecionado?.papelSistema && papelSelecionado.nomePapel !== "administrador" ? <p className="mt-4 text-xs leading-5 text-[#6c8879]">Este papel base não pode ser renomeado nem arquivado, mas as permissões podem mudar. Será pedida uma justificativa e as pessoas afetadas precisarão entrar de novo.</p> : null}
-            {!papelSelecionado?.papelSistema ? <p className="mt-4 text-xs leading-5 text-[#6c8879]">Nome: 3 a 60 caracteres, só letras minúsculas, números e _. A permissão de gerenciar acessos é exclusiva do administrador.</p> : null}
+            {papelSelecionado?.papelSistema && papelSelecionado.nomePapel !== "administrador" ? <p className="mt-4 text-xs leading-5 text-[#4b6657]">Este papel base não pode ser renomeado nem arquivado, mas as permissões podem mudar. Será pedida uma justificativa e as pessoas afetadas precisarão entrar de novo.</p> : null}
+            {!papelSelecionado?.papelSistema ? <p className="mt-4 text-xs leading-5 text-[#4b6657]">Nome: 3 a 60 caracteres, só letras minúsculas, números e _. A permissão de gerenciar acessos é exclusiva do administrador.</p> : null}
             <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end"><button type="submit" disabled={salvando || !nomePapel.trim() || !descricaoPapel.trim() || papelSelecionado?.nomePapel === "administrador"} className={ESTILOS.botaoPrincipal}>{salvando ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}{papelSelecionado ? "Salvar alterações" : "Criar papel"}</button></div>
           </form>
         </div>
@@ -568,7 +568,7 @@ export default function AdministracaoCrud({ podeConsultarResumo, podeGerenciarAc
           <div className="flex flex-col gap-4 rounded-[24px] border border-[#e1ebe2] bg-white p-4 sm:p-5 lg:flex-row lg:items-center">
             <div className="flex min-w-0 flex-1 items-start gap-3">
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#f5ece4] text-[#8a5a34]"><FileClock className="h-5 w-5" aria-hidden="true" /></span>
-              <div className="min-w-0"><h3 className="text-lg font-black leading-tight text-[#17362a]">Histórico de ações</h3><p className="mt-0.5 text-sm leading-6 text-[#6c8879]">Somente leitura. Dados sensíveis ficam ocultos.</p></div>
+              <div className="min-w-0"><h3 className="text-lg font-black leading-tight text-[#17362a]">Histórico de ações</h3><p className="mt-0.5 text-sm leading-6 text-[#4b6657]">Somente leitura. Dados sensíveis ficam ocultos.</p></div>
             </div>
             <div className="lg:w-80"><CampoBusca rotulo="Filtrar eventos" valor={filtroEvento} onChange={valor => { setFiltroEvento(valor); setPaginaAuditoria(0); }} placeholder="Filtrar por tipo de evento" /></div>
           </div>
@@ -576,11 +576,11 @@ export default function AdministracaoCrud({ podeConsultarResumo, podeGerenciarAc
             <ul className="divide-y divide-[#edf2ed] sm:hidden">
               {registros.map(registro => (
                 <li key={registro.idRegistroAuditoria} className="space-y-2 p-4">
-                  <div className="flex items-start justify-between gap-3"><strong className="min-w-0 break-words font-black text-[#17362a]">{registro.tipoEvento}</strong><span className="shrink-0 text-xs font-semibold text-[#6c8879]">{dataLocal(registro.dataCriacao)}</span></div>
+                  <div className="flex items-start justify-between gap-3"><strong className="min-w-0 break-words font-black text-[#17362a]">{registro.tipoEvento}</strong><span className="shrink-0 text-xs font-semibold text-[#4b6657]">{dataLocal(registro.dataCriacao)}</span></div>
                   <dl className="grid gap-1.5 text-xs">
-                    <div className="flex gap-2"><dt className="w-20 shrink-0 font-semibold text-[#6c8879]">Recurso</dt><dd className="min-w-0 break-all font-bold text-[#244637]">{registro.recursoEvento || "—"}{registro.idRecurso ? <span className="block font-normal text-[#82968a]">{registro.idRecurso}</span> : null}</dd></div>
-                    <div className="flex gap-2"><dt className="w-20 shrink-0 font-semibold text-[#6c8879]">Feito por</dt><dd className="min-w-0 break-all text-[#244637]">{registro.idUsuario || "Sistema"}</dd></div>
-                    <div className="flex gap-2"><dt className="w-20 shrink-0 font-semibold text-[#6c8879]">Correlação</dt><dd className="min-w-0 truncate font-mono text-[11px] text-[#82968a]" title={registro.idCorrelacao}>{registro.idCorrelacao || "—"}</dd></div>
+                    <div className="flex gap-2"><dt className="w-20 shrink-0 font-semibold text-[#4b6657]">Recurso</dt><dd className="min-w-0 break-all font-bold text-[#244637]">{registro.recursoEvento || "—"}{registro.idRecurso ? <span className="block font-normal text-[#82968a]">{registro.idRecurso}</span> : null}</dd></div>
+                    <div className="flex gap-2"><dt className="w-20 shrink-0 font-semibold text-[#4b6657]">Feito por</dt><dd className="min-w-0 break-all text-[#244637]">{registro.idUsuario || "Sistema"}</dd></div>
+                    <div className="flex gap-2"><dt className="w-20 shrink-0 font-semibold text-[#4b6657]">Correlação</dt><dd className="min-w-0 truncate font-mono text-[11px] text-[#82968a]" title={registro.idCorrelacao}>{registro.idCorrelacao || "—"}</dd></div>
                   </dl>
                 </li>
               ))}
@@ -607,7 +607,7 @@ export default function AdministracaoCrud({ podeConsultarResumo, podeGerenciarAc
         </section>
       ) : null}
 
-      {carregando ? <p className="flex items-center justify-center gap-2 text-sm font-semibold text-[#6c8879]" role="status"><LoaderCircle className="h-4 w-4 animate-spin text-[#1d7953]" aria-hidden="true" />Carregando dados…</p> : null}
+      {carregando ? <p className="flex items-center justify-center gap-2 text-sm font-semibold text-[#4b6657]" role="status"><LoaderCircle className="h-4 w-4 animate-spin text-[#1d7953]" aria-hidden="true" />Carregando dados…</p> : null}
       {salvando ? <div className="sr-only" aria-live="polite">Salvando alteração administrativa.</div> : null}
     </div>
   );

@@ -30,7 +30,7 @@ function IndicadorPesquisa({ titulo, valor, icone: Icone, detalhe, percentual }:
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#efedfa] text-[#6b5bb5]"><Icone className="h-5 w-5" aria-hidden="true" /></span>
       </div>
       {typeof percentual === "number" ? <div className="mt-3"><BarraProgresso percentual={percentual} tom="roxo" rotulo={titulo} /></div> : null}
-      <p className="mt-3 text-xs font-semibold text-[#6c8879]">{detalhe}</p>
+      <p className="mt-3 text-xs font-semibold text-[#4b6657]">{detalhe}</p>
     </article>
   );
 }
@@ -150,7 +150,7 @@ export default function PesquisaExperiencia({ podeEnviar, podeConsultar }: { pod
                         </label>
                       ))}
                     </div>
-                    <div className="mt-2 flex justify-between gap-3 text-xs font-semibold text-[#6c8879]" aria-hidden="true">
+                    <div className="mt-2 flex justify-between gap-3 text-xs font-semibold text-[#4b6657]" aria-hidden="true">
                       <span>Discordo totalmente</span>
                       <span className="text-right">Concordo totalmente</span>
                     </div>
@@ -166,7 +166,7 @@ export default function PesquisaExperiencia({ podeEnviar, podeConsultar }: { pod
               <span>Li as informações e aceito participar voluntariamente. A conta autenticada é usada apenas para pseudonimizar e limitar a identificação; o código bruto não é armazenado junto às respostas, e os resultados de pesquisa são apresentados de forma agregada.</span>
             </label>
             <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm font-semibold text-[#6c8879]">{faltam > 0 ? `Falta${faltam > 1 ? "m" : ""} ${faltam} ${faltam > 1 ? "frases" : "frase"} para responder.` : "Tudo respondido! Agora é só enviar."}</p>
+              <p className="text-sm font-semibold text-[#4b6657]">{faltam > 0 ? `Falta${faltam > 1 ? "m" : ""} ${faltam} ${faltam > 1 ? "frases" : "frase"} para responder.` : "Tudo respondido! Agora é só enviar."}</p>
               <button type="submit" disabled={enviando} className={`${ESTILOS.botaoPrincipal} h-12 w-full disabled:cursor-wait sm:w-auto`}>
                 {enviando ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Send className="h-4 w-4" aria-hidden="true" />}
                 {enviando ? "Enviando avaliação…" : "Enviar avaliação"}

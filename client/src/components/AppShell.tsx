@@ -256,7 +256,7 @@ export default function AppShell({
               <Menu className="h-5 w-5" />
             </button>
             <div className="min-w-0">
-              <p className="hidden text-xs font-semibold text-[#758f80] sm:block">Lixo Certo / {perfil.rotulo}</p>
+              <p className="hidden text-xs font-semibold text-[#4b6657] sm:block">Lixo Certo / {perfil.rotulo}</p>
               <h1 id="app-page-title" tabIndex={-1} aria-live="polite" aria-atomic="true" className="truncate text-base font-black tracking-tight text-[#17362a] focus:outline-none">{itemAtivo?.rotulo ?? "Visão geral"}</h1>
             </div>
           </div>
@@ -264,13 +264,13 @@ export default function AppShell({
             <OnboardingTour usuarioId={usuarioId} navegacao={navegacao} permissoes={permissoes} onAbrirArea={abrirAreaGuiada} onAreaObrigatoriaChange={onAreaObrigatoriaChange} />
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
-                <button type="button" className="group flex items-center gap-2 rounded-2xl border border-[#dce7dd] bg-white py-1 pl-1 pr-2 shadow-[0_6px_18px_-14px_rgba(23,54,42,.5)] transition hover:border-[#b9d8c2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953] data-[state=open]:border-[#1d7953]" aria-label="Abrir menu da conta">
+                <button type="button" className="group flex items-center gap-2 rounded-2xl border border-[#dce7dd] bg-white py-1 pl-1 pr-2 shadow-[0_6px_18px_-14px_rgba(23,54,42,.5)] transition hover:border-[#b9d8c2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953] data-[state=open]:border-[#1d7953]">
                   <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#17362a] text-xs font-black text-[#d6efad]">{iniciais}</span>
                   <span className="hidden max-w-[160px] text-left md:block">
                     <strong className="block truncate text-xs font-black text-[#17362a]">{nome}</strong>
-                    <span className="block truncate text-[10px] font-bold text-[#6d8a7b]">{perfil.rotulo}</span>
+                    <span className="block truncate text-[10px] font-bold text-[#4b6657]">{perfil.rotulo}</span>
                   </span>
-                  <ChevronDown className="h-4 w-4 text-[#6d8a7b] transition group-data-[state=open]:rotate-180" aria-hidden="true" />
+                  <ChevronDown className="h-4 w-4 text-[#4b6657] transition group-data-[state=open]:rotate-180" aria-hidden="true" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" sideOffset={8} className="w-[min(18rem,calc(100vw-2rem))] rounded-2xl border border-[#e1ebe2] bg-white p-2 text-[#17362a] shadow-[0_24px_60px_-24px_rgba(23,54,42,.45)]">
@@ -294,7 +294,7 @@ export default function AppShell({
                     <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#e7f4e4] text-[#1d7953]"><UserRound className="h-4 w-4" aria-hidden="true" /></span>
                     <span className="min-w-0 flex-1">
                       <span className="block">Perfil e sessões</span>
-                      <span className="block text-[11px] font-medium text-[#6d8a7b]">{perfilBloqueado ? "Termine o passo a passo primeiro" : "Seus dados e aparelhos conectados"}</span>
+                      <span className="block text-[11px] font-medium text-[#4b6657]">{perfilBloqueado ? "Termine o passo a passo primeiro" : "Seus dados e aparelhos conectados"}</span>
                     </span>
                     {perfilBloqueado ? <Lock className="h-3.5 w-3.5 text-[#8aa094]" aria-hidden="true" /> : null}
                   </DropdownMenuItem>

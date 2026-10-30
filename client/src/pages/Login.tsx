@@ -129,7 +129,7 @@ export default function Login() {
       informarErro("Informe seu nome completo.", "login-nome");
       return;
     }
-    if (!senhaValida(senha)) {
+    if (modo === "cadastro" && !senhaValida(senha)) {
       informarErro("A senha deve possuir no mínimo 12 caracteres, letras e números.", "login-senha");
       return;
     }
@@ -360,7 +360,7 @@ export default function Login() {
             <div className="mt-6">
               <div className="relative mb-4 flex items-center justify-center">
                 <div className="absolute inset-x-0 top-1/2 border-t border-[#dfe8e1]" />
-                <span className="relative bg-[#f7f9f6] px-3 text-xs font-semibold text-[#7b9485]">ou</span>
+                <span className="relative bg-[#f7f9f6] px-3 text-xs font-semibold text-[#4b6657]">ou</span>
               </div>
               <GoogleIdentityButton clientId={googleClientId} nonce={nonceGoogle} disabled={ocupado} onCredential={credential => void entrarComGoogle(credential)} />
             </div>

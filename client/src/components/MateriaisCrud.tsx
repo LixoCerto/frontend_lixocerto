@@ -201,7 +201,7 @@ export default function MateriaisCrud({ podeEscrever, podeAprovar }: { podeEscre
         <div className="flex flex-col gap-3 sm:flex-row">
           <label className="relative flex-1">
             <span className="sr-only">Buscar material ou sinônimo</span>
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6c8879]" aria-hidden="true" />
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#4b6657]" aria-hidden="true" />
             <input value={filtroTexto} onChange={event => setFiltroTexto(event.target.value)} placeholder="Buscar material ou sinônimo" className={`${ESTILOS.campo} pl-10`} />
           </label>
           <button type="button" onClick={() => void carregar()} className={`${ESTILOS.botaoSecundario} h-12 sm:w-auto`}><RefreshCw className={`h-4 w-4 ${carregando ? "animate-spin" : ""}`} aria-hidden="true" /> Atualizar lista</button>
@@ -219,7 +219,7 @@ export default function MateriaisCrud({ podeEscrever, podeAprovar }: { podeEscre
         />
       ) : null}
       {!carregando && materiais.length > 0 ? (
-        <p className="px-1 text-sm font-semibold text-[#6c8879]">{materiais.length === 1 ? "1 material encontrado" : `${materiais.length} materiais encontrados`}</p>
+        <p className="px-1 text-sm font-semibold text-[#4b6657]">{materiais.length === 1 ? "1 material encontrado" : `${materiais.length} materiais encontrados`}</p>
       ) : null}
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -235,7 +235,7 @@ export default function MateriaisCrud({ podeEscrever, podeAprovar }: { podeEscre
                     <h3 className="break-words text-lg font-black leading-tight text-[#17362a]">{material.nomeMaterial}</h3>
                     <Etiqueta tom={status.tom} icone={IconeStatus}>{rotulosStatus[material.statusMaterial] ?? material.statusMaterial}</Etiqueta>
                   </div>
-                  <p className="mt-1 text-sm font-semibold text-[#6c8879]">{material.categoriaMaterial} · versão {material.versaoConteudo}</p>
+                  <p className="mt-1 text-sm font-semibold text-[#4b6657]">{material.categoriaMaterial} · versão {material.versaoConteudo}</p>
                 </div>
               </div>
 
@@ -294,7 +294,7 @@ export default function MateriaisCrud({ podeEscrever, podeAprovar }: { podeEscre
                   <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-white" style={{ backgroundColor: TONS.azul.cor }}>{editando ? <Pencil className="h-5 w-5" aria-hidden="true" /> : <Plus className="h-5 w-5" aria-hidden="true" />}</span>
                   <div className="min-w-0">
                     <DialogTitle className="text-left text-xl font-black leading-tight text-[#17362a] sm:text-2xl">{editando ? "Editar material" : "Novo material"}</DialogTitle>
-                    <p className="mt-0.5 text-sm leading-6 text-[#6c8879]">Fica salvo como rascunho até ser aprovado.</p>
+                    <p className="mt-0.5 text-sm leading-6 text-[#4b6657]">Fica salvo como rascunho até ser aprovado.</p>
                     <DialogDescription className="sr-only">Cadastre ou edite uma orientação de descarte com contexto, limites e fontes de referência.</DialogDescription>
                   </div>
                 </div>
@@ -372,7 +372,7 @@ function Campo({ rotulo, dica, largo = false, children }: { rotulo: string; dica
     <label className={`block min-w-0 ${largo ? "sm:col-span-2" : ""}`}>
       <span className={ESTILOS.rotulo}>{rotulo}</span>
       {children}
-      {dica ? <span className="mt-1.5 block text-xs leading-5 text-[#6c8879]">{dica}</span> : null}
+      {dica ? <span className="mt-1.5 block text-xs leading-5 text-[#4b6657]">{dica}</span> : null}
     </label>
   );
 }

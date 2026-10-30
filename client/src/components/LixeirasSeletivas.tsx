@@ -55,7 +55,7 @@ export default function LixeirasSeletivas() {
               type="button"
               data-ativa={selecionada}
               aria-pressed={selecionada}
-              aria-label={`Lixeira ${residuo.nomeCor}: ${residuo.rotulo}`}
+              aria-label={`${selecionada ? "Certo! " : ""}${residuo.rotulo} — lixeira ${residuo.nomeCor}`}
               onMouseEnter={() => { setPausado(true); setAtiva(indice); }}
               onFocus={() => { setPausado(true); setAtiva(indice); }}
               onBlur={() => setPausado(false)}

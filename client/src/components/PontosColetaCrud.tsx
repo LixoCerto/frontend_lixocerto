@@ -51,6 +51,7 @@ type Ponto = {
   distanciaKm?: number;
   statusVerificacao: string;
   categoriasAceitas: string[];
+  origemInformacao: string;
   horarioFuncionamento: string;
   telefoneContato: string;
   urlInformacoes: string;
@@ -73,6 +74,7 @@ const vazio: Dados = {
   latitudePontoColeta: 0,
   longitudePontoColeta: 0,
   categoriasAceitas: [],
+  origemInformacao: "",
   horarioFuncionamento: "",
   telefoneContato: "",
   urlInformacoes: "",
@@ -116,6 +118,7 @@ export default function PontosColetaCrud({
   });
   const [mensagem, setMensagem] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [moderandoId, setModerandoId] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
   const [consultandoCep, setConsultandoCep] = useState(false);
   const [localizando, setLocalizando] = useState(false);
@@ -332,7 +335,12 @@ export default function PontosColetaCrud({
     event.preventDefault();
     setErro(null);
     setMensagem(null);
-    if (!dados.nomePontoColeta.trim() || !dados.enderecoPontoColeta.trim() || !dados.cidadePontoColeta.trim() || dados.latitudePontoColeta === 0 || dados.longitudePontoColeta === 0) {
+    const latitude = dados.latitudePontoColeta;
+    const longitude = dados.longitudePontoColeta;
+    const coordenadasInvalidas = !Number.isFinite(latitude) || !Number.isFinite(longitude)
+      || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180
+      || (latitude === 0 && longitude === 0);
+    if (!dados.nomePontoColeta.trim() || !dados.enderecoPontoColeta.trim() || !dados.cidadePontoColeta.trim() || coordenadasInvalidas) {
       setErro("Preencha os dados obrigatórios e capture uma localização válida.");
       return;
     }
@@ -364,12 +372,17 @@ export default function PontosColetaCrud({
   }
 
   async function moderar(id: string, status: string) {
+    const acao = status === "verificado" ? "aprovar" : "rejeitar";
+    if (!window.confirm(`Confirmar ${acao} este ponto de coleta?`)) return;
+    setModerandoId(id);
     try {
       const resposta = await alterarStatusPontoColeta(id, status);
       setMensagem(resposta.mensagemResultado);
       await carregar();
     } catch {
       setErro("Não foi possível alterar o status do ponto.");
+    } finally {
+      setModerandoId(null);
     }
   }
 
@@ -412,7 +425,7 @@ export default function PontosColetaCrud({
           </span>
           <div className="min-w-0">
             <h3 className="text-lg font-black leading-tight tracking-tight text-[#17362a]">Onde você quer descartar?</h3>
-            <p className="mt-0.5 text-sm leading-6 text-[#6c8879]">Digite a cidade e escolha o material. Se preferir, use sua localização.</p>
+            <p className="mt-0.5 text-sm leading-6 text-[#4b6657]">Digite a cidade e escolha o material. Se preferir, use sua localização.</p>
           </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -486,7 +499,7 @@ export default function PontosColetaCrud({
                   <h3 className="break-words text-base font-black leading-tight text-[#17362a] sm:text-lg">{ponto.nomePontoColeta}</h3>
                   <p className="mt-1 break-words text-sm leading-6 text-[#5c7768]">
                     {ponto.enderecoPontoColeta} · {ponto.cidadePontoColeta}/{ponto.estadoPontoColeta}
-                    {ponto.cepPontoColeta ? <span className="text-[#8aa094]"> · CEP {formatarCep(ponto.cepPontoColeta)}</span> : null}
+                    {ponto.cepPontoColeta ? <span className="text-[#5c7768]"> · CEP {formatarCep(ponto.cepPontoColeta)}</span> : null}
                   </p>
                 </div>
               </div>
@@ -496,34 +509,37 @@ export default function PontosColetaCrud({
                 {typeof ponto.distanciaKm === "number" ? <Etiqueta tom="azul" icone={Navigation}>{ponto.distanciaKm < 1 ? `${Math.round(ponto.distanciaKm * 1000)} m` : `${ponto.distanciaKm.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} km`} de você</Etiqueta> : null}
               </div>
 
+              {verificado ? <p className="mt-2 text-xs leading-5 text-[#4b6657]">O selo “Verificado” indica revisão do cadastro; não garante que a coordenada tenha sido aferida em campo.</p> : null}
+              {ponto.origemInformacao.trim() ? <p role="note" className="mt-3 flex items-start gap-2 rounded-xl border border-[#ead9a8] bg-[#fff9e9] px-3 py-2.5 text-xs leading-5 text-[#5e4a17]"><Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><span><strong className="font-bold">Fonte e precisão:</strong> {ponto.origemInformacao}</span></p> : null}
+
               <div className="mt-4">
-                <p className="mb-2 text-xs font-bold text-[#6c8879]">Recebe</p>
-                <div className="flex flex-wrap gap-1.5" aria-label="Materiais aceitos">
+                <p className="mb-2 text-xs font-bold text-[#4b6657]">Recebe</p>
+                <div className="flex flex-wrap gap-1.5" role="group" aria-label="Materiais aceitos">
                   {ponto.categoriasAceitas.length
                     ? ponto.categoriasAceitas.map(item => <span key={item} className="inline-flex items-center gap-1 rounded-full border border-[#cfe8d8] bg-[#f3faf5] px-2.5 py-1 text-xs font-bold text-[#1d6b43]"><Recycle className="h-3 w-3" aria-hidden="true" />{item}</span>)
-                    : <span className="text-xs text-[#6c8879]">Materiais aceitos não informados</span>}
+                    : <span className="text-xs text-[#4b6657]">Materiais aceitos não informados</span>}
                 </div>
               </div>
 
               {ponto.horarioFuncionamento || ponto.telefoneContato || (ponto.urlInformacoes && /^https?:\/\//i.test(ponto.urlInformacoes)) || ponto.dataVerificacao || podeEscrever || podeAprovar ? (
-                <details className="group mt-4 rounded-2xl bg-[#f7faf7] p-3.5" open>
-                  <summary className="cursor-pointer list-none text-sm font-bold text-[#45614f] marker:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">Informações do local <span className="ml-1 text-xs font-semibold text-[#6c8879] group-open:hidden">(mostrar)</span><span className="ml-1 hidden text-xs font-semibold text-[#6c8879] group-open:inline">(ocultar)</span></summary>
+                <details className="group mt-4 rounded-2xl bg-[#f7faf7] p-3.5">
+                  <summary className="cursor-pointer list-none text-sm font-bold text-[#45614f] marker:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1d7953]">Informações do local <span className="ml-1 text-xs font-semibold text-[#4b6657] group-open:hidden">(mostrar)</span><span className="ml-1 hidden text-xs font-semibold text-[#4b6657] group-open:inline">(ocultar)</span></summary>
                   <ul className="mt-2 space-y-2 text-sm text-[#45614f]">
                   {ponto.horarioFuncionamento ? <li className="flex items-start gap-2.5"><Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-[#1d7953]" aria-hidden="true" /><span className="min-w-0 break-words"><strong className="font-bold text-[#17362a]">Atendimento:</strong> {ponto.horarioFuncionamento}</span></li> : null}
                   {ponto.telefoneContato ? <li className="flex items-start gap-2.5"><Phone className="mt-0.5 h-4 w-4 shrink-0 text-[#1d7953]" aria-hidden="true" /><span><strong className="font-bold text-[#17362a]">Telefone:</strong> <a className="font-bold text-[#1d7953] underline" href={`tel:${ponto.telefoneContato.replace(/[^+\d]/g, "")}`}>{ponto.telefoneContato}</a></span></li> : null}
                   {ponto.urlInformacoes && /^https?:\/\//i.test(ponto.urlInformacoes) ? <li className="flex items-start gap-2.5"><Globe className="mt-0.5 h-4 w-4 shrink-0 text-[#1d7953]" aria-hidden="true" /><a className="inline-flex items-center gap-1 font-bold text-[#1d7953] underline" href={ponto.urlInformacoes} target="_blank" rel="noopener noreferrer">Informações do local <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" /></a></li> : null}
-                  {ponto.dataVerificacao ? <li className="flex items-start gap-2.5 text-xs text-[#6c8879]"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><span>Última validação: {Number.isNaN(Date.parse(ponto.dataVerificacao)) ? "data não informada" : new Date(ponto.dataVerificacao).toLocaleDateString("pt-BR")}</span></li> : null}
-                  {(podeEscrever || podeAprovar) ? <li className="flex items-start gap-2.5 text-xs text-[#6c8879]"><Crosshair className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><span className="tabular-nums">{ponto.latitudePontoColeta.toFixed(5)}, {ponto.longitudePontoColeta.toFixed(5)}</span></li> : null}
+                  {ponto.dataVerificacao ? <li className="flex items-start gap-2.5 text-xs text-[#4b6657]"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><span>Última validação: {Number.isNaN(Date.parse(ponto.dataVerificacao)) ? "data não informada" : new Date(ponto.dataVerificacao).toLocaleDateString("pt-BR")}</span></li> : null}
+                  {(podeEscrever || podeAprovar) ? <li className="flex items-start gap-2.5 text-xs text-[#4b6657]"><Crosshair className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><span className="tabular-nums">{ponto.latitudePontoColeta.toFixed(5)}, {ponto.longitudePontoColeta.toFixed(5)}</span></li> : null}
                   </ul>
                 </details>
               ) : null}
 
               <div className="mt-auto pt-4">
                 <div className="grid grid-cols-2 gap-2">
-                  <a target="_blank" rel="noreferrer" aria-label={`Abrir mapa para ${ponto.nomePontoColeta} em nova aba`} href={`https://www.openstreetmap.org/?mlat=${ponto.latitudePontoColeta}&mlon=${ponto.longitudePontoColeta}#map=17/${ponto.latitudePontoColeta}/${ponto.longitudePontoColeta}`} className={classeLink}>
+                  <a target="_blank" rel="noreferrer" aria-label={`Ver no mapa: ${ponto.nomePontoColeta} (abre em nova aba)`} href={`https://www.openstreetmap.org/?mlat=${ponto.latitudePontoColeta}&mlon=${ponto.longitudePontoColeta}#map=17/${ponto.latitudePontoColeta}/${ponto.longitudePontoColeta}`} className={classeLink}>
                     <MapPinned className="h-4 w-4" aria-hidden="true" /> Ver no mapa
                   </a>
-                  <a target="_blank" rel="noopener noreferrer" aria-label={`Traçar rota até ${ponto.nomePontoColeta} em nova aba`} href={`https://www.google.com/maps/dir/?api=1&destination=${ponto.latitudePontoColeta},${ponto.longitudePontoColeta}`} className={classeLink}>
+                  <a target="_blank" rel="noopener noreferrer" aria-label={`Como chegar: ${ponto.nomePontoColeta} (abre em nova aba)`} href={`https://www.google.com/maps/dir/?api=1&destination=${ponto.latitudePontoColeta},${ponto.longitudePontoColeta}`} className={classeLink}>
                     <Navigation className="h-4 w-4" aria-hidden="true" /> Como chegar
                   </a>
                 </div>
@@ -537,8 +553,8 @@ export default function PontosColetaCrud({
                           <button type="button" onClick={() => void remover(ponto.idPontoColeta)} className={`${classeAcao} flex-1 bg-[#fff1ef] text-[#a8493e] hover:bg-[#fde4e0] sm:flex-none`}><Trash2 className="h-4 w-4" aria-hidden="true" /> Excluir</button>
                         </> : null}
                         {podeAprovar && !verificado ? <>
-                          <button type="button" onClick={() => void moderar(ponto.idPontoColeta, "verificado")} className={`${classeAcao} flex-1 bg-[#e6f5ec] text-[#1d6b43] hover:bg-[#d6eedf] sm:flex-none`}><Check className="h-4 w-4" aria-hidden="true" /> Aprovar</button>
-                          <button type="button" onClick={() => void moderar(ponto.idPontoColeta, "rejeitado")} className={`${classeAcao} flex-1 bg-[#fff1ef] text-[#a8493e] hover:bg-[#fde4e0] sm:flex-none`}><X className="h-4 w-4" aria-hidden="true" /> Rejeitar</button>
+                          <button type="button" disabled={moderandoId === ponto.idPontoColeta} aria-busy={moderandoId === ponto.idPontoColeta} onClick={() => void moderar(ponto.idPontoColeta, "verificado")} className={`${classeAcao} flex-1 bg-[#e6f5ec] text-[#1d6b43] hover:bg-[#d6eedf] disabled:cursor-wait disabled:opacity-60 sm:flex-none`}><Check className="h-4 w-4" aria-hidden="true" /> Aprovar</button>
+                          <button type="button" disabled={moderandoId === ponto.idPontoColeta} aria-busy={moderandoId === ponto.idPontoColeta} onClick={() => void moderar(ponto.idPontoColeta, "rejeitado")} className={`${classeAcao} flex-1 bg-[#fff1ef] text-[#a8493e] hover:bg-[#fde4e0] disabled:cursor-wait disabled:opacity-60 sm:flex-none`}><X className="h-4 w-4" aria-hidden="true" /> Rejeitar</button>
                         </> : null}
                       </div>
                     ) : null}
@@ -570,7 +586,7 @@ export default function PontosColetaCrud({
                 </span>
                 <div className="min-w-0">
                   <DialogTitle className="text-left text-xl font-black leading-tight tracking-tight text-[#17362a] sm:text-2xl">{editando ? "Editar ponto" : "Novo ponto de coleta"}</DialogTitle>
-                  <DialogDescription className="mt-1 text-left text-sm leading-6 text-[#6c8879]">Preencha endereço, localização e materiais aceitos. Campos com * são obrigatórios.</DialogDescription>
+                  <DialogDescription className="mt-1 text-left text-sm leading-6 text-[#4b6657]">Preencha endereço, localização e materiais aceitos. Campos com * são obrigatórios.</DialogDescription>
                 </div>
               </div>
               <button type="button" onClick={() => setAberto(false)} className={ESTILOS.botaoIcone} aria-label="Fechar formulário"><X className="h-5 w-5" aria-hidden="true" /></button>
@@ -605,7 +621,7 @@ export default function PontosColetaCrud({
                     <span className="hidden sm:inline">{consultandoCep ? "Buscando" : "Buscar CEP"}</span>
                   </button>
                 </div>
-                <p className="mt-1.5 text-xs leading-5 text-[#6c8879]">Ao digitar os 8 números, o endereço é preenchido sozinho (ViaCEP).</p>
+                <p className="mt-1.5 text-xs leading-5 text-[#4b6657]">Ao digitar os 8 números, o endereço é preenchido sozinho (ViaCEP).</p>
               </div>
               <label className="block sm:col-span-2">
                 <span className={ESTILOS.rotulo}>Endereço *</span>
@@ -627,17 +643,22 @@ export default function PontosColetaCrud({
                   {localizando ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Crosshair className="h-4 w-4" aria-hidden="true" />}
                   {localizando ? "Localizando e buscando endereço…" : "Usar minha localização atual"}
                 </button>
-                <p className="mt-2 text-xs leading-5 text-[#6c8879]">
+                <p className="mt-2 text-xs leading-5 text-[#4b6657]">
                   Com sua localização, sugerimos o endereço e o CEP — confira, pois pode ser aproximado. Dados do mapa: <a className="font-bold text-[#1d7953] underline" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a>.
                 </p>
               </div>
               <label className="block">
                 <span className={ESTILOS.rotulo}>Latitude</span>
-                <input type="number" step="any" value={dados.latitudePontoColeta || ""} onChange={event => atualizar("latitudePontoColeta", Number(event.target.value))} placeholder="-7.11532" className={`${ESTILOS.campo} tabular-nums`} />
+                <input type="number" min={-90} max={90} step="any" value={dados.latitudePontoColeta || ""} onChange={event => atualizar("latitudePontoColeta", Number(event.target.value))} placeholder="-7.11532" className={`${ESTILOS.campo} tabular-nums`} />
               </label>
               <label className="block">
                 <span className={ESTILOS.rotulo}>Longitude</span>
-                <input type="number" step="any" value={dados.longitudePontoColeta || ""} onChange={event => atualizar("longitudePontoColeta", Number(event.target.value))} placeholder="-34.86100" className={`${ESTILOS.campo} tabular-nums`} />
+                <input type="number" min={-180} max={180} step="any" value={dados.longitudePontoColeta || ""} onChange={event => atualizar("longitudePontoColeta", Number(event.target.value))} placeholder="-34.86100" className={`${ESTILOS.campo} tabular-nums`} />
+              </label>
+              <label className="block sm:col-span-2">
+                <span className={ESTILOS.rotulo}>Origem e precisão da localização</span>
+                <textarea maxLength={1000} rows={3} value={dados.origemInformacao} onChange={event => atualizar("origemInformacao", event.target.value)} placeholder="Ex.: fonte oficial para o endereço; pin cartográfico não aferido em campo." className={ESTILOS.areaTexto} />
+                <span className="mt-1.5 block text-xs leading-5 text-[#4b6657]">Informe a fonte e se o ponto foi aferido no local. Essa informação ficará visível para quem consultar o ponto.</span>
               </label>
             </SecaoFormulario>
 
@@ -645,7 +666,7 @@ export default function PontosColetaCrud({
               <label className="block sm:col-span-2">
                 <span className={ESTILOS.rotulo}>Horário de atendimento</span>
                 <textarea maxLength={500} rows={2} value={dados.horarioFuncionamento} onChange={event => atualizar("horarioFuncionamento", event.target.value)} placeholder="Ex.: seg. a sex., 8h às 17h" className={ESTILOS.areaTexto} />
-                <span className="mt-1.5 block text-xs text-[#6c8879]">Horários podem mudar; preencha apenas quando tiver certeza.</span>
+                <span className="mt-1.5 block text-xs text-[#4b6657]">Horários podem mudar; preencha apenas quando tiver certeza.</span>
               </label>
               <label className="block">
                 <span className={ESTILOS.rotulo}>Telefone</span>
@@ -700,7 +721,7 @@ function SecaoFormulario({ icone: Icone, titulo, descricao, children }: { icone:
         </span>
         {titulo}
       </legend>
-      {descricao ? <p className="mt-1 text-xs leading-5 text-[#6c8879]">{descricao}</p> : null}
+      {descricao ? <p className="mt-1 text-xs leading-5 text-[#4b6657]">{descricao}</p> : null}
       <div className="mt-3 grid gap-4 sm:grid-cols-2">{children}</div>
     </fieldset>
   );

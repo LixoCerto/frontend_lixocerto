@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   concluirDescarte,
   iniciarCheckinDescarte,
@@ -45,9 +45,13 @@ export default function RegistrosDescarte({
   const [checkin, setCheckin] = useState<Checkin | null>(null);
   const [filtroStatus, setFiltroStatus] = useState("pendente");
   const [carregando, setCarregando] = useState(false);
+  const [carregandoRegistros, setCarregandoRegistros] = useState(podeLer || podeRevisar);
+  const [erroCarregamentoRegistros, setErroCarregamentoRegistros] = useState("");
+  const [tentativaRecarga, setTentativaRecarga] = useState(0);
   const [idProcessando, setIdProcessando] = useState("");
   const [aviso, setAviso] = useState("");
   const [erro, setErro] = useState("");
+  const cancelarGpsRef = useRef<(() => void) | null>(null);
 
   async function carregarMeus() {
     if (!podeLer) return;
@@ -80,6 +84,8 @@ export default function RegistrosDescarte({
   useEffect(() => {
     let ativo = true;
     async function carregar() {
+      setCarregandoRegistros(true);
+      setErroCarregamentoRegistros("");
       try {
         const resultados = await Promise.all([
           podeLer ? listarMeusDescartes() : Promise.resolve({ registros: [] }),
@@ -89,12 +95,14 @@ export default function RegistrosDescarte({
         setMeusRegistros(resultados[0].registros);
         setFila(resultados[1].registros);
       } catch {
-        if (ativo) setErro("Não foi possível carregar os registros de descarte.");
+        if (ativo) setErroCarregamentoRegistros("Não foi possível carregar os registros de descarte.");
+      } finally {
+        if (ativo) setCarregandoRegistros(false);
       }
     }
     void carregar();
     return () => { ativo = false; };
-  }, [podeLer, podeRevisar, filtroStatus]);
+  }, [podeLer, podeRevisar, filtroStatus, tentativaRecarga]);
 
   useEffect(() => {
     if (!pontoInicial) return;
@@ -130,8 +138,11 @@ export default function RegistrosDescarte({
         finalizado = true;
         if (idMonitoramento !== null) navigator.geolocation.clearWatch(idMonitoramento);
         if (temporizador !== undefined) window.clearTimeout(temporizador);
+        cancelarGpsRef.current = null;
         acao();
       };
+
+      cancelarGpsRef.current = () => finalizar(() => reject(new DOMException("Tentativa de localização cancelada.", "AbortError")));
 
       temporizador = window.setTimeout(() => finalizar(() => {
         const precisao = melhorPosicao?.coords.accuracy;
@@ -149,8 +160,12 @@ export default function RegistrosDescarte({
         }, erroLocalizacao => {
           if (erroLocalizacao.code === 1) {
             finalizar(() => reject(new Error("A permissão de localização foi negada. Autorize-a no navegador e nas configurações do dispositivo para continuar.")));
+          } else if (erroLocalizacao.code === 2) {
+            finalizar(() => reject(new Error("O GPS não conseguiu determinar sua posição. Verifique se a localização está ativada e tente novamente.")));
+          } else if (erroLocalizacao.code === 3) {
+            finalizar(() => reject(new Error("A busca por GPS demorou demais. Tente novamente ao ar livre ou perto de uma janela.")));
           }
-        }, { enableHighAccuracy: true, maximumAge: 0, timeout: 15_000 });
+        }, { enableHighAccuracy: true, maximumAge: 0, timeout: TEMPO_MAXIMO_GPS_MS });
       } catch {
         finalizar(() => reject(new Error("Não foi possível iniciar o GPS. Confirme a permissão de localização e tente novamente.")));
       }
@@ -173,7 +188,8 @@ export default function RegistrosDescarte({
       setCategoriasSelecionadas([]); setFotos({});
       setAviso(`Check-in validado a ${resposta.distanciaMetros.toFixed(1)} m do ponto. Você tem 30 minutos para concluir.`);
     } catch (falha) {
-      setErro(falha instanceof Error ? falha.message : "Não foi possível iniciar o check-in.");
+      if (falha instanceof Error && falha.name === "AbortError") setAviso("Verificação de localização cancelada. Você pode tentar novamente.");
+      else setErro(mensagemErro(falha, "Não foi possível iniciar o check-in."));
     } finally { setIdProcessando(""); }
   }
 
@@ -198,7 +214,7 @@ export default function RegistrosDescarte({
       if (tamanhoAtualSemCategoria + bytes.byteLength > TAMANHO_MAXIMO_LOTE) throw new Error("O conjunto de fotos pode ter no máximo 2,5 MiB. Remova ou reduza outra imagem.");
       setFotos(atual => ({ ...atual, [categoria]: { nomeArquivo: arquivo.name, bytes } }));
     } catch (falha) {
-      setErro(falha instanceof Error ? falha.message : "Não foi possível processar essa foto.");
+      setErro(mensagemErro(falha, "Não foi possível processar essa foto."));
     }
   }
 
@@ -213,6 +229,7 @@ export default function RegistrosDescarte({
       return;
     }
     setIdProcessando("enviar"); setErro(""); setAviso("");
+    let envioAceito = false;
     try {
       const resposta = await concluirDescarte(checkin.id, categoriasSelecionadas.map(categoria => ({
         categoriaMaterial: categoria,
@@ -220,23 +237,36 @@ export default function RegistrosDescarte({
         relato,
       })));
       if (!resposta.operacaoAceita) throw new Error(resposta.mensagemResultado || "Não foi possível concluir o descarte.");
+      envioAceito = true;
       setAviso(`${resposta.registros.length} ${resposta.registros.length === 1 ? "registro enviado" : "registros enviados"} para revisão. Pontos só serão concedidos após aprovação.`);
       setCheckin(null); setCategoriasSelecionadas([]); setFotos({}); setRelato("");
-      await Promise.all([carregarMeus(), carregarFila()]);
+      try {
+        await Promise.all([carregarMeus(), carregarFila()]);
+      } catch {
+        setErro("O envio foi concluído, mas não foi possível atualizar a lista. Tente carregar os registros novamente.");
+      }
     } catch (falha) {
-      setErro(falha instanceof Error ? falha.message : "Não foi possível enviar as evidências.");
+      if (!envioAceito) setErro(mensagemErro(falha, "Não foi possível enviar as evidências."));
     } finally { setIdProcessando(""); }
   }
 
   async function decidir(id: string, status: "aprovado" | "rejeitado") {
+    const confirmacao = status === "aprovado"
+      ? "Aprovar este registro e conceder 20 pontos à pessoa?"
+      : "Rejeitar este registro? A pessoa não receberá pontos.";
+    if (!window.confirm(confirmacao)) return;
     setIdProcessando(id); setErro(""); setAviso("");
     try {
       const resultado = await revisarDescarte(id, status);
       if (!resultado.operacaoAceita) throw new Error(resultado.mensagemResultado || "A revisão não foi aplicada.");
       setAviso(resultado.mensagemResultado);
-      await Promise.all([carregarFila(), carregarMeus()]);
+      try {
+        await Promise.all([carregarFila(), carregarMeus()]);
+      } catch {
+        setErro("A revisão foi concluída, mas não foi possível atualizar a lista. Tente carregar os registros novamente.");
+      }
     } catch (falha) {
-      setErro(falha instanceof Error ? falha.message : "Não foi possível concluir a revisão.");
+      setErro(mensagemErro(falha, "Não foi possível concluir a revisão."));
     } finally { setIdProcessando(""); }
   }
 
@@ -250,9 +280,10 @@ export default function RegistrosDescarte({
         <PassoGuia numero={3} icone={Camera} tom="amarelo" titulo="Envie as fotos" texto="Uma foto por material, em até 30 minutos. Uma pessoa revisa antes de liberar os pontos." />
       </ol>
 
-      {erro || aviso ? <div className="mt-5 space-y-3">
+      {erro || aviso || erroCarregamentoRegistros ? <div className="mt-5 space-y-3">
         {erro ? <Aviso tipo="erro" focar>{erro}</Aviso> : null}
         {aviso ? <Aviso tipo="sucesso" focar>{aviso}</Aviso> : null}
+        {erroCarregamentoRegistros ? <Aviso tipo="erro" focar><span>{erroCarregamentoRegistros}</span><button type="button" onClick={() => setTentativaRecarga(atual => atual + 1)} className={`${ESTILOS.botaoSecundario} mt-2 w-full sm:w-auto`}>Tentar novamente</button></Aviso> : null}
       </div> : null}
 
       {podeRegistrar ? <div className="mt-6 space-y-6">
@@ -266,8 +297,8 @@ export default function RegistrosDescarte({
             </button>
           </div>
           {pontos.length
-            ? <label className="block min-w-0"><span className={ESTILOS.rotulo}>Ponto de coleta</span><select required className={ESTILOS.campo} value={pontoSelecionado} disabled={Boolean(checkin)} onChange={evento => { setPontoSelecionado(evento.target.value); setCategoriasSelecionadas([]); setFotos({}); }}><option value="">Selecione um ponto</option>{pontos.map(ponto => <option key={ponto.idPontoColeta} value={ponto.idPontoColeta}>{ponto.nomePontoColeta} · {ponto.enderecoPontoColeta} · aceita {ponto.categoriasAceitas.join(", ") || "categorias não informadas"}</option>)}</select></label>
-            : <p className="flex items-start gap-2 text-sm leading-6 text-[#6c8879]"><Info className="mt-1 h-4 w-4 shrink-0 text-[#1d7953]" aria-hidden="true" />Busque os pontos da sua cidade ou toque em “Iniciar descarte” no cartão de um ponto acima.</p>}
+            ? <label className="block min-w-0"><span className={ESTILOS.rotulo}>Ponto de coleta</span><select required className={ESTILOS.campo} value={pontoSelecionado} disabled={Boolean(checkin) || idProcessando === "checkin"} onChange={evento => { setPontoSelecionado(evento.target.value); setCategoriasSelecionadas([]); setFotos({}); }}><option value="">Selecione um ponto</option>{pontos.map(ponto => <option key={ponto.idPontoColeta} value={ponto.idPontoColeta}>{ponto.nomePontoColeta} · {ponto.enderecoPontoColeta} · aceita {ponto.categoriasAceitas.join(", ") || "categorias não informadas"}</option>)}</select></label>
+            : <p className="flex items-start gap-2 text-sm leading-6 text-[#4b6657]"><Info className="mt-1 h-4 w-4 shrink-0 text-[#1d7953]" aria-hidden="true" />Busque os pontos da sua cidade ou toque em “Iniciar descarte” no cartão de um ponto acima.</p>}
           {pontoAtual ? <div className="flex items-start gap-3 rounded-2xl border border-[#cfe8d8] bg-white p-3.5">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl" style={{ backgroundColor: TONS.verde.fundo, color: TONS.verde.cor }}><MapPinned className="h-5 w-5" aria-hidden="true" /></span>
             <div className="min-w-0 text-sm leading-6 text-[#5c7768]">
@@ -277,10 +308,9 @@ export default function RegistrosDescarte({
             </div>
           </div> : null}
           {!checkin
-            ? <button type="button" disabled={!pontoAtual || idProcessando === "checkin"} onClick={() => void iniciarCheckin()} className={`${ESTILOS.botaoPrincipal} h-12 w-full disabled:cursor-wait sm:w-auto`}>
-              {idProcessando === "checkin" ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Crosshair className="h-4 w-4" aria-hidden="true" />}
-              {idProcessando === "checkin" ? "Aguardando o GPS (até 10 m)…" : "Estou no ponto: confirmar localização"}
-            </button>
+            ? idProcessando === "checkin"
+              ? <div className="flex flex-col gap-2 sm:flex-row sm:items-center"><p role="status" aria-live="polite" className="flex min-h-12 items-center gap-2 text-sm font-semibold text-[#45614f]"><LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />Aguardando o GPS (até 10 m)…</p><button type="button" onClick={() => cancelarGpsRef.current?.()} className={`${ESTILOS.botaoSecundario} w-full sm:w-auto`}>Cancelar localização</button></div>
+              : <button type="button" disabled={!pontoAtual} onClick={() => void iniciarCheckin()} className={`${ESTILOS.botaoPrincipal} h-12 w-full disabled:cursor-wait sm:w-auto`}><Crosshair className="h-4 w-4" aria-hidden="true" />Estou no ponto: confirmar localização</button>
             : <div className="flex flex-col gap-3 rounded-2xl border border-[#cfe3d1] bg-[#f1f9ef] p-4 text-sm text-[#2f6a46] sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-3">
                 <CircleCheck className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
@@ -295,7 +325,7 @@ export default function RegistrosDescarte({
 
         {checkin ? <form onSubmit={enviarEvidencias} className="space-y-4 rounded-[22px] border border-[#e1ebe2] bg-[#fafcf9] p-4 sm:p-5">
           <TituloEtapa numero={2} titulo="Envie uma foto de cada material" />
-          <p className="text-sm leading-6 text-[#6c8879]">Cada material vira um registro e precisa da sua própria foto (até 5 por vez). Não mostre pessoas, documentos, placas ou outros dados pessoais.</p>
+          <p className="text-sm leading-6 text-[#4b6657]">Cada material vira um registro e precisa da sua própria foto (até 5 por vez). Não mostre pessoas, documentos, placas ou outros dados pessoais.</p>
           <div className="flex flex-wrap gap-2" role="group" aria-label="Categorias aceitas pelo ponto">
             {categoriasAceitas.map(categoria => {
               const selecionada = categoriasSelecionadas.includes(categoria);
@@ -309,12 +339,12 @@ export default function RegistrosDescarte({
               <span className="min-w-0 break-words">Foto — {categoria}</span>
             </span>
             <input required type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={evento => void selecionarFoto(categoria, evento.target.files?.[0])} className="mt-3 block w-full min-w-0 text-xs text-[#5c7768] file:mr-3 file:min-h-10 file:cursor-pointer file:rounded-xl file:border-0 file:bg-[#e6f5ec] file:px-3.5 file:text-sm file:font-bold file:text-[#1d6b43] hover:file:bg-[#d6eedf]" />
-            {fotos[categoria] ? <span className="mt-2 block break-words text-xs font-semibold text-[#2f6a46]">Pronta: {fotos[categoria].nomeArquivo} · {(fotos[categoria].bytes.byteLength / 1024).toLocaleString("pt-BR", { maximumFractionDigits: 0 })} KiB</span> : <span className="mt-2 block text-xs text-[#6c8879]">Tire uma foto nítida do material já separado.</span>}
+            {fotos[categoria] ? <span className="mt-2 block break-words text-xs font-semibold text-[#2f6a46]">Pronta: {fotos[categoria].nomeArquivo} · {(fotos[categoria].bytes.byteLength / 1024).toLocaleString("pt-BR", { maximumFractionDigits: 0 })} KiB</span> : <span className="mt-2 block text-xs text-[#4b6657]">Tire uma foto nítida do material já separado.</span>}
           </label>)}</div> : null}
           <label className="block"><span className={ESTILOS.rotulo}>Observação <span className="font-semibold text-[#8aa094]">(opcional)</span></span><textarea maxLength={500} className={`${ESTILOS.areaTexto} resize-y`} value={relato} onChange={evento => setRelato(evento.target.value)} placeholder="Descreva brevemente o material (sem dados pessoais)." /></label>
           <div className="space-y-1.5">
             <BarraProgresso percentual={(totalFotosBytes / TAMANHO_MAXIMO_LOTE) * 100} tom={totalFotosBytes > TAMANHO_MAXIMO_LOTE ? "vermelho" : "verde"} rotulo="Espaço usado pelas fotos" />
-            <p className="text-xs leading-5 text-[#6c8879]">Fotos: {(totalFotosBytes / 1024).toLocaleString("pt-BR", { maximumFractionDigits: 0 })} de 2.560 KiB. As fotos são otimizadas, sem informações ocultas como localização e horário, guardadas de forma privada e apagadas em até 90 dias após a revisão.</p>
+            <p className="text-xs leading-5 text-[#4b6657]">Fotos: {(totalFotosBytes / 1024).toLocaleString("pt-BR", { maximumFractionDigits: 0 })} de 2.560 KiB. As fotos são otimizadas, sem informações ocultas como localização e horário, guardadas de forma privada e apagadas em até 90 dias após a revisão.</p>
           </div>
           <button type="submit" disabled={!categoriasSelecionadas.length || fotosPendentes.length > 0 || Boolean(idProcessando)} className={`${ESTILOS.botaoPrincipal} h-12 w-full disabled:cursor-wait sm:w-auto`}>
             {idProcessando === "enviar" ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Check className="h-4 w-4" aria-hidden="true" />}
@@ -322,12 +352,12 @@ export default function RegistrosDescarte({
           </button>
         </form> : null}
 
-        <p className="flex items-start gap-2 text-xs leading-5 text-[#6c8879]"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />A localização vem do navegador e pode ser imprecisa ou manipulada, então a checagem de 5 m não é prova contra fraude. Cada foto é analisada por uma pessoa e não confirma sozinha a entrega do material.</p>
+        <p className="flex items-start gap-2 text-xs leading-5 text-[#4b6657]"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />A localização vem do navegador e pode ser imprecisa ou manipulada, então a checagem de 5 m não é prova contra fraude. Cada foto é analisada por uma pessoa e não confirma sozinha a entrega do material.</p>
       </div> : null}
     </Cartao>
 
     {podeLer ? <Cartao icone={Trophy} tom="amarelo" titulo="Meus registros" descricao="Acompanhe seus descartes e os pontos que você já ganhou.">
-      {meusRegistros.length ? <ul className="space-y-3">{meusRegistros.map(registro => {
+      {carregandoRegistros ? <p role="status" aria-live="polite" className="flex items-center gap-2 text-sm font-semibold text-[#45614f]"><LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />Carregando seus registros…</p> : erroCarregamentoRegistros ? null : meusRegistros.length ? <ul className="space-y-3">{meusRegistros.map(registro => {
         const status = estiloStatusRegistro(registro.status);
         return <li key={registro.idRegistro} className="rounded-2xl border border-[#e7eee6] bg-[#fafcf9] p-4 transition hover:border-[#cfe8d8]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -335,7 +365,7 @@ export default function RegistrosDescarte({
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl" style={{ backgroundColor: TONS.verde.fundo, color: TONS.verde.cor }}><Recycle className="h-5 w-5" aria-hidden="true" /></span>
               <div className="min-w-0">
                 <strong className="block break-words text-sm font-black text-[#17362a]">{registro.categoriaMaterial} · {registro.nomePontoColeta}</strong>
-                <p className="mt-0.5 break-words text-xs leading-5 text-[#6c8879]">{registro.cidadePontoColeta} · {formatarData(registro.dataRegistro)}{registro.relato ? ` · ${registro.relato}` : ""}</p>
+                <p className="mt-0.5 break-words text-xs leading-5 text-[#4b6657]">{registro.cidadePontoColeta} · {formatarData(registro.dataRegistro)}{registro.relato ? ` · ${registro.relato}` : ""}</p>
               </div>
             </div>
             <div className="flex flex-wrap gap-1.5 sm:shrink-0 sm:justify-end">
@@ -345,7 +375,7 @@ export default function RegistrosDescarte({
           </div>
           <div className="mt-2 pl-0 sm:pl-[52px]">
             {registro.status === "pendente" ? <p className="text-xs leading-5 text-[#8a5d06]">Aguardando revisão. Os pontos entram depois da aprovação.</p> : null}
-            {registro.evidenciaDisponivel ? <FotoRegistro idRegistro={registro.idRegistro} /> : registro.temCheckin ? <p className="mt-1 text-xs leading-5 text-[#6c8879]">A foto já foi apagada, conforme o prazo de guarda.</p> : <p className="mt-1 text-xs leading-5 text-[#8a5d06]">Registro antigo, enviado antes da exigência de check-in e foto.</p>}
+            {registro.evidenciaDisponivel ? <FotoRegistro idRegistro={registro.idRegistro} /> : registro.temCheckin ? <p className="mt-1 text-xs leading-5 text-[#4b6657]">A foto já foi apagada, conforme o prazo de guarda.</p> : <p className="mt-1 text-xs leading-5 text-[#8a5d06]">Registro antigo, enviado antes da exigência de check-in e foto.</p>}
           </div>
         </li>;
       })}</ul> : <EstadoVazio icone={Recycle} titulo="Nenhum descarte registrado ainda" descricao="Escolha um ponto de coleta acima e faça seu primeiro registro." />}
@@ -358,18 +388,18 @@ export default function RegistrosDescarte({
       descricao="Confira a foto e o check-in antes de aprovar."
       acoes={<select aria-label="Filtrar registros por situação" className={`${ESTILOS.campo} w-full sm:w-48`} value={filtroStatus} onChange={evento => setFiltroStatus(evento.target.value)}><option value="pendente">Pendentes</option><option value="aprovado">Aprovados</option><option value="rejeitado">Rejeitados</option><option value="todos">Todos</option></select>}
     >
-      {fila.length ? <ul className="space-y-3">{fila.map(registro => {
+      {carregandoRegistros ? <p role="status" aria-live="polite" className="flex items-center gap-2 text-sm font-semibold text-[#45614f]"><LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />Carregando fila de revisão…</p> : erroCarregamentoRegistros ? null : fila.length ? <ul className="space-y-3">{fila.map(registro => {
         const status = estiloStatusRegistro(registro.status);
         return <li key={registro.idRegistro} className="rounded-2xl border border-[#e7eee6] p-4 sm:p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
               <strong className="block break-words text-sm font-black text-[#17362a]">{registro.categoriaMaterial} · {registro.nomePontoColeta}</strong>
-              <p className="mt-0.5 break-words text-xs leading-5 text-[#6c8879]">{registro.cidadePontoColeta} · participante {registro.identificadorParticipante} · {formatarData(registro.dataRegistro)}</p>
+              <p className="mt-0.5 break-words text-xs leading-5 text-[#4b6657]">{registro.cidadePontoColeta} · participante {registro.identificadorParticipante} · {formatarData(registro.dataRegistro)}</p>
             </div>
             <div className="sm:shrink-0"><Etiqueta tom={status.tom} icone={status.icone}>{status.rotulo}</Etiqueta></div>
           </div>
           <p className="mt-3 break-words rounded-xl bg-[#f7faf7] px-3.5 py-2.5 text-sm leading-6 text-[#45614f]">{registro.relato || "Sem observação."}</p>
-          {registro.temCheckin ? <p className="mt-2 flex items-start gap-1.5 text-xs leading-5 text-[#6c8879]"><Crosshair className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />Check-in a {registro.distanciaCheckinMetros.toFixed(1)} m do ponto · precisão informada {registro.precisaoCheckinMetros.toFixed(1)} m.</p> : <p className="mt-2 text-xs font-bold text-[#8a5d06]">Registro antigo, sem check-in.</p>}
+          {registro.temCheckin ? <p className="mt-2 flex items-start gap-1.5 text-xs leading-5 text-[#4b6657]"><Crosshair className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />Check-in a {registro.distanciaCheckinMetros.toFixed(1)} m do ponto · precisão informada {registro.precisaoCheckinMetros.toFixed(1)} m.</p> : <p className="mt-2 text-xs font-bold text-[#8a5d06]">Registro antigo, sem check-in.</p>}
           {registro.evidenciaDisponivel ? <FotoRegistro idRegistro={registro.idRegistro} /> : <p className="mt-2 text-xs text-[#8a5d06]">Sem foto disponível.</p>}
           {registro.status === "pendente" ? <div className="mt-4 flex flex-col gap-2 border-t border-[#edf2ed] pt-4 sm:flex-row sm:flex-wrap sm:items-center">
             {registro.evidenciaDisponivel && registro.temCheckin
@@ -392,7 +422,7 @@ function PassoGuia({ numero, icone: Icone, tom, titulo, texto }: { numero: numbe
     </span>
     <div className="min-w-0">
       <strong className="block text-sm font-black text-[#17362a]">{titulo}</strong>
-      <p className="mt-0.5 text-xs leading-5 text-[#6c8879]">{texto}</p>
+      <p className="mt-0.5 text-xs leading-5 text-[#4b6657]">{texto}</p>
     </div>
   </li>;
 }
@@ -427,7 +457,7 @@ function FotoRegistro({ idRegistro }: { idRegistro: string }) {
       bytes.set(resposta.fotoWebp);
       setUrl(URL.createObjectURL(new Blob([bytes.buffer], { type: resposta.tipoConteudo || "image/webp" })));
     } catch (falha) {
-      setErro(falha instanceof Error ? falha.message : "Não foi possível abrir a foto.");
+      setErro(mensagemErro(falha, "Não foi possível abrir a foto."));
     } finally { setCarregando(false); }
   }
 
@@ -464,4 +494,10 @@ async function comprimirFoto(arquivo: File): Promise<Uint8Array> {
 function formatarData(valor: string) {
   const data = new Date(valor);
   return Number.isNaN(data.getTime()) ? "data não informada" : data.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+}
+
+function mensagemErro(falha: unknown, padrao: string) {
+  if (!(falha instanceof Error) || !falha.message.trim()) return padrao;
+  const mensagem = falha.message.trim().replace(/^\[(?:canceled|unknown|invalid_argument|deadline_exceeded|not_found|already_exists|permission_denied|resource_exhausted|failed_precondition|aborted|out_of_range|unimplemented|internal|unavailable|data_loss|unauthenticated)\]\s*/i, "");
+  return mensagem || padrao;
 }
