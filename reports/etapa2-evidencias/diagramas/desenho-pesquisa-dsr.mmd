@@ -1,0 +1,11 @@
+%%{init: {"theme":"base","themeVariables":{"fontSize":"24px","primaryColor":"#f2f2f2","primaryTextColor":"#111111","primaryBorderColor":"#333333","lineColor":"#333333","secondaryColor":"#e5e5e5","tertiaryColor":"#ffffff","fontFamily":"Arial"}}}%%
+flowchart TB
+  A["1. Problema e público-alvo\nDescarte doméstico e eletroeletrônico"] --> B["2. Requisitos do artefato\nGuia, pontos, aprendizagem e registro"]
+  B --> C["3. Projeto e desenvolvimento incremental\nReact/Vite · NestJS/gRPC · PostgreSQL/Redis"]
+  C --> D["4. Modelagem\nCasos de uso e modelo ER"]
+  D --> E["5. Demonstração\nJornadas ponta a ponta com dados sintéticos"]
+  E --> F["6. Avaliação técnica\nTestes · Nielsen · axe/WCAG 2.2 · Lighthouse"]
+  F --> G["7. Correções priorizadas\ne reexecução dos testes"]
+  G -. "ciclo iterativo de melhoria" .-> C
+  classDef default fill:#f3f3f3,stroke:#333,color:#111,stroke-width:1.5px;
+  linkStyle default stroke:#333,stroke-width:1.5px;

@@ -1,0 +1,134 @@
+{
+  "generatedAt": "2026-10-30T05:47:34.042Z",
+  "tool": "Lighthouse User Flow 13.6.0",
+  "environment": {
+    "browser": "Chrome/156.0.8078.47",
+    "device": "emulação móvel, viewport 390×844 CSS px, DPR 1",
+    "network": "throttling simulado: RTT 150 ms; throughput 1.638,4 Kbps; download 1.474,56 Kbps; upload 675 Kbps; CPU ×4",
+    "origin": "http://127.0.0.1:3000",
+    "note": "Medições de laboratório; não representam dados de campo/CrUX."
+  },
+  "steps": [
+    {
+      "name": "Navegação: login",
+      "type": "",
+      "performanceScore": 100,
+      "lcpMs": 1374.1246,
+      "inpMs": null,
+      "cls": 0,
+      "fcpMs": 1374.1246,
+      "tbtMs": 62.5,
+      "speedIndexMs": 1374.1246
+    },
+    {
+      "name": "Interação: autenticação e primeiro acesso",
+      "type": "",
+      "performanceScore": 68,
+      "lcpMs": null,
+      "inpMs": 58.416,
+      "cls": 0,
+      "fcpMs": null,
+      "tbtMs": 728.5089999999988,
+      "speedIndexMs": null
+    },
+    {
+      "name": "Tela: visão geral",
+      "type": "",
+      "performanceScore": 0,
+      "lcpMs": null,
+      "inpMs": null,
+      "cls": null,
+      "fcpMs": null,
+      "tbtMs": null,
+      "speedIndexMs": null
+    },
+    {
+      "name": "Interação: busca no Guia",
+      "type": "",
+      "performanceScore": 97,
+      "lcpMs": null,
+      "inpMs": 231.305,
+      "cls": 0,
+      "fcpMs": null,
+      "tbtMs": 142.85,
+      "speedIndexMs": null
+    },
+    {
+      "name": "Tela: Guia de descarte",
+      "type": "",
+      "performanceScore": 0,
+      "lcpMs": null,
+      "inpMs": null,
+      "cls": null,
+      "fcpMs": null,
+      "tbtMs": null,
+      "speedIndexMs": null
+    },
+    {
+      "name": "Interação: busca de ponto de coleta",
+      "type": "",
+      "performanceScore": 97,
+      "lcpMs": null,
+      "inpMs": 233.24,
+      "cls": 0,
+      "fcpMs": null,
+      "tbtMs": 138.94499999999996,
+      "speedIndexMs": null
+    },
+    {
+      "name": "Tela: pontos de coleta",
+      "type": "",
+      "performanceScore": 0,
+      "lcpMs": null,
+      "inpMs": null,
+      "cls": null,
+      "fcpMs": null,
+      "tbtMs": null,
+      "speedIndexMs": null
+    },
+    {
+      "name": "Interação: abertura do Quiz",
+      "type": "",
+      "performanceScore": 100,
+      "lcpMs": null,
+      "inpMs": 137.787,
+      "cls": 0,
+      "fcpMs": null,
+      "tbtMs": 59.619000000000014,
+      "speedIndexMs": null
+    },
+    {
+      "name": "Tela: Quiz",
+      "type": "",
+      "performanceScore": 0,
+      "lcpMs": null,
+      "inpMs": null,
+      "cls": null,
+      "fcpMs": null,
+      "tbtMs": null,
+      "speedIndexMs": null
+    },
+    {
+      "name": "Interação: início do check-in",
+      "type": "",
+      "performanceScore": 98,
+      "lcpMs": null,
+      "inpMs": 201.627,
+      "cls": 0,
+      "fcpMs": null,
+      "tbtMs": 111.80899999999998,
+      "speedIndexMs": null
+    },
+    {
+      "name": "Tela: check-in",
+      "type": "",
+      "performanceScore": 0,
+      "lcpMs": null,
+      "inpMs": null,
+      "cls": null,
+      "fcpMs": null,
+      "tbtMs": null,
+      "speedIndexMs": null
+    }
+  ]
+}

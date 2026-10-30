@@ -1,0 +1,11 @@
+{
+  "name": "lixocerto-etapa2-audit-tools",
+  "private": true,
+  "type": "module",
+  "description": "Ferramentas isoladas para reproduzir auditorias Axe e Lighthouse da Etapa 2.",
+  "dependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "lighthouse": "13.6.0",
+    "puppeteer-core": "25.16.0"
+  }
+}

@@ -1,0 +1,15 @@
+%%{init: {"theme":"base","themeVariables":{"fontSize":"22px","primaryColor":"#f2f2f2","primaryTextColor":"#111111","primaryBorderColor":"#333333","lineColor":"#333333","secondaryColor":"#e5e5e5","tertiaryColor":"#ffffff","fontFamily":"Arial"}}}%%
+erDiagram
+  USUARIO ||--o{ MATERIAL : cria_edita_revisa
+  USUARIO ||--o{ PONTO_COLETA : cadastra
+  USUARIO ||--o{ QUIZ_ATRIBUICAO : recebe
+  QUESTAO ||--o{ QUIZ_ATRIBUICAO : atribuida
+  QUESTAO ||--o{ ALTERNATIVA : possui
+  USUARIO ||--o{ TENTATIVA_QUIZ : responde
+  QUESTAO ||--o{ TENTATIVA_QUIZ : avaliada
+  ALTERNATIVA ||--o{ TENTATIVA_QUIZ : selecionada
+  USUARIO ||--o{ CHECKIN_DESCARTE : inicia
+  PONTO_COLETA ||--o{ CHECKIN_DESCARTE : destino
+  CHECKIN_DESCARTE ||--o| REGISTRO_DESCARTE : origina
+  USUARIO ||--o{ REGISTRO_DESCARTE : registra
+  PONTO_COLETA ||--o{ REGISTRO_DESCARTE : recebe

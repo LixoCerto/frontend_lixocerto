@@ -1,0 +1,22 @@
+{
+  "comparison": "same working tree and dependencies; App.tsx toggled to the parent revision without route lazy loading",
+  "baselineCommit": "30a28267606733e5955ba3bb7c8c7de6edf959fc",
+  "afterCommit": "f47004681c7fb17db7f8235e2d36153467eee2d4",
+  "route": "/login",
+  "javascriptRequestedBytes": {
+    "before": 797683,
+    "after": 474077
+  },
+  "transferGzipBytes": {
+    "before": 226801,
+    "after": 146583
+  },
+  "scriptsRequested": {
+    "before": 1,
+    "after": 5
+  },
+  "fullBuildJavaScriptBytesAfter": 800223,
+  "note": "Total build JS is not a comparable initial-transfer measure; lazy routes defer chunks until navigation.",
+  "initialJavascriptReductionPct": 40.6,
+  "initialGzipReductionPct": 35.4
+}

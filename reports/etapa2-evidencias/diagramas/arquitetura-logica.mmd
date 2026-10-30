@@ -1,0 +1,15 @@
+%%{init: {"theme":"base","themeVariables":{"fontSize":"22px","primaryColor":"#f2f2f2","primaryTextColor":"#111111","primaryBorderColor":"#333333","lineColor":"#333333","secondaryColor":"#e5e5e5","tertiaryColor":"#ffffff","fontFamily":"Arial"}}}%%
+flowchart TB
+  U["Pessoa usuária / navegador"] --> FE["Frontend\nReact + Vite"]
+  FE -->|"gRPC-Web / HTTP"| GW["Gateway\nEnvoy + filtro gRPC-Web"]
+  GW -->|"gRPC"| API["API\nNestJS + Node.js"]
+  API --> DB[("PostgreSQL\nconfigurado externamente")]
+  API --> R[("Redis\ncache")]
+  API --> OBJ["Evidências de imagem\nfilesystem ou armazenamento S3 compatível"]
+  ADM["Administração\ncatálogo · pontos · revisão"] --> FE
+  DKR["Docker Compose\nserviços definidos"] -. "orquestra" .-> FE
+  DKR -.-> GW
+  DKR -.-> API
+  DKR -.-> R
+  classDef default fill:#f4f4f4,stroke:#333,color:#111,stroke-width:1.5px;
+  linkStyle default stroke:#333,stroke-width:1.5px;

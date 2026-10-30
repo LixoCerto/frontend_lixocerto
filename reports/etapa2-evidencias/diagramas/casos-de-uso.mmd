@@ -1,0 +1,28 @@
+%%{init: {"theme":"base","themeVariables":{"primaryColor":"#f2f2f2","primaryTextColor":"#111111","primaryBorderColor":"#333333","lineColor":"#333333","secondaryColor":"#e5e5e5","tertiaryColor":"#ffffff","fontFamily":"Arial"}}}%%
+flowchart LR
+  P(("Pessoa usuária"))
+  A(("Administrador / curador"))
+  subgraph S["Plataforma LixoCerto"]
+    U1["Consultar guia de descarte"]
+    U2["Buscar ponto de coleta"]
+    U3["Responder quiz e receber pontuação"]
+    U4["Participar de desafio"]
+    U5["Registrar descarte com localização e foto"]
+    U6["Acompanhar pontos, nível e selos"]
+    A1["Manter materiais e fontes"]
+    A2["Cadastrar e moderar pontos"]
+    A3["Revisar registros e evidências"]
+    A4["Administrar papéis e permissões"]
+  end
+  P --> U1
+  P --> U2
+  P --> U3
+  P --> U4
+  P --> U5
+  P --> U6
+  A --> A1
+  A --> A2
+  A --> A3
+  A --> A4
+  classDef default fill:#f4f4f4,stroke:#333,color:#111,stroke-width:1.5px;
+  linkStyle default stroke:#333,stroke-width:1.4px;

@@ -1,0 +1,35 @@
+digraph ER {
+  graph [rankdir=TB, bgcolor="white", fontname="Arial", fontsize=18, nodesep=0.38, ranksep=0.58, splines=polyline, outputorder=edgesfirst, pad=0.20];
+  node [shape=box, style="rounded,filled", fillcolor="#F2F2F2", color="#333333", penwidth=1.2, fontname="Arial", fontsize=18, margin="0.22,0.14"];
+  edge [color="#333333", penwidth=1.0, arrowsize=0.8, fontname="Arial", fontsize=12];
+  USUARIO [label="USUARIO"];
+  MATERIAL [label="MATERIAL"];
+  PONTO [label="PONTO_COLETA"];
+  QUESTAO [label="QUESTAO"];
+  ATRIBUICAO [label="QUIZ_ATRIBUICAO"];
+  ALTERNATIVA [label="ALTERNATIVA"];
+  TENTATIVA [label="TENTATIVA_QUIZ"];
+  CHECKIN [label="CHECKIN_DESCARTE"];
+  REGISTRO [label="REGISTRO_DESCARTE"];
+  {rank=same; MATERIAL; PONTO; QUESTAO;}
+  {rank=same; ATRIBUICAO; ALTERNATIVA; CHECKIN;}
+  {rank=same; TENTATIVA; REGISTRO;}
+  MATERIAL -> PONTO [style=invis, weight=12];
+  PONTO -> QUESTAO [style=invis, weight=12];
+  ATRIBUICAO -> ALTERNATIVA [style=invis, weight=12];
+  ALTERNATIVA -> CHECKIN [style=invis, weight=12];
+  TENTATIVA -> REGISTRO [style=invis, weight=12];
+  USUARIO -> MATERIAL [label="1:N cria/revisa"];
+  USUARIO -> PONTO [label="1:N cadastra"];
+  USUARIO -> ATRIBUICAO [label="1:N recebe"];
+  QUESTAO -> ATRIBUICAO [label="1:N atribuída"];
+  QUESTAO -> ALTERNATIVA [label="1:N possui"];
+  USUARIO -> TENTATIVA [label="1:N responde"];
+  QUESTAO -> TENTATIVA [label="1:N avaliada"];
+  ALTERNATIVA -> TENTATIVA [label="1:N selecionada"];
+  USUARIO -> CHECKIN [label="1:N inicia"];
+  PONTO -> CHECKIN [label="1:N destino"];
+  CHECKIN -> REGISTRO [label="1:0..1 origina"];
+  USUARIO -> REGISTRO [label="1:N registra"];
+  PONTO -> REGISTRO [label="1:N recebe"];
+}

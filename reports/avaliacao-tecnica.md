@@ -1,84 +1,70 @@
-# Avaliação técnica do Lixo Certo
+# Avaliação técnica da plataforma LixoCerto — Etapa 2
 
-Data da execução: 22/10/2026. Ambiente: sandbox Linux, Node.js 22.13.0, Chromium headless, frontend servido pelo preview de produção em `127.0.0.1:4173`. A auditoria Lighthouse usou o preset mobile simulado: Moto G Power (2022), viewport 412×823, DPR 1,75, rede simulada RTT 150 ms e download 1,474 Mbps, CPU 4× mais lenta.
+**Data:** 30/10/2026. **Ambiente de ensaio:** sandbox local, com PostgreSQL e Redis descartáveis, API local, Envoy gRPC-Web e frontend local. Nenhum teste automatizado desta etapa usou a VM, dados de produção, localização física ou foto real.
 
-## 1. Testes automatizados e jornadas
+## Versão e ferramentas
 
-| Jornada / suíte | Passos executados | Resultado |
-|---|---|---|
-| Cadastro e login | Abrir `/login`; validar heading, campos de e-mail e senha; alternar para “Criar conta”; preencher senha inválida; confirmar mensagens de requisito e bloqueio do cadastro; abrir recuperação de senha | **PASSOU**: 3/3 testes Playwright existentes, 23/23 testes unitários do frontend |
-| Consulta ao guia | O código contém a tela e busca do guia em `Home`, mas a jornada autenticada exige API gRPC-Web/Envoy e usuário autenticado | **NÃO VALIDADO ponta a ponta**: infraestrutura de API não estava disponível nesta sandbox |
-| Busca de pontos de coleta | O componente `PontosColetaCrud` foi localizado, mas a chamada real depende da API e de dados de homologação | **NÃO VALIDADO ponta a ponta**: infraestrutura de API não estava disponível |
-| Quiz com pontuação | O frontend contém o fluxo de questionários e o backend contém regras de questionários/gamificação; não foi possível executar a jornada real sem API, banco e sessão | **NÃO VALIDADO ponta a ponta** |
-| Check-in com foto | O fluxo de registros de descarte e evidências existe no frontend/backend; upload e persistência reais dependem de API, storage e autenticação | **NÃO VALIDADO ponta a ponta** |
-| 11 testes de integração da API | `pnpm testar:integracao` | **11/11 pulados** pelos próprios testes por ausência de PostgreSQL e Redis locais |
-| E2E gRPC existente | `pnpm testar:e2e` compila a API e chama `ServicoSaude.Verificar` | **FALHOU**: recebeu `status_servico=degradado` em vez de `saudavel`; banco e Redis não estavam disponíveis |
-| Qualidade do frontend | `pnpm check`, `pnpm test`, `pnpm build` | **PASSOU**: tipos, 4 arquivos de teste e 23 testes; build de produção concluído |
+Os resultados foram obtidos sobre a árvore de trabalho testada baseada nos commits API `6cc375982dd74be84ffb191b857d6c2c91bc52c4`, frontend `f47004681c7fb17db7f8235e2d36153467eee2d4` e infraestrutura `66c49a4657f2b9f186afe841a30e14a6a904a436`; o working tree continha alterações locais relacionadas à etapa, ainda não commitadas. O commit `30a28267606733e5955ba3bb7c8c7de6edf959fc` do frontend foi usado como referência de `App.tsx` sem lazy loading na comparação controlada do bundle. O suplemento `etapa2-evidencias` contém métricas, capturas, roteiros e manifesto; os SHAs-base não incluem as alterações avaliadas.
 
-Conclusão desta frente: os testes automatizáveis disponíveis foram executados, mas não é válido declarar as cinco jornadas principais como ponta a ponta aprovadas. Três jornadas públicas de acesso estão cobertas; as quatro jornadas autenticadas e dependentes de dados permanecem pendentes de execução em ambiente com API, Envoy, PostgreSQL, Redis e storage.
+| Ferramenta | Versão observada |
+|---|---|
+| Node.js | 22.23.4 |
+| pnpm | 10.4.1 |
+| TypeScript | 5.9.3 (frontend) / dependência declarada 5.9.2 na API |
+| Vite | 7.1.9 |
+| Playwright | 1.56.1 |
+| Chromium/Chrome | 156.0.8078.47 |
+| axe-core / @axe-core/playwright | 4.14.0 |
+| Lighthouse User Flow | 13.6.0 |
 
-## 2. Avaliação heurística de Nielsen
+## Testes automatizados
 
-Inspeção estática e exploratória das telas públicas, rotas, componentes e estados de erro/carregamento. Gravidade: 0 = sem problema; 1 = cosmético; 2 = menor; 3 = maior; 4 = crítico.
+| Camada | Execução | Resultado |
+|---|---|---:|
+| API | TypeScript, testes unitários, lint de contratos (Buf) e compilação | Concluídos sem erro; 122 testes unitários em 33 arquivos |
+| API | Integração em PostgreSQL/Redis locais descartáveis | 11/11 aprovados |
+| API | E2E de saúde gRPC | 1/1 aprovado |
+| Frontend | TypeScript, testes unitários e build de produção | Concluídos sem erro; 17 testes unitários em três arquivos |
+| Frontend | Playwright ponta a ponta | 7/7 aprovados |
 
-| Heurística | Evidência observada | Problema / gravidade |
-|---|---|---|
-| 1. Visibilidade do estado do sistema | Há `TelaCarregamento`, `role=status`, `aria-live`, estados de ocupado, alertas e mensagens de sucesso | Sem problema relevante observado — **0** |
-| 2. Correspondência com o mundo real | Rótulos “Guia”, “Pontos de coleta”, “Desafios”, “Quiz” e linguagem em português orientam a tarefa | Sem problema relevante observado — **0** |
-| 3. Controle e liberdade do usuário | Existem retorno para login, recuperação de senha e limpeza de filtros | A jornada autenticada não pôde ser exercitada para verificar cancelamento de upload/check-in — **2, pendente de validação** |
-| 4. Consistência e padrões | Componentes Radix, botões e estados visuais seguem padrões semelhantes; tabs usam `role=tab`/`tabpanel` | Sem problema relevante após a correção ARIA — **0** |
-| 5. Prevenção de erros | Validação de senha, confirmação de senha, campos rotulados e bloqueio de cadastro inválido | Sem problema relevante observado no acesso — **0** |
-| 6. Reconhecimento em vez de memorização | Campos têm labels, autocomplete, placeholders, navegação nomeada e filtros visíveis | Sem problema relevante observado — **0** |
-| 7. Flexibilidade e eficiência | Há filtros, busca, onboarding e navegação por áreas | A eficiência das jornadas de guia, quiz e check-in não foi confirmada sem backend — **2, pendente de validação** |
-| 8. Estética e design minimalista | Login é focado; Home concentra guia, pontos, descarte, desafios, pesquisa e administração | Densidade potencialmente alta na Home para usuários iniciantes — **2, requer validação com a tela autenticada** |
-| 9. Reconhecimento, diagnóstico e recuperação de erros | `role=alert`, mensagens de erro, botão “Tentar novamente” e estados vazios estão presentes | Sem problema relevante nas telas públicas — **0** |
-| 10. Ajuda e documentação | Textos de apoio, dicas e onboarding explicam conceitos principais | Falta confirmar ajuda contextual para falhas de upload e integração — **1, pendente de jornada real** |
+As sete jornadas Playwright foram: (1) cadastro, login e onboarding; (2) login de conta fictícia com senha legada válida; (3) busca no Guia com registro do seed local marcado como publicado somente na base descartável; (4) busca de pontos e leitura dos dados exibidos; (5) resposta ao quiz, participação em desafio e atualização do painel; (6) rejeição de localização simulada fora do raio de 5 m; e (7) check-in no ponto com foto sintética e envio para revisão. Conta, ponto, check-in, localização e foto usados nos ensaios eram fictícios ou sintéticos e permaneceram na base descartável. Em consulta separada, confirmamos que a ficha de papel/papelão correspondente aparece publicada na homologação; a Figura 5 usa recortes dessa consulta real. O cenário de geofence simula coordenadas no navegador; não é uma medição de GPS em campo.
 
-Resultado heurístico: nenhuma falha crítica foi identificada nas telas públicas. Os itens de gravidade 1–2 são pontos de validação das jornadas autenticadas, não evidências de falha reproduzida.
+## Acessibilidade automática
 
-## 3. Acessibilidade, desempenho e latência
+Axe-core foi aplicado a sete telas — login, confirmação de e-mail, visão geral, Guia, pontos, quiz e check-in — em Chromium headless, viewport 1280×900 CSS px, com tags WCAG 2.2 A/AA, versões anteriores incluídas no conjunto e boas práticas. Foram encontrados **zero violações confirmadas**, 283 resultados de regra aprovados e **seis regras incompletas**, todas relacionadas a contraste de cores e exigindo verificação manual. Resultado automatizado zero não equivale a conformidade WCAG: não houve avaliação completa com teclado, leitor de tela, zoom, alto contraste nem inspeção manual de todos os pares de cores.
 
-### Axe / WCAG 2.2
+## Desempenho em laboratório
 
-Auditoria com `axe-core` usando tags `wcag22a`, `wcag21aa` e `best-practice`, viewport 1280×800, DPR 1, nas telas `/login`, `/confirmar-email` e `/redefinir-senha`.
+Lighthouse User Flow 13.6.0 foi executado três vezes na build de produção, sob emulação móvel de 390×844 CSS px, DPR 1, RTT simulado de 150 ms, throughput de download 1.474,56 Kbps, upload 675 Kbps e CPU ×4. São métricas de laboratório, não dados de campo/CrUX. A coluna “score” é a pontuação de desempenho Lighthouse (0–100) da navegação ou timespan correspondente; não se incluem snapshots de tela sem uma navegação/interação medida.
 
-| Tela | Violações | Passes | Incompletos |
+| Etapa medida | Score Lighthouse — mediana (intervalo) | Métrica | Mediana (3 execuções) | Amostras |
+|---|---:|---|---:|---|
+| Navegação inicial `/login` | 94 (94–100) | LCP | **2.930,6 ms** | 1.374,1; 2.935,0; 2.930,6 ms |
+| Navegação inicial `/login` | 94 (94–100) | CLS | **0,000** | 0; 0; 0 |
+| Autenticação e primeiro acesso | 69 (68–69) | INP de laboratório | **58,1 ms** | 58,4; 57,1; 58,1 ms |
+| Busca no Guia | 97 (97–97) | INP de laboratório | **230,5 ms** | 231,3; 222,7; 230,5 ms |
+| Busca de ponto | 97 (96–97) | INP de laboratório | **245,7 ms** | 233,2; 245,7; 253,0 ms |
+| Abertura do quiz | 100 (100–100) | INP de laboratório | **158,7 ms** | 137,8; 158,7; 164,5 ms |
+| Início do check-in | 98 (98–99) | INP de laboratório | **202,6 ms** | 201,6; 203,3; 202,6 ms |
+
+Os limites de referência para um resultado “bom” são LCP ≤ 2,5 s, INP ≤ 200 ms e CLS ≤ 0,1. O LCP mediano de laboratório excedeu 2,5 s, embora as três amostras tenham ficado abaixo de 3 s; três das cinco medianas de interação excederam 200 ms (busca do Guia, busca de pontos e início do check-in). CLS permaneceu zero. INP acima é uma medida de interações sintéticas em User Flow, não o percentil 75 de sessões reais; não há dados de campo para afirmar aprovação dos Core Web Vitals.
+
+## Comparação controlada do code splitting
+
+Foram construídas duas cópias com o mesmo código e dependências da versão de trabalho; somente o carregamento de rotas em `App.tsx` foi alternado para a referência anterior ao lazy loading. O total de JavaScript da aplicação permaneceu semelhante, mas a transferência inicial da rota `/login` caiu:
+
+| Rota inicial `/login` | Antes (sem divisão de rota) | Depois (lazy loading) | Variação |
 |---|---:|---:|---:|
-| `/login` | **0** | 15 | 0 |
-| `/confirmar-email` | **0** | 11 | 0 |
-| `/redefinir-senha` | **0** | 11 | 0 |
+| JavaScript efetivamente solicitado, bytes sem gzip | 797.683 | 474.077 | −40,6% |
+| Transferência HTTP dos scripts, gzip | 226.801 | 146.583 | **−35,4%** |
+| Número de arquivos JS solicitados | 1 | 5 | chunks compartilhados e da rota |
 
-Foi corrigido o uso inválido de `role="tabpanel"` diretamente no `<form>`, passando o painel para um contêiner semântico. Também foram corrigidos contrastes do subtítulo, tab inativo e rodapé, e removida a restrição `maximum-scale=1` do viewport.
+Os arquivos JavaScript somados na build final totalizam 800.223 bytes sem gzip, pois o code splitting reorganiza o total em chunks e não remove o código das demais rotas. O comparativo é do carregamento inicial da tela de login; não deve ser descrito como redução equivalente do total de bytes da aplicação.
 
-### Lighthouse
+## Homologação e ponto de coleta
 
-| Métrica | Resultado final |
-|---|---:|
-| Performance | **92/100** |
-| Accessibility | **100/100** |
-| Best Practices | **100/100** |
-| SEO | **92/100** |
-| FCP | **2,5 s** |
-| LCP | **2,9 s** |
-| CLS | **0** |
-| TBT | **0 ms** |
-| INP | Não disponível no Lighthouse de laboratório; requer dados de campo ou interação instrumentada |
+Na primeira observação da homologação, foram vistos oito conteúdos publicados; na reconsulta somente de leitura em 30/10/2026, o Guia exibiu nove e a busca por “papelão” retornou uma ficha publicada. Os cinco temas em revisão documental já apareciam na lista, portanto não houve publicação duplicada; a diferença entre oito e nove é tratada como variação entre consultas, não como publicação feita por nós. A pedido do usuário, a EMLUR foi cadastrada e aprovada como “Verificado”, com fonte municipal e coordenada do pin do Google Maps. A coordenada não foi aferida em campo; “Verificado” indica aprovação do cadastro, não precisão geodésica ou confirmação operacional. Não há evidência de que a alteração local de interface que destaca a ressalva do pin tenha sido implantada na homologação.
 
-A meta de latência abaixo de 3 s foi atingida para o LCP da tela de login no cenário documentado: **2,9 s** com Moto G Power (2022) em rede simulada RTT 150 ms / 1,474 Mbps. Isso não comprova todas as telas autenticadas nem uma medição de campo de INP.
+## Reprodução
 
-### Code splitting e ativos
-
-Antes do ajuste, o build gerava um único chunk JavaScript principal de **790,16 kB** (**224,78 kB gzip**) e o Lighthouse apontou LCP variável, chegando a 5,7 s em uma execução.
-
-Depois do ajuste, as páginas passaram a ser carregadas com `React.lazy`/`Suspense`: o maior chunk comum ficou em **281,97 kB** (**91,68 kB gzip**), com `Login` em **20,83 kB** (**7,31 kB gzip**) e `Home` em chunk separado de **301,40 kB** (**78,11 kB gzip**). O logo usado no login também foi reduzido de PNG 1254×1254 com **606 kB** para WebP 256×256 com **19 kB**. O LCP final ficou em **2,9 s**.
-
-## Artefatos
-
-- `reports/playwright.json`: resultado JSON dos testes Playwright.
-- `reports/lighthouse-login-final-final.json`: relatório Lighthouse final.
-- `reports/axe-public.json`: relatório axe das três telas públicas.
-- `dist/`: build de produção após code splitting e otimizações.
-
-## Pendência para fechar a avaliação ponta a ponta
-
-Executar novamente em homologação com API, Envoy, PostgreSQL, Redis, storage e contas de teste válidas. Só então devem ser adicionados/rodados os cenários reais de guia, pontos, quiz com pontuação e check-in com foto, além de repetir Lighthouse/axe na Home autenticada e medir INP com interação real.
+Os comandos, SHAs-base, versões, relatórios brutos, capturas e roteiros de axe/Lighthouse estão no suplemento versionado junto ao projeto, em `reports/etapa2-evidencias/`. Os testes devem ser executados apenas contra PostgreSQL/Redis locais descartáveis e contas fictícias.
