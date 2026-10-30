@@ -1,8 +1,8 @@
-# Lixo Certo — Frontend
+# LixoCerto — Frontend web
 
-Aplicação web de página única construída com React, TypeScript e Vite para a plataforma educacional **Lixo Certo**, desenvolvida no TCC II. O frontend apresenta o guia de descarte, pontos de coleta, quizzes, desafios, progresso, pesquisa de experiência e áreas administrativas conforme as permissões recebidas da API.
+Aplicação web de página única construída com React, TypeScript e Vite para a plataforma **LixoCerto**. Apresenta o Guia de descarte, pontos de coleta, quizzes, desafios, progresso, pesquisa de experiência e áreas administrativas, conforme as permissões recebidas da API.
 
-> **Status:** projeto em desenvolvimento. A interface demonstra os fluxos implementados; isso não equivale a uma avaliação formal de usabilidade, acessibilidade ou impacto com participantes.
+> **Status:** em desenvolvimento. Testes automatizados, inspeções e métricas de laboratório têm escopo definido; não equivalem, por si só, a avaliação com participantes nem demonstram impacto ambiental.
 
 ## Arquitetura
 
@@ -54,7 +54,7 @@ Inicie o servidor de desenvolvimento com:
 pnpm dev
 ```
 
-O script Vite atual escuta em `0.0.0.0`; utilize-o somente em uma rede de desenvolvimento confiável e não exponha essa porta à Internet. Para gerar e visualizar o bundle de produção localmente:
+Os servidores Vite de desenvolvimento e preview escutam em `0.0.0.0`; utilize-os somente em uma rede de desenvolvimento confiável e não exponha essas portas à Internet. Para gerar e visualizar o bundle de produção localmente:
 
 ```bash
 pnpm build
@@ -88,7 +88,7 @@ Execute `pnpm proto:generate` somente quando alterar deliberadamente um contrato
 - Variáveis `VITE_*` são incorporadas ao bundle e ficam visíveis no navegador; use-as apenas para configuração pública.
 - A autorização de contas e ações é responsabilidade da API, não do frontend.
 - A navegação e o onboarding são adaptados às permissões recebidas do backend.
-- A interface inclui suporte a teclado e preferências de movimento reduzido, mas o projeto ainda não declara uma auditoria formal de conformidade ou um escore SUS.
+- A interface inclui suporte a teclado e preferências de movimento reduzido. Os relatórios registram o escopo das verificações; não constituem declaração de conformidade integral com WCAG nem avaliação com participantes.
 - Testes automatizados não substituem testes integrados com API/banco nem avaliação com participantes.
 
 ## Documentação relacionada
@@ -96,3 +96,6 @@ Execute `pnpm proto:generate` somente quando alterar deliberadamente um contrato
 - [Arquitetura do frontend estático](docs/ARQUITETURA_FRONTEND_ESTATICO.md)
 - [Configuração de desenvolvimento](docs/CONFIGURACAO_DESENVOLVIMENTO.md)
 - [Contrato de autenticação](proto/lixo_certo/v1/servico_autenticacao.proto)
+- [Avaliação técnica](reports/avaliacao-tecnica.md)
+- [Inspeção heurística de usabilidade](reports/avaliacao-heuristica-etapa2.md)
+- [API](https://github.com/LixoCerto/api_lixocerto) · [Infraestrutura](https://github.com/LixoCerto/infra_lixocerto)
