@@ -43,6 +43,7 @@ import {
   listarQuestoesGestao,
   type DadosQuestaoApi,
 } from "@/lib/api";
+import { interpretarRespostaQuestionario } from "@/lib/questionario-resposta";
 
 type QuestaoPublica = Awaited<ReturnType<typeof listarQuestoes>>["questoes"][number];
 type QuestaoGestao = Awaited<ReturnType<typeof listarQuestoesGestao>>["questoes"][number];
@@ -197,13 +198,25 @@ export default function QuestionariosCrud({ podeAdministrar, podeResponder }: { 
     setIdRespondendo(questao.idQuestao);
     setAlternativaSelecionada(atual => ({ ...atual, [questao.idQuestao]: idAlternativa }));
     setErro("");
+    setAviso("");
     try {
       const resposta = await enviarRespostaQuestionario(questao.idQuestao, idAlternativa);
-      const feedback = { correta: resposta.indicaCorreta, pontos: resposta.quantidadePontos, explicacao: resposta.explicacaoResposta };
-      setRespostas(atual => ({ ...atual, [questao.idQuestao]: feedback }));
-      setFeedbackRecente(feedback);
+      const resultado = interpretarRespostaQuestionario(resposta);
+      if (resultado.estado === "nao-registrada") {
+        setErro(resultado.mensagem);
+        setAlternativaSelecionada(atual => ({ ...atual, [questao.idQuestao]: undefined }));
+        return;
+      }
+
       setQuestoesPublicas(atual => atual.filter(item => item.idQuestao !== questao.idQuestao));
-      setAviso(resposta.indicaCorreta ? `Resposta correta: +${resposta.quantidadePontos} pontos. Esta questão foi encerrada.` : "Resposta registrada. Esta questão foi encerrada e não pode ser respondida novamente.");
+      if (resultado.estado === "ja-respondida") {
+        setAviso(resultado.mensagem);
+        return;
+      }
+
+      setRespostas(atual => ({ ...atual, [questao.idQuestao]: resultado.feedback }));
+      setFeedbackRecente(resultado.feedback);
+      setAviso(resultado.mensagem);
     } catch {
       setErro("Não foi possível registrar sua resposta. Tente novamente.");
       setAlternativaSelecionada(atual => ({ ...atual, [questao.idQuestao]: undefined }));
