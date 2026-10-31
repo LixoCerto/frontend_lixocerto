@@ -8,7 +8,7 @@ import { useEffect, useRef, type CSSProperties, type KeyboardEvent, type ReactNo
  * textos curtos e alvos de toque grandes para pessoas de todas as idades.
  */
 
-export type TomPagina = "verde" | "azul" | "amarelo" | "vermelho" | "marrom" | "roxo" | "cinza";
+export type TomPagina = "verde" | "azul" | "amarelo" | "vermelho" | "marrom" | "roxo" | "laranja" | "cinza";
 
 export const TONS: Record<TomPagina, { cor: string; fundo: string; borda: string; texto: string }> = {
   verde: { cor: "#2f9a5f", fundo: "#e6f5ec", borda: "#cfe8d8", texto: "#1d6b43" },
@@ -17,6 +17,7 @@ export const TONS: Record<TomPagina, { cor: string; fundo: string; borda: string
   vermelho: { cor: "#d0493e", fundo: "#fbe9e7", borda: "#f3d0cb", texto: "#a3362d" },
   marrom: { cor: "#8a5a34", fundo: "#f5ece4", borda: "#e6d6c6", texto: "#6f4728" },
   roxo: { cor: "#6b5bb5", fundo: "#efedfa", borda: "#dcd7f2", texto: "#4f4291" },
+  laranja: { cor: "#c2410c", fundo: "#fff7ed", borda: "#fed7aa", texto: "#9a3412" },
   cinza: { cor: "#5f7a6b", fundo: "#eef3ef", borda: "#dfe8e1", texto: "#3f5c4c" },
 };
 

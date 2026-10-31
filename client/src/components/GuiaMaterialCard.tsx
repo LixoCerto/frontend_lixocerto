@@ -19,15 +19,16 @@ export type MaterialGuia = {
   verifiedAt: string;
 };
 
-/** Associa a categoria do material à cor da lixeira da coleta seletiva (CONAMA 275/2001). */
+/** Aplica as cores previstas na CONAMA 275/2001; categorias especiais sem cor específica permanecem neutras. */
 export function tomDaCategoria(categoria: string): TomPagina {
   const texto = categoria.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  if (/radioativ/.test(texto)) return "roxo";
+  if (/perigos/.test(texto)) return "laranja";
   if (/papel|papelao/.test(texto)) return "azul";
   if (/plastic/.test(texto)) return "vermelho";
   if (/vidro/.test(texto)) return "verde";
   if (/metal|aluminio|aco|lata/.test(texto)) return "amarelo";
   if (/organic|compost|alimento/.test(texto)) return "marrom";
-  if (/eletr|pilha|bateria|perigos|lampada|oleo|medicament/.test(texto)) return "roxo";
   return "cinza";
 }
 
