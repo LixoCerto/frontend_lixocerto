@@ -29,6 +29,7 @@ import { Aviso, CabecalhoPagina, Carregando, ESTILOS, EstadoVazio, Estatistica, 
 import { distanciaEmKm } from "@/lib/geo";
 import { registrarAcaoOnboarding } from "@/lib/onboarding";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { interpretarResultadoMutacao } from "@/lib/resultado-mutacao";
 import {
   alterarStatusPontoColeta,
   atualizarPontoColeta,
@@ -125,28 +126,47 @@ export default function PontosColetaCrud({
   const [localizandoBusca, setLocalizandoBusca] = useState(false);
   const idConsultaCep = useRef(0);
 
-  const carregar = useCallback(async () => {
-    setCarregando(true);
-    setErro(null);
-    try {
-      const resposta = await listarPontosColeta(
-        filtrosAplicados.localizacao ? "" : filtrosAplicados.cidade,
-        filtrosAplicados.categoria,
-        filtrosAplicados.localizacao ? { ...filtrosAplicados.localizacao, raioMetros: filtrosAplicados.raioKm * 1000 } : undefined,
-      );
-      const pontosCarregados = resposta.pontosColeta.map(ponto => ({
-        ...ponto,
-        cepPontoColeta: formatarCep(ponto.cepPontoColeta),
-        distanciaKm: filtrosAplicados.localizacao ? distanciaEmKm(filtrosAplicados.localizacao, { latitude: ponto.latitudePontoColeta, longitude: ponto.longitudePontoColeta }) ?? undefined : undefined,
-      }));
-      if (filtrosAplicados.localizacao) pontosCarregados.sort((a, b) => (a.distanciaKm ?? Infinity) - (b.distanciaKm ?? Infinity));
-      setPontos(pontosCarregados);
-    } catch {
-      setErro("Não foi possível carregar os pontos de coleta.");
-    } finally {
-      setCarregando(false);
-    }
-  }, [filtrosAplicados]);
+  const carregar = useCallback(
+    async (reportarFalha = true): Promise<boolean> => {
+      setCarregando(true);
+      setErro(null);
+      try {
+        const resposta = await listarPontosColeta(
+          filtrosAplicados.localizacao ? "" : filtrosAplicados.cidade,
+          filtrosAplicados.categoria,
+          filtrosAplicados.localizacao
+            ? {
+                ...filtrosAplicados.localizacao,
+                raioMetros: filtrosAplicados.raioKm * 1000,
+              }
+            : undefined,
+        );
+        const pontosCarregados = resposta.pontosColeta.map(ponto => ({
+          ...ponto,
+          cepPontoColeta: formatarCep(ponto.cepPontoColeta),
+          distanciaKm: filtrosAplicados.localizacao
+            ? distanciaEmKm(filtrosAplicados.localizacao, {
+                latitude: ponto.latitudePontoColeta,
+                longitude: ponto.longitudePontoColeta,
+              }) ?? undefined
+            : undefined,
+        }));
+        if (filtrosAplicados.localizacao)
+          pontosCarregados.sort(
+            (a, b) => (a.distanciaKm ?? Infinity) - (b.distanciaKm ?? Infinity)
+          );
+        setPontos(pontosCarregados);
+        return true;
+      } catch {
+        if (reportarFalha)
+          setErro("Não foi possível carregar os pontos de coleta.");
+        return false;
+      } finally {
+        setCarregando(false);
+      }
+    },
+    [filtrosAplicados]
+  );
 
   useEffect(() => {
     void carregar();
@@ -331,6 +351,20 @@ export default function PontosColetaCrud({
     );
   }
 
+  function publicarResultadoMutacao(
+    resposta: { operacaoAceita: boolean; mensagemResultado: string },
+    listaAtualizada: boolean
+  ) {
+    const resultado = interpretarResultadoMutacao(resposta, listaAtualizada);
+    if (resultado.tipo === "sucesso") {
+      setErro(null);
+      setMensagem(resultado.mensagem);
+      return;
+    }
+    setMensagem(null);
+    setErro(resultado.mensagem);
+  }
+
   async function salvar(event: FormEvent) {
     event.preventDefault();
     setErro(null);
@@ -352,9 +386,13 @@ export default function PontosColetaCrud({
       const resposta = editando
         ? await atualizarPontoColeta(editando, dados)
         : await criarPontoColeta(dados);
-      setMensagem(resposta.mensagemResultado);
+      if (!resposta.operacaoAceita) {
+        publicarResultadoMutacao(resposta, false);
+        return;
+      }
       setAberto(false);
-      await carregar();
+      const listaAtualizada = await carregar(false);
+      publicarResultadoMutacao(resposta, listaAtualizada);
     } catch {
       setErro("Não foi possível salvar o ponto. Verifique suas permissões e os dados informados.");
     }
@@ -362,10 +400,16 @@ export default function PontosColetaCrud({
 
   async function remover(id: string) {
     if (!window.confirm("Excluir este ponto de coleta?")) return;
+    setErro(null);
+    setMensagem(null);
     try {
       const resposta = await excluirPontoColeta(id);
-      setMensagem(resposta.mensagemResultado);
-      await carregar();
+      if (!resposta.operacaoAceita) {
+        publicarResultadoMutacao(resposta, false);
+        return;
+      }
+      const listaAtualizada = await carregar(false);
+      publicarResultadoMutacao(resposta, listaAtualizada);
     } catch {
       setErro("Não foi possível excluir o ponto.");
     }
@@ -374,11 +418,17 @@ export default function PontosColetaCrud({
   async function moderar(id: string, status: string) {
     const acao = status === "verificado" ? "aprovar" : "rejeitar";
     if (!window.confirm(`Confirmar ${acao} este ponto de coleta?`)) return;
+    setErro(null);
+    setMensagem(null);
     setModerandoId(id);
     try {
       const resposta = await alterarStatusPontoColeta(id, status);
-      setMensagem(resposta.mensagemResultado);
-      await carregar();
+      if (!resposta.operacaoAceita) {
+        publicarResultadoMutacao(resposta, false);
+        return;
+      }
+      const listaAtualizada = await carregar(false);
+      publicarResultadoMutacao(resposta, listaAtualizada);
     } catch {
       setErro("Não foi possível alterar o status do ponto.");
     } finally {
