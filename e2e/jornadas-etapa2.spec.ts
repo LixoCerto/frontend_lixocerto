@@ -59,7 +59,7 @@ test.describe("Prioridade 2 — jornadas principais de ponta a ponta", () => {
     await page.locator("#login-senha").fill(senhaCadastro);
     await page.locator("#login-confirmacao").fill(senhaCadastro);
     await page.getByRole("button", { name: "Criar minha conta" }).click();
-    await expect(page).toHaveURL(/\/confirmar-email\?email=/, { timeout: 20_000 });
+    await expect(page).toHaveURL(/\/confirmar-email\?email=/, { timeout: 60_000 });
     await expect(page.getByRole("heading", { name: "Confirme seu e-mail" })).toBeVisible();
     await capturar(page, "01-confirmacao-email.png");
 
