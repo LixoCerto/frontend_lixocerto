@@ -18,7 +18,7 @@ describe("interpretarResultadoMutacao", () => {
         false
       )
     ).toEqual({
-      tipo: "erro",
+      tipo: "atencao",
       mensagem:
         "Status atualizado. O servidor aceitou a alteração, mas a lista não pôde ser atualizada. Atualize a consulta para conferir o estado atual.",
     });

@@ -1,5 +1,5 @@
 export type ResultadoMutacao = {
-  tipo: "sucesso" | "erro";
+  tipo: "sucesso" | "atencao" | "erro";
   mensagem: string;
 };
 
@@ -26,7 +26,7 @@ export function interpretarResultadoMutacao(
       ? `${mensagemServidor} `
       : "A alteração foi registrada. ";
     return {
-      tipo: "erro",
+      tipo: "atencao",
       mensagem: `${confirmacao}O servidor aceitou a alteração, mas a lista não pôde ser atualizada. Atualize a consulta para conferir o estado atual.`,
     };
   }

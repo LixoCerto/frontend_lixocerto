@@ -117,7 +117,12 @@ export default function PontosColetaCrud({
     localizacao: null,
     raioKm: 10,
   });
-  const [mensagem, setMensagem] = useState<string | null>(null);
+  const [mensagem, setMensagemBase] = useState<string | null>(null);
+  const [tipoMensagem, setTipoMensagem] = useState<"sucesso" | "atencao">("sucesso");
+  function setMensagem(texto: string | null, tipo: "sucesso" | "atencao" = "sucesso") {
+    setTipoMensagem(tipo);
+    setMensagemBase(texto);
+  }
   const [erro, setErro] = useState<string | null>(null);
   const [moderandoId, setModerandoId] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
@@ -356,9 +361,9 @@ export default function PontosColetaCrud({
     listaAtualizada: boolean
   ) {
     const resultado = interpretarResultadoMutacao(resposta, listaAtualizada);
-    if (resultado.tipo === "sucesso") {
+    if (resultado.tipo !== "erro") {
       setErro(null);
-      setMensagem(resultado.mensagem);
+      setMensagem(resultado.mensagem, resultado.tipo);
       return;
     }
     setMensagem(null);
@@ -466,7 +471,7 @@ export default function PontosColetaCrud({
       </CabecalhoPagina>
 
       {erro ? <Aviso tipo="erro" focar>{erro}</Aviso> : null}
-      {mensagem ? <Aviso tipo="sucesso" focar>{mensagem}</Aviso> : null}
+      {mensagem ? <Aviso tipo={tipoMensagem} focar>{mensagem}</Aviso> : null}
 
       <form data-onboarding-action="pesquisar_pontos" onSubmit={event => { event.preventDefault(); aplicarFiltros(); }} className={ESTILOS.cartao}>
         <div className="mb-5 flex items-start gap-3">
@@ -643,7 +648,7 @@ export default function PontosColetaCrud({
             </div>
 
             {erro ? <div className="mt-5"><Aviso tipo="erro" focar>{erro}</Aviso></div> : null}
-            {mensagem ? <div className="mt-5"><Aviso tipo="sucesso" focar>{mensagem}</Aviso></div> : null}
+            {mensagem ? <div className="mt-5"><Aviso tipo={tipoMensagem} focar>{mensagem}</Aviso></div> : null}
 
             <SecaoFormulario icone={Building2} titulo="Sobre o local">
               <label className="block sm:col-span-2">
